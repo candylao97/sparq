@@ -1,0 +1,521 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+}
+
+enum UserRole {
+  CUSTOMER
+  PROVIDER
+  BOTH
+  ADMIN
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  DECLINED
+  CANCELLED_BY_CUSTOMER
+  CANCELLED_BY_PROVIDER
+  REFUNDED
+  EXPIRED
+  DISPUTED
+}
+
+enum PaymentStatus {
+  NONE
+  AUTH_PENDING
+  AUTHORISED
+  CAPTURED
+  AUTH_RELEASED
+  REFUNDED
+  FAILED
+}
+
+enum ServiceLocation {
+  AT_HOME
+  STUDIO
+  BOTH
+}
+
+enum ServiceCategory {
+  NAILS
+  LASHES
+}
+
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+  UNDER_REVIEW
+  BANNED
+}
+
+enum RefundStatus {
+  NONE
+  REQUESTED
+  APPROVED
+  PROCESSED
+  DENIED
+}
+
+
+enum ProviderTier {
+  NEWCOMER
+  RISING
+  TRUSTED
+  PRO
+  ELITE
+}
+
+enum SubscriptionPlan {
+  FREE
+  PRO
+  ELITE
+}
+
+enum CustomerMembership {
+  FREE
+  PREMIUM
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum PayoutStatus {
+  SCHEDULED
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum DisputeStatus {
+  OPEN
+  UNDER_REVIEW
+  RESOLVED_REFUND
+  RESOLVED_NO_REFUND
+  CLOSED
+}
+
+enum NotificationType {
+  NEW_BOOKING
+  BOOKING_ACCEPTED
+  BOOKING_DECLINED
+  BOOKING_COMPLETED
+  BOOKING_CANCELLED
+  NEW_MESSAGE
+  NEW_REVIEW
+  PAYMENT_RECEIVED
+  PAYOUT_SENT
+  BOOKING_EXPIRED
+  BOOKING_DISPUTED
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          UserRole  @default(CUSTOMER)
+  phone         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts           Account[]
+  sessions           Session[]
+  providerProfile    ProviderProfile?
+  customerProfile    CustomerProfile?
+  bookingsAsCustomer Booking[]        @relation("CustomerBookings")
+  bookingsAsProvider Booking[]        @relation("ProviderBookings")
+  sentMessages       Message[]
+  notifications      Notification[]
+  reviews            Review[]         @relation("CustomerReviews")
+  adminNotes         AdminNote[]      @relation("AdminNotes")
+  leakageFlags       ContactLeakageFlag[]
+}
+
+model CustomerProfile {
+  id               String             @id @default(cuid())
+  userId           String             @unique
+  membership       CustomerMembership @default(FREE)
+  savedProviders   String[]
+  stripeCustomerId String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ProviderProfile {
+  id               String           @id @default(cuid())
+  userId           String           @unique
+  bio              String?          @db.Text
+  tagline          String?
+  serviceRadius    Int?             @default(10)
+  studioAddress    String?
+  suburb           String?
+  city             String           @default("Sydney")
+  state            String           @default("NSW")
+  latitude         Float?
+  longitude        Float?
+  offerAtHome      Boolean          @default(true)
+  offerAtStudio    Boolean          @default(false)
+  tier             ProviderTier     @default(NEWCOMER)
+  subscriptionPlan SubscriptionPlan @default(FREE)
+  stripeAccountId  String?
+  isVerified       Boolean          @default(false)
+  backgroundCheck  Boolean          @default(false)
+  yearsExperience  Int?
+  languages        String[]
+  accountStatus    AccountStatus    @default(ACTIVE)
+  suspendReason    String?          @db.Text
+  suspendedAt      DateTime?
+  responseTimeHours  Float           @default(24)
+  completionRate     Float            @default(100)
+  totalEarnings      Float            @default(0)
+  cancellationPolicy String?          @db.Text
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  services     Service[]
+  availability Availability[]
+  portfolio    PortfolioPhoto[]
+  verification Verification?
+  scoreFactors ScoreFactors?
+}
+
+model ScoreFactors {
+  id               String          @id @default(cuid())
+  providerId       String          @unique
+  reviewScore      Float           @default(0)
+  completionScore  Float           @default(0)
+  responseScore    Float           @default(0)
+  consistencyScore Float           @default(0)
+  verificationScore Float          @default(0)
+  updatedAt        DateTime        @updatedAt
+
+  provider ProviderProfile @relation(fields: [providerId], references: [id], onDelete: Cascade)
+}
+
+model Service {
+  id            String          @id @default(cuid())
+  providerId    String
+  title         String
+  category      ServiceCategory
+  description   String?         @db.Text
+  price         Float
+  duration      Int
+  locationTypes ServiceLocation @default(BOTH)
+  maxGuests     Int?
+  isActive      Boolean         @default(true)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  provider ProviderProfile @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  bookings Booking[]
+  addons   ServiceAddon[]
+
+  @@index([providerId])
+}
+
+model Availability {
+  id         String   @id @default(cuid())
+  providerId String
+  date       DateTime @db.Date
+  timeSlots  String[]
+  isBlocked  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  provider ProviderProfile @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, date])
+}
+
+model Booking {
+  id              String          @id @default(cuid())
+  customerId      String
+  providerId      String
+  serviceId       String
+  date            DateTime
+  time            String
+  locationType    ServiceLocation
+  address         String?
+  guestCount      Int?
+  status          BookingStatus   @default(PENDING)
+  totalPrice      Float
+  platformFee     Float
+  commissionRate  Float
+  tipAmount       Float           @default(0)
+  stripePaymentId String?
+  paymentStatus   PaymentStatus   @default(NONE)
+  giftVoucherCode String?
+  notes           String?         @db.Text
+  refundStatus    RefundStatus    @default(NONE)
+  refundAmount    Float?
+  refundReason    String?         @db.Text
+  refundedAt       DateTime?
+  acceptDeadline   DateTime?
+  completedAt      DateTime?
+  disputeDeadline  DateTime?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  customer User      @relation("CustomerBookings", fields: [customerId], references: [id])
+  provider User      @relation("ProviderBookings", fields: [providerId], references: [id])
+  service  Service   @relation(fields: [serviceId], references: [id])
+  review        Review?
+  messages      Message[]
+  payout        Payout?
+  statusHistory BookingStatusHistory[]
+  dispute       Dispute?
+
+  @@index([customerId])
+  @@index([providerId])
+  @@index([status])
+}
+
+model Review {
+  id               String   @id @default(cuid())
+  bookingId        String   @unique
+  customerId       String
+  rating           Int
+  text             String?  @db.Text
+  aiSummary        String?  @db.Text
+  providerResponse String?  @db.Text
+  isVisible        Boolean  @default(true)
+  isFlagged        Boolean  @default(false)
+  isVerifiedPurchase Boolean @default(true)
+  flagReason       String?  @db.Text
+  moderatedAt      DateTime?
+  moderatedBy      String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  booking  Booking @relation(fields: [bookingId], references: [id])
+  customer User    @relation("CustomerReviews", fields: [customerId], references: [id])
+}
+
+model PortfolioPhoto {
+  id         String   @id @default(cuid())
+  providerId String
+  url        String
+  caption    String?
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  provider ProviderProfile @relation(fields: [providerId], references: [id], onDelete: Cascade)
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  bookingId String
+  senderId  String
+  text      String   @db.Text
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  booking Booking @relation(fields: [bookingId], references: [id])
+  sender  User    @relation(fields: [senderId], references: [id])
+
+  @@index([bookingId])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  link      String?
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Verification {
+  id                          String             @id @default(cuid())
+  providerId                  String             @unique
+  stripeVerificationSessionId String?
+  status                      VerificationStatus @default(PENDING)
+  backgroundCheckStatus       VerificationStatus @default(PENDING)
+  adminNotes                  String?
+  submittedAt                 DateTime           @default(now())
+  reviewedAt                  DateTime?
+
+  provider ProviderProfile @relation(fields: [providerId], references: [id], onDelete: Cascade)
+}
+
+model AdminNote {
+  id        String   @id @default(cuid())
+  adminId   String
+  subject   String
+  body      String   @db.Text
+  category  String   @default("general")
+  pinned    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  admin User @relation("AdminNotes", fields: [adminId], references: [id])
+
+  @@index([adminId])
+  @@index([category])
+}
+
+model Suburb {
+  id        String   @id @default(cuid())
+  name      String
+  postcode  String
+  state     String   @default("NSW")
+  city      String   @default("Sydney")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@unique([name, postcode])
+}
+
+model PlatformSetting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String @db.Text
+  label String?
+  group String @default("general")
+
+  @@index([group])
+}
+
+model GiftVoucher {
+  id         String   @id @default(cuid())
+  code       String   @unique
+  amount     Float
+  issuedBy   String
+  usedBy     String?
+  isRedeemed Boolean  @default(false)
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+}
+
+model ContactLeakageFlag {
+  id         String    @id @default(cuid())
+  messageId  String?
+  reviewId   String?
+  bookingId  String?
+  userId     String
+  user       User      @relation(fields: [userId], references: [id])
+  flagType   String
+  snippet    String    @db.Text
+  resolved   Boolean   @default(false)
+  resolvedBy String?
+  resolvedAt DateTime?
+  createdAt  DateTime  @default(now())
+}
+
+model Payout {
+  id               String       @id @default(cuid())
+  bookingId        String       @unique
+  providerId       String
+  amount           Float
+  platformFee      Float
+  stripeTransferId String?
+  status           PayoutStatus @default(SCHEDULED)
+  scheduledAt      DateTime
+  processedAt      DateTime?
+  failedAt         DateTime?
+  failureReason    String?
+  createdAt        DateTime     @default(now())
+
+  booking Booking @relation(fields: [bookingId], references: [id])
+
+  @@index([status])
+  @@index([scheduledAt])
+}
+
+model BookingStatusHistory {
+  id         String   @id @default(cuid())
+  bookingId  String
+  fromStatus String
+  toStatus   String
+  changedBy  String
+  reason     String?
+  createdAt  DateTime @default(now())
+
+  booking Booking @relation(fields: [bookingId], references: [id])
+
+  @@index([bookingId])
+}
+
+model Dispute {
+  id          String        @id @default(cuid())
+  bookingId   String        @unique
+  customerId  String
+  reason      String        @db.Text
+  evidence    String?       @db.Text
+  status      DisputeStatus @default(OPEN)
+  resolution  String?       @db.Text
+  resolvedBy  String?
+  resolvedAt  DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  booking Booking @relation(fields: [bookingId], references: [id])
+}
+
+model ServiceAddon {
+  id        String  @id @default(cuid())
+  serviceId String
+  name      String
+  price     Float
+  duration  Int     @default(0)
+  isActive  Boolean @default(true)
+
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@index([serviceId])
+}
