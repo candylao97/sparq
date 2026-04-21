@@ -16,6 +16,7 @@ import {
   parseBookingUrlState,
   serializeBookingUrlState,
   buildBookingUrl,
+  buildRetryBookingUrl,
 } from '@/lib/booking-url-state'
 
 function p(qs: string): URLSearchParams {
@@ -277,5 +278,104 @@ describe('buildBookingUrl', () => {
     expect(parsed.guestCount).toBe(2)
     expect(parsed.selectedAddons).toEqual(['a'])
     expect(parsed.step).toBe(3)
+  })
+})
+
+describe('buildRetryBookingUrl (AUDIT-007)', () => {
+  it('builds a retry URL that lands on Step 3 with preserved date/time/location', () => {
+    const url = buildRetryBookingUrl({
+      providerId:   'prov-1',
+      serviceId:    'svc-abc',
+      date:         '2026-05-20',
+      time:         '13:00',
+      locationType: 'AT_HOME',
+      tipAmount:    10,
+      guestCount:   2,
+      giftVoucherCode: 'GIFT50',
+    })
+    expect(url.startsWith('/book/prov-1?')).toBe(true)
+    const qs = url.split('?')[1] ?? ''
+    const parsed = parseBookingUrlState(new URLSearchParams(qs))
+    expect(parsed.serviceId).toBe('svc-abc')
+    expect(parsed.date).toBe('2026-05-20')
+    expect(parsed.time).toBe('13:00')
+    expect(parsed.locationType).toBe('AT_HOME')
+    expect(parsed.tip).toBe(10)
+    expect(parsed.guestCount).toBe(2)
+    expect(parsed.voucherInput).toBe('GIFT50')
+    expect(parsed.step).toBe(3)
+  })
+
+  it('does not round-trip add-ons or promo codes (by design)', () => {
+    const url = buildRetryBookingUrl({
+      providerId:   'prov-1',
+      serviceId:    'svc-1',
+      date:         '2026-06-01',
+      time:         '09:00',
+      locationType: 'STUDIO',
+    })
+    const qs = url.split('?')[1] ?? ''
+    const parsed = parseBookingUrlState(new URLSearchParams(qs))
+    expect(parsed.selectedAddons).toEqual([])
+    expect(parsed.promoCode).toBe('')
+  })
+
+  it('coerces missing guestCount to 1 (default)', () => {
+    const url = buildRetryBookingUrl({
+      providerId:   'prov-1',
+      serviceId:    'svc-1',
+      date:         '2026-06-01',
+      time:         '09:00',
+      locationType: 'STUDIO',
+      guestCount:   null,
+    })
+    // guestCount=1 is omitted from the URL
+    expect(url).not.toContain('guests=')
+  })
+
+  it('coerces negative tipAmount to 0', () => {
+    const url = buildRetryBookingUrl({
+      providerId:   'prov-1',
+      serviceId:    'svc-1',
+      date:         '2026-06-01',
+      time:         '09:00',
+      locationType: 'STUDIO',
+      tipAmount:    -5,
+    })
+    expect(url).not.toContain('tip=')
+  })
+
+  it('treats unknown locationType as empty string', () => {
+    const url = buildRetryBookingUrl({
+      providerId:   'prov-1',
+      serviceId:    'svc-1',
+      date:         '2026-06-01',
+      time:         '09:00',
+      locationType: 'HOTEL' as string,
+    })
+    expect(url).not.toContain('locationType=')
+  })
+
+  it('omits voucher when no code present', () => {
+    const url = buildRetryBookingUrl({
+      providerId:   'prov-1',
+      serviceId:    'svc-1',
+      date:         '2026-06-01',
+      time:         '09:00',
+      locationType: 'STUDIO',
+      giftVoucherCode: null,
+    })
+    expect(url).not.toContain('voucher=')
+  })
+
+  it('always sets step=3 so the user lands on Review & confirm', () => {
+    const url = buildRetryBookingUrl({
+      providerId:   'prov-1',
+      serviceId:    'svc-1',
+      date:         '2026-06-01',
+      time:         '09:00',
+      locationType: 'STUDIO',
+    })
+    expect(url).toContain('step=3')
   })
 })
