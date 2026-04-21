@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { computeNextPayoutSummary } from '@/lib/next-payout'
 
 export async function GET() {
   const session = await getServerSession(authOptions)
@@ -19,7 +20,7 @@ export async function GET() {
     const prevMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999)
     const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1)
 
-    const [profile, bookings, reviews, unrespondedReviews, customerBookingCounts, aiSummaryReview] = await Promise.all([
+    const [profile, bookings, reviews, unrespondedReviews, customerBookingCounts, aiSummaryReview, queuedPayouts] = await Promise.all([
       prisma.providerProfile.findUnique({
         where: { userId: session.user.id },
         include: {
@@ -67,7 +68,26 @@ export async function GET() {
         orderBy: { createdAt: 'desc' },
         select: { aiSummary: true },
       }),
+      // AUDIT-011: Payouts queued for this talent (next payout surfacing).
+      // We fetch all non-terminal payouts so the helper can total them up,
+      // not just the earliest — the aside widget shows "$X queued across Y".
+      prisma.payout.findMany({
+        where: {
+          providerId: session.user.id,
+          status: { in: ['SCHEDULED', 'PROCESSING'] },
+        },
+        select: {
+          id: true,
+          amount: true,
+          status: true,
+          scheduledAt: true,
+        },
+        orderBy: { scheduledAt: 'asc' },
+      }),
     ])
+
+    // AUDIT-011: Collapse queued payouts into the single summary the UI needs.
+    const nextPayout = computeNextPayoutSummary(queuedPayouts, now)
 
     if (!profile) {
       return NextResponse.json({ error: 'Provider profile not found' }, { status: 404 })
@@ -103,8 +123,9 @@ export async function GET() {
     }
 
     // Pending bookings with repeat fan count and expiry
+    // P1-E: Include RESCHEDULE_REQUESTED so provider can accept/decline from bookings page
     const pendingBookings = bookings
-      .filter(b => b.status === 'PENDING')
+      .filter(b => b.status === 'PENDING' || b.status === 'RESCHEDULE_REQUESTED')
       .map(b => {
         const minutesUntilExpiry = b.acceptDeadline
           ? Math.max(0, Math.round((new Date(b.acceptDeadline).getTime() - now.getTime()) / 60000))
@@ -119,6 +140,9 @@ export async function GET() {
           status: b.status,
           locationType: b.locationType,
           address: ['CONFIRMED', 'COMPLETED'].includes(b.status) ? b.address : null,
+          rescheduleDate: b.rescheduleDate?.toISOString() || null,
+          rescheduleTime: b.rescheduleTime || null,
+          rescheduleReason: b.rescheduleReason || null,
           service: { title: b.service.title, duration: b.service.duration, category: b.service.category },
           customer: { id: b.customerId, name: b.customer.name || 'Client', image: b.customer.image },
           repeatFanCount: repeatFanMap.get(b.customerId) || 0,
@@ -153,6 +177,15 @@ export async function GET() {
       : 0
     const completedThisMonth = completed.filter(b => b.date >= monthStart).length
 
+    // M-2: Compute tip stats from completed bookings
+    const completedWithTip = completed.filter(b => (b.tipAmount ?? 0) > 0)
+    const totalTips = completedWithTip.reduce((s, b) => s + (b.tipAmount ?? 0), 0)
+    const tipStats = {
+      totalTips,
+      tipRate: completed.length > 0 ? Math.round((completedWithTip.length / completed.length) * 100) : 0,
+      avgTip: completedWithTip.length > 0 ? Math.round((totalTips / completedWithTip.length) * 100) / 100 : 0,
+    }
+
     return NextResponse.json({
       profile: {
         id: profile.id,
@@ -170,6 +203,8 @@ export async function GET() {
         offerAtStudio: profile.offerAtStudio,
         responseTimeHours: profile.responseTimeHours,
         completionRate: profile.completionRate,
+        cancellationCount: profile.cancellationCount,
+        cancellationCountResetAt: profile.cancellationCountResetAt?.toISOString() ?? null,
         scoreFactors: profile.scoreFactors,
         services: profile.services,
         portfolio: profile.portfolio.map(p => ({ id: p.id, url: p.url, caption: p.caption })),
@@ -178,6 +213,9 @@ export async function GET() {
           stripeVerificationSessionId: profile.verification.stripeVerificationSessionId,
         } : null,
         stripeAccountId: profile.stripeAccountId,
+        isFeatured: profile.isFeatured,
+        accountStatus: profile.accountStatus,
+        suspendReason: profile.suspendReason,
       },
       earnings,
       pendingBookings,
@@ -201,6 +239,8 @@ export async function GET() {
         booking: r.booking ? { service: { title: r.booking.service.title } } : undefined,
       })),
       aiReviewSummary: aiSummaryReview?.aiSummary || null,
+      nextPayout,
+      tipStats,
       stats: {
         totalBookings: bookings.length,
         pendingBookings: pendingBookings.length,

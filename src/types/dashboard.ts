@@ -14,6 +14,8 @@ export interface DashboardProfile {
   offerAtStudio: boolean
   responseTimeHours: number
   completionRate: number
+  cancellationCount: number
+  cancellationCountResetAt: string | null
   scoreFactors: {
     reviewScore: number
     completionScore: number
@@ -40,6 +42,9 @@ export interface DashboardProfile {
     stripeVerificationSessionId: string | null
   } | null
   stripeAccountId: string | null
+  isFeatured: boolean
+  accountStatus?: string
+  suspendReason?: string | null
 }
 
 export interface PendingBooking {
@@ -52,6 +57,9 @@ export interface PendingBooking {
   status: string
   locationType: string
   address: string | null
+  rescheduleDate: string | null
+  rescheduleTime: string | null
+  rescheduleReason: string | null
   service: { title: string; duration: number; category: string }
   customer: { id: string; name: string; image: string | null }
   repeatFanCount: number
@@ -102,6 +110,27 @@ export interface DashboardStats {
   avgResponseTimeHours: number
 }
 
+// M-2: Tip analytics for provider payments page
+export interface DashboardTipStats {
+  totalTips: number
+  tipRate: number
+  avgTip: number
+}
+
+// AUDIT-011: Next-payout summary — soonest queued payout + totals.
+// `null` when nothing is queued (no completed bookings yet, or all paid out).
+export interface DashboardNextPayout {
+  next: {
+    id: string
+    amount: number
+    scheduledAt: string
+    isOverdue: boolean
+    status: string
+  }
+  totalScheduled: number
+  queuedCount: number
+}
+
 export interface DashboardData {
   profile: DashboardProfile
   earnings: DashboardEarnings
@@ -110,6 +139,9 @@ export interface DashboardData {
   recentReviews: DashboardReview[]
   unrespondedReviews: DashboardReview[]
   aiReviewSummary: string | null
+  /** AUDIT-011: Soonest queued payout + totals. Null when nothing is queued. */
+  nextPayout: DashboardNextPayout | null
+  tipStats: DashboardTipStats
   stats: DashboardStats
 }
 
@@ -137,10 +169,14 @@ export interface CustomerBooking {
   locationType: string
   address: string | null
   notes: string | null
+  rescheduleDate: string | null
+  rescheduleTime: string | null
   service: { id: string; title: string; duration: number; category: string }
-  provider: { id: string; name: string; image: string | null; tier: string; suburb: string | null }
+  provider: { id: string; name: string; image: string | null; tier: string; suburb: string | null; providerProfile?: { cancellationPolicyType: string } | null }
   review: { id: string; rating: number; text: string | null; providerResponse: string | null } | null
   unreadMessageCount: number
+  disputeDeadline: string | null
+  dispute: { id: string; status: string; reason: string; createdAt: string } | null
 }
 
 export interface FavouriteTalent {
@@ -153,6 +189,9 @@ export interface FavouriteTalent {
   lastBookingDate: string
   topService: string
   averageRating: number
+  minPrice: number
+  offerAtHome: boolean
+  offerAtStudio: boolean
 }
 
 export interface CustomerSpending {
@@ -198,6 +237,7 @@ export interface CustomerDashboardData {
     memberSince: string
   }
   upcomingBookings: CustomerBooking[]
+  imminentBookings: CustomerBooking[]
   pastBookings: CustomerBooking[]
   unreviewedBookings: CustomerBooking[]
   reviewsLeft: Array<{

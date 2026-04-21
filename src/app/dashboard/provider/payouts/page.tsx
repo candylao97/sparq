@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -10,6 +10,7 @@ import {
   Banknote,
   CheckCircle2,
   CreditCard,
+  Download,
   ExternalLink,
   Loader2,
   Shield,
@@ -17,6 +18,7 @@ import {
   Clock,
   AlertCircle,
 } from 'lucide-react'
+import type { PayoutHistoryItem } from '@/app/api/dashboard/provider/payout-history/route'
 
 interface StripeStatus {
   connected: boolean
@@ -29,9 +31,51 @@ interface StripeStatus {
 interface EarningsSummary {
   totalEarnings: number
   completedBookings: number
+  // AUDIT-011: Soonest queued payout + totals. Null when nothing is queued.
+  nextPayout: {
+    next: {
+      id: string
+      amount: number
+      scheduledAt: string
+      isOverdue: boolean
+      status: string
+    }
+    totalScheduled: number
+    queuedCount: number
+  } | null
 }
 
-export default function ProviderPayoutsPage() {
+function PayoutStatusBadge({ status }: { status: string }) {
+  if (status === 'COMPLETED') {
+    return (
+      <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
+        Paid
+      </span>
+    )
+  }
+  if (status === 'FAILED' || status === 'CANCELLED') {
+    return (
+      <span className="inline-flex items-center rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-700">
+        {status === 'CANCELLED' ? 'Cancelled' : 'Failed'}
+      </span>
+    )
+  }
+  if (status === 'PROCESSING') {
+    return (
+      <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700">
+        Processing
+      </span>
+    )
+  }
+  // SCHEDULED (default)
+  return (
+    <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700">
+      Scheduled
+    </span>
+  )
+}
+
+function ProviderPayoutsPageInner() {
   const { data: session, status: authStatus } = useSession()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -40,6 +84,8 @@ export default function ProviderPayoutsPage() {
   const [earnings, setEarnings] = useState<EarningsSummary | null>(null)
   const [loading, setLoading] = useState(true)
   const [connecting, setConnecting] = useState(false)
+  const [payoutHistory, setPayoutHistory] = useState<PayoutHistoryItem[]>([])
+  const [historyLoading, setHistoryLoading] = useState(false)
 
   useEffect(() => {
     if (authStatus === 'unauthenticated') router.push('/login')
@@ -47,6 +93,21 @@ export default function ProviderPayoutsPage() {
       router.push('/dashboard/customer')
     }
   }, [authStatus, session, router])
+
+  const fetchPayoutHistory = useCallback(async () => {
+    setHistoryLoading(true)
+    try {
+      const res = await fetch('/api/dashboard/provider/payout-history')
+      if (res.ok) {
+        const data = await res.json()
+        setPayoutHistory(data.payouts ?? [])
+      }
+    } catch {
+      // silently fail — table will show empty state
+    } finally {
+      setHistoryLoading(false)
+    }
+  }, [])
 
   const fetchStatus = useCallback(async () => {
     try {
@@ -63,6 +124,7 @@ export default function ProviderPayoutsPage() {
         setEarnings({
           totalEarnings: dashData.earnings?.allTime ?? 0,
           completedBookings: dashData.stats?.completedBookings ?? 0,
+          nextPayout: dashData.nextPayout ?? null,
         })
       }
     } catch {
@@ -73,8 +135,11 @@ export default function ProviderPayoutsPage() {
   }, [])
 
   useEffect(() => {
-    if (session) fetchStatus()
-  }, [session, fetchStatus])
+    if (session) {
+      fetchStatus()
+      fetchPayoutHistory()
+    }
+  }, [session, fetchStatus, fetchPayoutHistory])
 
   // Handle return from Stripe onboarding
   useEffect(() => {
@@ -130,7 +195,7 @@ export default function ProviderPayoutsPage() {
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#FDFBF7_100%)]">
-      <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+      <div className="mx-auto max-w-[1600px] px-4 py-10 sm:px-8 lg:px-12 xl:px-20">
         {/* Back link */}
         <Link
           href="/dashboard/provider"
@@ -312,11 +377,44 @@ export default function ProviderPayoutsPage() {
 
             {/* Earnings summary */}
             {earnings && (
-              <div className="rounded-2xl border border-[#e8e1de] bg-white p-6">
+              <div className="mb-6 rounded-2xl border border-[#e8e1de] bg-white p-6">
                 <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-[#717171]">
                   Payout summary
                 </h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+                  {/* AUDIT-011: Next payout tile — only shown when something is queued. */}
+                  {earnings.nextPayout && (
+                    <div className="rounded-xl bg-[#f9f2ef] p-4 md:col-span-1">
+                      <p className="mb-1 flex items-center gap-1 text-xs text-[#717171]">
+                        <Banknote className="h-3 w-3" />
+                        Next payout
+                      </p>
+                      <p className="text-2xl font-bold text-[#1A1A1A]">
+                        {formatCurrency(earnings.nextPayout.next.amount)}
+                      </p>
+                      <p className="mt-1 text-xs text-[#717171]">
+                        {earnings.nextPayout.next.isOverdue ? (
+                          <span className="inline-flex items-center gap-1 text-amber-700">
+                            <AlertCircle className="h-3 w-3" />
+                            Processing
+                          </span>
+                        ) : (
+                          <>
+                            Arriving{' '}
+                            {new Date(
+                              earnings.nextPayout.next.scheduledAt,
+                            ).toLocaleDateString('en-AU', {
+                              day: 'numeric',
+                              month: 'short',
+                            })}
+                          </>
+                        )}
+                        {earnings.nextPayout.queuedCount > 1 && (
+                          <> · {earnings.nextPayout.queuedCount} queued</>
+                        )}
+                      </p>
+                    </div>
+                  )}
                   <div className="rounded-xl bg-[#f9f2ef] p-4">
                     <p className="mb-1 text-xs text-[#717171]">Total earnings</p>
                     <p className="text-2xl font-bold text-[#1A1A1A]">
@@ -332,9 +430,135 @@ export default function ProviderPayoutsPage() {
                 </div>
               </div>
             )}
+
+            {/* Payout history table */}
+            <PayoutHistoryTable
+              payouts={payoutHistory}
+              loading={historyLoading}
+              formatCurrency={formatCurrency}
+            />
           </>
         )}
       </div>
+    </div>
+  )
+}
+
+function PayoutHistoryTable({
+  payouts,
+  loading,
+  formatCurrency,
+}: {
+  payouts: PayoutHistoryItem[]
+  loading: boolean
+  formatCurrency: (n: number) => string
+}) {
+  function fmtDate(iso: string) {
+    return new Date(iso).toLocaleDateString('en-AU', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    })
+  }
+
+  function handleExportCsv() {
+    if (!payouts || payouts.length === 0) return
+    const headers = ['Date', 'Booking', 'Service', 'Client', 'Amount', 'Platform Fee', 'Status', 'Processed At']
+    const rows = payouts.map((p: PayoutHistoryItem) => [
+      p.scheduledAt ? new Date(p.scheduledAt).toLocaleDateString('en-AU') : '—',
+      p.bookingId ?? '—',
+      p.serviceTitle ?? '—',
+      p.customerName ?? '—',
+      `$${(p.amount ?? 0).toFixed(2)}`,
+      `$${(p.platformFee ?? 0).toFixed(2)}`,
+      p.status ?? '—',
+      p.processedAt ? new Date(p.processedAt).toLocaleDateString('en-AU') : '—',
+    ])
+    const csv = [headers, ...rows].map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `sparq-payouts-${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  return (
+    <div className="rounded-2xl border border-[#e8e1de] bg-white p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-sm font-semibold uppercase tracking-wider text-[#717171]">
+          Payout history
+        </h3>
+        {payouts.length > 0 && (
+          <button
+            onClick={handleExportCsv}
+            className="inline-flex items-center gap-1.5 rounded-full border border-[#e8e1de] bg-white px-4 py-2 text-sm font-semibold text-[#1A1A1A] hover:bg-[#f9f2ef] transition-colors"
+          >
+            <Download className="h-4 w-4" />
+            Export CSV
+          </button>
+        )}
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-6 w-6 animate-spin text-[#E96B56]" />
+        </div>
+      ) : payouts.length === 0 ? (
+        <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
+          <Banknote className="h-8 w-8 text-[#e8e1de]" />
+          <p className="text-sm font-medium text-[#1A1A1A]">No payouts yet</p>
+          <p className="text-xs text-[#717171]">
+            Completed bookings will generate payouts that appear here.
+          </p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-[#e8e1de]">
+                <th className="pb-3 pr-4 text-left text-xs font-medium uppercase tracking-wider text-[#717171]">
+                  Date
+                </th>
+                <th className="pb-3 pr-4 text-left text-xs font-medium uppercase tracking-wider text-[#717171]">
+                  Service
+                </th>
+                <th className="pb-3 pr-4 text-left text-xs font-medium uppercase tracking-wider text-[#717171]">
+                  Client
+                </th>
+                <th className="pb-3 pr-4 text-right text-xs font-medium uppercase tracking-wider text-[#717171]">
+                  Amount
+                </th>
+                <th className="pb-3 text-left text-xs font-medium uppercase tracking-wider text-[#717171]">
+                  Status
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#f3ece9]">
+              {payouts.map((payout) => (
+                <tr key={payout.id} className="group transition-colors hover:bg-[#fdfaf9]">
+                  <td className="py-3.5 pr-4 text-[#717171]">
+                    {fmtDate(payout.scheduledAt)}
+                  </td>
+                  <td className="py-3.5 pr-4 font-medium text-[#1A1A1A]">
+                    {payout.serviceTitle}
+                  </td>
+                  <td className="py-3.5 pr-4 text-[#717171]">
+                    {payout.customerName ?? '—'}
+                  </td>
+                  <td className="py-3.5 pr-4 text-right font-semibold text-[#1A1A1A]">
+                    {formatCurrency(payout.amount)}
+                  </td>
+                  <td className="py-3.5">
+                    <PayoutStatusBadge status={payout.status} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   )
 }
@@ -349,5 +573,13 @@ function StatusRow({ label, done }: { label: string; done: boolean }) {
       )}
       <span className={`text-sm ${done ? 'text-[#1A1A1A]' : 'text-[#717171]'}`}>{label}</span>
     </div>
+  )
+}
+
+export default function ProviderPayoutsPage() {
+  return (
+    <Suspense fallback={null}>
+      <ProviderPayoutsPageInner />
+    </Suspense>
   )
 }
