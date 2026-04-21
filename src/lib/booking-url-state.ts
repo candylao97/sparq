@@ -104,3 +104,44 @@ export function buildBookingUrl(providerId: string, input: BookingUrlInputs): st
   const qs = serializeBookingUrlState(input)
   return qs ? `/book/${providerId}?${qs}` : `/book/${providerId}`
 }
+
+/**
+ * AUDIT-007: Build a retry-payment URL from an existing booking record.
+ * Used by the confirmed page's "Retry payment" CTA when a PaymentIntent
+ * failed — we want to bounce the user back into the booking wizard with
+ * as much of their original selection pre-filled as possible, landing on
+ * Step 3 (Review & confirm) so they can re-submit without re-navigating.
+ *
+ * The booking argument is intentionally loose-typed because the GET
+ * /api/bookings/:id route returns the raw Prisma Booking record, which
+ * isn't fully represented in the CustomerBooking display type.
+ */
+export interface RetryBookingSource {
+  providerId: string
+  serviceId: string
+  date: string
+  time: string
+  locationType: string | null | undefined
+  tipAmount?: number | null
+  guestCount?: number | null
+  giftVoucherCode?: string | null
+}
+
+export function buildRetryBookingUrl(booking: RetryBookingSource): string {
+  const locationType: BookingLocationType =
+    booking.locationType === 'AT_HOME' || booking.locationType === 'STUDIO'
+      ? booking.locationType
+      : ''
+  return buildBookingUrl(booking.providerId, {
+    serviceId:      booking.serviceId,
+    date:           booking.date,
+    time:           booking.time,
+    locationType,
+    tip:            Math.max(0, booking.tipAmount ?? 0),
+    guestCount:     Math.max(1, booking.guestCount ?? 1),
+    selectedAddons: [],     // add-ons live in a separate table; can't round-trip
+    voucherInput:   booking.giftVoucherCode ?? '',
+    promoCode:      '',     // promo usage is linked to the original failed booking
+    step:           3,       // land on Review & confirm
+  })
+}

@@ -10,6 +10,7 @@ import {
   getConfirmationCopy,
   type ConfirmationMode,
 } from '@/lib/booking-confirmation'
+import { buildRetryBookingUrl } from '@/lib/booking-url-state'
 
 function formatLocationType(locationType: string): string {
   if (locationType === 'AT_HOME') return 'At your location'
@@ -111,6 +112,30 @@ function ConfirmedContent() {
     acceptDeadlineText,
   })
 
+  // AUDIT-007: Build a retry-payment URL that preserves everything we know
+  // about this booking, so the user doesn't re-enter date/time/location/tip/
+  // guests/voucher when retrying after a failed card. guestCount and
+  // giftVoucherCode aren't on the public CustomerBooking shape so we read
+  // them defensively from the raw API payload.
+  //
+  // NOTE: this still *creates a new booking* on submit. A safer path would
+  // reuse the original PaymentIntent when Stripe already shows it as
+  // succeeded (duplicate-charge defence) — flagged to the team as a
+  // separate ticket rather than silently adjusting payment routing here.
+  const rawBooking       = booking as unknown as Record<string, unknown>
+  const retryGuestCount  = typeof rawBooking.guestCount === 'number' ? rawBooking.guestCount : undefined
+  const retryVoucherCode = typeof rawBooking.giftVoucherCode === 'string' ? rawBooking.giftVoucherCode : undefined
+  const retryBookingUrl  = buildRetryBookingUrl({
+    providerId:      booking.provider.id,
+    serviceId:       booking.service.id,
+    date:            booking.date,
+    time:            booking.time,
+    locationType:    booking.locationType,
+    tipAmount:       booking.tipAmount,
+    guestCount:      retryGuestCount,
+    giftVoucherCode: retryVoucherCode,
+  })
+
   const icalUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/api/calendar/ical/${bookingId}`
 
   // Build Google Calendar deep-link from booking data
@@ -147,7 +172,7 @@ function ConfirmedContent() {
                 We couldn&apos;t process your payment for this booking. Please update your payment method to keep the appointment.
               </p>
               <Link
-                href={`/book/${booking.provider.id}?service=${booking.service.id}`}
+                href={retryBookingUrl}
                 className="inline-block bg-amber-600 text-white font-jakarta font-semibold text-xs px-4 py-2 rounded-lg hover:bg-amber-700 transition-colors"
               >
                 Retry payment →
