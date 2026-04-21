@@ -5,10 +5,31 @@ import { prisma } from '@/lib/prisma'
 import { stripe } from '@/lib/stripe'
 import { getCommissionRate, calculatePlatformFee } from '@/lib/utils'
 import { filterContactInfo } from '@/lib/content-filter'
+import { rateLimit } from '@/lib/rate-limit'
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  // AUDIT-017: Velocity check on booking creation. Tier 1 by IP (catches
+  // bursts from a compromised network / scraper), tier 2 by user. Limits
+  // are deliberately generous — a legitimate customer books occasionally,
+  // while an abuser tries dozens in minutes.
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+  const ipAllowed = await rateLimit(`booking-create-ip:${ip}`, 30, 3600)
+  if (!ipAllowed) {
+    return NextResponse.json(
+      { error: 'Too many booking requests from your network. Please try again later.' },
+      { status: 429 },
+    )
+  }
+  const userAllowed = await rateLimit(`booking-create-user:${session.user.id}`, 10, 3600)
+  if (!userAllowed) {
+    return NextResponse.json(
+      { error: 'Too many booking requests. Please wait a bit before trying again.' },
+      { status: 429 },
+    )
+  }
 
   try {
     const body = await req.json()
