@@ -47,17 +47,32 @@ jest.mock('@/lib/content-filter', () => ({
     flagType: null,
     matches: [],
   }),
+  filterContactInfoLax: jest.fn().mockReturnValue({
+    text: 'Please bring oils',
+    flagged: false,
+    flagType: null,
+    matches: [],
+  }),
 }))
 
 // Mock Prisma client – every method starts as jest.fn() so tests can override
-jest.mock('@/lib/prisma', () => ({
-  prisma: {
+// AUDIT-017 adds a `prisma.$transaction(async tx => …)` wrapper around the PATCH
+// handler. For unit tests we reuse the outer `prisma` proxy as the `tx` so
+// `tx.booking.findUnique(…)` etc. resolve to the same jest.fn() instances the
+// test overrides. Initializer runs later — the mock below returns a thunk that
+// reads `prisma` lazily at call time.
+jest.mock('@/lib/prisma', () => {
+  const prisma: Record<string, unknown> = {
+    $transaction: jest.fn((fn) =>
+      typeof fn === 'function' ? Promise.resolve(fn(prisma)) : Promise.all(fn),
+    ),
     booking: {
       findMany: jest.fn(),
       findUnique: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
+      count: jest.fn().mockResolvedValue(0),
     },
     service: {
       findUnique: jest.fn(),
@@ -84,8 +99,12 @@ jest.mock('@/lib/prisma', () => ({
     contactLeakageFlag: {
       create: jest.fn().mockResolvedValue({}),
     },
-  },
-}))
+    user: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
+  }
+  return { prisma }
+})
 
 // Mock utility functions used by the booking route
 jest.mock('@/lib/utils', () => ({
@@ -237,11 +256,22 @@ describe('POST /api/bookings', () => {
     title: 'Gel Manicure',
     price: 200,
     duration: 60,
+    isActive: true,
+    isDeleted: false,
+    maxGuests: 4,
+    instantBook: false,
     provider: {
       id: 'provider-profile-1',
       userId: 'user-provider-1',
       tier: 'TRUSTED',
-      user: { id: 'user-provider-1', name: 'Provider Jane' },
+      accountStatus: 'ACTIVE',
+      isVerified: true,
+      latitude: null,
+      longitude: null,
+      serviceRadius: 10,
+      timezone: 'Australia/Sydney',
+      stripeSubscriptionStatus: null,
+      user: { id: 'user-provider-1', name: 'Provider Jane', email: 'provider@example.com' },
     },
   }
 
