@@ -93,6 +93,13 @@ jest.mock('@/lib/utils', () => ({
   calculatePlatformFee: jest.fn().mockReturnValue(10),
 }))
 
+// AUDIT-017: Rate limiter defaults to "allowed" so existing POST/PATCH tests
+// are not affected. A dedicated test suite in bookings-velocity.test.ts
+// overrides this to assert 429 behaviour.
+jest.mock('@/lib/rate-limit', () => ({
+  rateLimit: jest.fn().mockResolvedValue(true),
+}))
+
 // ─── Imports (after mocks are registered) ───────────────────────────────────
 
 import { GET as bookingsGET, POST as bookingsPOST } from '@/app/api/bookings/route'
