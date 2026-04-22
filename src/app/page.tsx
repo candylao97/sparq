@@ -54,9 +54,11 @@ async function getFeaturedProviders() {
       take: 6,
     })
 
+    // `providers` here is User rows (outer query is prisma.user.findMany),
+    // so p.id is User.id — the correct match for Booking.providerUserId.
     const providerIds = providers.map(p => p.id)
     const ratingRows = providerIds.length > 0
-      ? await prisma.$queryRaw<{ providerId: string; avg: number; count: bigint }[]>`
+      ? await prisma.$queryRaw<{ providerUserId: string; avg: number; count: bigint }[]>`
           SELECT b."providerUserId", AVG(r.rating)::float AS avg, COUNT(r.rating) AS count
           FROM "Review" r
           JOIN "Booking" b ON b.id = r."bookingId"
@@ -65,7 +67,7 @@ async function getFeaturedProviders() {
           GROUP BY b."providerUserId"
         `
       : []
-    const ratingMap = new Map(ratingRows.map(r => [r.providerId, { avg: r.avg || 0, count: Number(r.count) }]))
+    const ratingMap = new Map(ratingRows.map(r => [r.providerUserId, { avg: r.avg || 0, count: Number(r.count) }]))
 
     return providers.map(p => ({
       id: p.id,
