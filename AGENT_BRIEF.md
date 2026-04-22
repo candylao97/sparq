@@ -134,11 +134,24 @@ Last FIND-id assigned: FIND-17
   Blocks provider first-booking UX changes.
 
 ### AUDIT-011 — Next payout visibility
-- Status: IN_REVIEW
-- Branch: `fix/audit-011-next-payout-visibility` (ahead 1, files 6)
-- Evidence: commit `b91cd06`
-- Notes: Adds `src/lib/next-payout.ts` + dashboard `NextPayoutCard`.
-  Clean isolated branch; safe merge candidate.
+- Status: MERGED
+- Branches: `fix/audit-011-handauthored` (lib + tests) +
+  `fix/audit-011-ui-integration` (API + card + payouts-banner)
+- Evidence: commits `ace41b1` (partial, lib only) and the follow-up
+  commit landing the UI integration; backup tag
+  `backup/fix-audit-011-2026-04-22` preserves the original bundled
+  branch.
+- Notes: Shipped in two passes. Phase 4 landed the pure helper
+  (`src/lib/next-payout.ts` + 10 tests) and the UI integration was
+  deferred because the original branch's `dashboard/provider/page.tsx`
+  diff (+969 lines) bundled many unrelated UX changes that couldn't
+  be cleanly rebased. The follow-up pass lands just the
+  NextPayoutCard, API wiring, payouts-page banner, and the
+  `DashboardData.nextPayout` / `DashboardData.tipStats` contract
+  additions — the minimum surface needed for next-payout visibility.
+  Unrelated bundle material (PendingBooking.reschedule*,
+  CustomerBooking.dispute*, ProviderProfile.cancellationCount /
+  isFeatured / accountStatus) is deliberately not ported.
 
 ### AUDIT-012 — Cancellation policy editable from settings
 - Status: IN_REVIEW (product-blocked by AUDIT-013)
@@ -217,12 +230,29 @@ Last FIND-id assigned: FIND-17
   Cost once decided: ~3–5 engineer-days.
 
 ### AUDIT-037 — No-show timezone / DST handling
-- Status: IN_REVIEW
-- Branch: `fix/audit-037-no-show-timezone` (ahead 1, files 3)
-- Evidence: commit `e4402bf`
-- Notes: Clean isolated branch. Replaces two hardcoded `+10:00`
-  offsets with `hoursUntilBooking()` helper; 10 tests. Safe merge
-  candidate.
+- Status: MERGED
+- Branch: `fix/audit-037-handauthored` (commit `5bccaea`,
+  merge `57e6463`); backup tag
+  `backup/fix-audit-037-2026-04-22` preserves the original branch.
+- Evidence: `src/lib/booking-time.ts` on main (from Phase 1) is the
+  DST-aware helper; `src/__tests__/utils/bookingTime.test.ts` (10
+  tests) locks the behaviour in and was landed as the hand-authored
+  variant. Server-side consumers already route through the helper:
+  `src/app/api/bookings/[id]/route.ts`,
+  `src/app/api/cron/expire-bookings/route.ts`,
+  `src/app/api/cron/send-reminders/route.ts`.
+- Notes: The original branch's client-side call-site fixes had no
+  target on main. `grep -rn '+10:00\|+11:00' src/app/ src/components/`
+  returns zero hits — the buggy code the branch was patching was
+  working-tree drift that never made it into main. The new provider
+  bookings page (`src/app/dashboard/provider/bookings/page.tsx`) and
+  the refund-preview UI on `src/app/bookings/page.tsx` that the
+  backup branch also carried are separate feature work, not bug-fix
+  scope; if/when those features land, they should import
+  `hoursUntilBooking` from `@/lib/booking-time`. Closing the
+  audit as MERGED on the basis that (1) the helper is in place,
+  (2) regression tests are committed, (3) no remaining buggy
+  call-sites exist on main.
 
 ### AUDIT-018, AUDIT-019, AUDIT-022..AUDIT-035 (except AUDIT-036), AUDIT-038..AUDIT-040 — UNKNOWN
 - Status: UNKNOWN

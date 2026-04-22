@@ -29,6 +29,18 @@ interface StripeStatus {
 interface EarningsSummary {
   totalEarnings: number
   completedBookings: number
+  // AUDIT-011: soonest queued payout + totals. Null when nothing is queued.
+  nextPayout: {
+    next: {
+      id: string
+      amount: number
+      scheduledAt: string
+      isOverdue: boolean
+      status: string
+    }
+    totalScheduled: number
+    queuedCount: number
+  } | null
 }
 
 export default function ProviderPayoutsPage() {
@@ -71,6 +83,7 @@ function ProviderPayoutsPageInner() {
         setEarnings({
           totalEarnings: dashData.earnings?.allTime ?? 0,
           completedBookings: dashData.stats?.completedBookings ?? 0,
+          nextPayout: dashData.nextPayout ?? null,
         })
       }
     } catch {
@@ -317,6 +330,52 @@ function ProviderPayoutsPageInner() {
                 <ExternalLink className="h-3.5 w-3.5" />
               </a>
             </div>
+
+            {/* AUDIT-011: Next payout banner — soonest queued amount, date, +N more */}
+            {earnings?.nextPayout && (
+              <div className={`mb-6 rounded-2xl border p-6 ${
+                earnings.nextPayout.next.isOverdue
+                  ? 'border-[#fdd8d1] bg-[#fdecec]'
+                  : 'border-[#e8e1de] bg-[#f9f2ef]'
+              }`}>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${
+                      earnings.nextPayout.next.isOverdue ? 'bg-white' : 'bg-white'
+                    }`}>
+                      {earnings.nextPayout.next.isOverdue
+                        ? <AlertCircle className="h-6 w-6 text-[#a63a29]" />
+                        : <Banknote className="h-6 w-6 text-[#E96B56]" />}
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-[#717171]">
+                        Next payout
+                      </p>
+                      <p className="mt-0.5 text-3xl font-bold text-[#1A1A1A]">
+                        {formatCurrency(earnings.nextPayout.next.amount)}
+                      </p>
+                      <p className="mt-1 flex items-center gap-1.5 text-sm text-[#717171]">
+                        <Clock className="h-3.5 w-3.5" />
+                        {earnings.nextPayout.next.isOverdue ? (
+                          <span className="text-[#a63a29]">
+                            Processing — was due {new Date(earnings.nextPayout.next.scheduledAt).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })}
+                          </span>
+                        ) : (
+                          <span>
+                            Scheduled {new Date(earnings.nextPayout.next.scheduledAt).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })}
+                          </span>
+                        )}
+                      </p>
+                      {earnings.nextPayout.queuedCount > 1 && (
+                        <p className="mt-1 text-sm text-[#717171]">
+                          + {earnings.nextPayout.queuedCount - 1} more queued · {formatCurrency(earnings.nextPayout.totalScheduled)} total
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Earnings summary */}
             {earnings && (
