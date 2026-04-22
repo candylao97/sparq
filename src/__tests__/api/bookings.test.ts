@@ -68,6 +68,7 @@ jest.mock('@/lib/prisma', () => {
     ),
     booking: {
       findMany: jest.fn(),
+      findFirst: jest.fn().mockResolvedValue(null),
       findUnique: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
@@ -82,10 +83,11 @@ jest.mock('@/lib/prisma', () => {
     },
     giftVoucher: {
       findUnique: jest.fn(),
+      update: jest.fn().mockResolvedValue({}),
       updateMany: jest.fn(),
     },
     availability: {
-      findUnique: jest.fn(),
+      findUnique: jest.fn().mockResolvedValue(null),
     },
     notification: {
       create: jest.fn(),
@@ -95,12 +97,23 @@ jest.mock('@/lib/prisma', () => {
     },
     payout: {
       create: jest.fn().mockResolvedValue({}),
+      upsert: jest.fn().mockResolvedValue({}),
     },
     contactLeakageFlag: {
       create: jest.fn().mockResolvedValue({}),
     },
     user: {
+      findUnique: jest.fn().mockResolvedValue({ id: 'user-customer-1', name: 'Emma', email: 'emma@example.com' }),
       findMany: jest.fn().mockResolvedValue([]),
+    },
+    providerProfile: {
+      update: jest.fn().mockResolvedValue({}),
+    },
+    dispute: {
+      findUnique: jest.fn().mockResolvedValue(null),
+    },
+    promoCodeUsage: {
+      findUnique: jest.fn().mockResolvedValue(null),
     },
   }
   return { prisma }
@@ -110,6 +123,47 @@ jest.mock('@/lib/prisma', () => {
 jest.mock('@/lib/utils', () => ({
   getCommissionRate: jest.fn().mockReturnValue(0.15),
   calculatePlatformFee: jest.fn().mockReturnValue(10),
+}))
+
+// audit-001 moved server-only math into utils.server. Test mocks fix the
+// platform fee at $10 (matching the prior utils mock) so voucher/tier
+// arithmetic in these tests stays predictable.
+jest.mock('@/lib/utils.server', () => ({
+  getCommissionRateAsync: jest.fn().mockResolvedValue(0.15),
+  calculatePlatformFeeAsync: jest.fn().mockResolvedValue({ fee: 10, floor: 10 }),
+  getBookingNoticeHours: jest.fn().mockResolvedValue(0),
+  getMaxBookingDays: jest.fn().mockResolvedValue(365),
+  getTipCap: jest.fn().mockResolvedValue(1000),
+}))
+
+// audit-001 derives the effective tier via a Stripe-subscription-aware lookup.
+// The test fixtures already set `provider.tier = 'TRUSTED'`; pass that through.
+jest.mock('@/lib/provider-tier', () => ({
+  getEffectiveProviderTier: jest.fn(({ tier }) => tier ?? 'NEWCOMER'),
+}))
+
+jest.mock('@/lib/settings', () => ({
+  getSettingFloat: jest.fn().mockResolvedValue(null),
+}))
+
+jest.mock('@/lib/availability-sentinel', () => ({
+  getSentinelDateString: jest.fn((dow) => `2000-01-0${(dow + 1) % 10}`),
+  getSentinelDate: jest.fn((dow) => new Date(Date.UTC(2000, 0, (dow + 1) % 10 || 1, 12))),
+}))
+
+jest.mock('@/lib/email', () => ({
+  sendBookingRequestEmail: jest.fn().mockResolvedValue({}),
+  sendBookingConfirmationToCustomer: jest.fn().mockResolvedValue({}),
+  sendBookingConfirmationEmail: jest.fn().mockResolvedValue({}),
+  sendBookingDeclinedEmail: jest.fn().mockResolvedValue({}),
+  sendBookingCancelledEmail: jest.fn().mockResolvedValue({}),
+  sendBookingCompletedEmail: jest.fn().mockResolvedValue({}),
+  sendBookingExpiredEmail: jest.fn().mockResolvedValue({}),
+}))
+
+jest.mock('@/lib/sms', () => ({
+  sendBookingRequestSms: jest.fn().mockResolvedValue({}),
+  sendNewBookingRequestSms: jest.fn().mockResolvedValue({}),
 }))
 
 // AUDIT-017: Rate limiter defaults to "allowed" so existing POST/PATCH tests
@@ -342,27 +396,38 @@ describe('POST /api/bookings', () => {
     expect(json.error).toBe('Service not found')
   })
 
+  // AUDIT-001 rewrote voucher validation. New flow: findUnique first, then
+  // check isRedeemed / expiresAt / recipientEmail / hold-window / remaining
+  // balance (amount - usedAmount). Discount is clamped to available balance
+  // at computation time; the atomic update happens inside a $transaction.
   it('applies a valid gift voucher discount', async () => {
     mockGetServerSession.mockResolvedValueOnce(makeSession() as any)
     ;(mockPrisma.service.findUnique as jest.Mock).mockResolvedValueOnce(fakeService)
     setupAvailabilityMocks()
     ;(mockPrisma.customerProfile.findUnique as jest.Mock).mockResolvedValueOnce({ membership: 'FREE' })
-    // Atomic updateMany succeeds (voucher is valid)
-    ;(mockPrisma.giftVoucher.updateMany as jest.Mock).mockResolvedValueOnce({ count: 1 })
-    // findUnique to get the voucher amount
-    ;(mockPrisma.giftVoucher.findUnique as jest.Mock).mockResolvedValueOnce({
+
+    const validVoucher = {
       id: 'voucher-1',
       code: 'SAVE50',
       amount: 50,
-      isRedeemed: true,
-    })
+      usedAmount: 0,
+      isRedeemed: false,
+      expiresAt: new Date(Date.now() + 30 * 24 * 3600 * 1000), // 30 days future
+      recipientEmail: null,
+      heldByUserId: null,
+      heldAt: null,
+    }
+    // First findUnique at the pre-check stage, second inside the $transaction
+    ;(mockPrisma.giftVoucher.findUnique as jest.Mock)
+      .mockResolvedValueOnce(validVoucher)
+      .mockResolvedValueOnce(validVoucher)
 
     let capturedBookingData: any = null
     ;(mockPrisma.booking.create as jest.Mock).mockImplementationOnce((args) => {
       capturedBookingData = args.data
       return Promise.resolve({ id: 'booking-with-voucher', ...args.data })
     })
-    ;(mockPrisma.booking.update as jest.Mock).mockResolvedValueOnce({}) // stripe PI update
+    ;(mockPrisma.booking.update as jest.Mock).mockResolvedValueOnce({})
     ;(mockPrisma.notification.create as jest.Mock).mockResolvedValueOnce({})
 
     const req = makeRequest('http://localhost/api/bookings', 'POST', {
@@ -371,9 +436,27 @@ describe('POST /api/bookings', () => {
     })
     await bookingsPOST(req)
 
-    // totalPrice should be (service.price + platformFee) - voucherDiscount
-    // = (200 + 10) - 50 = 160  (utils mocks: calculatePlatformFee → 10)
+    // totalPrice = (service.price + platformFee) - voucherDiscount
+    // = (200 + 10) - 50 = 160  (utils mock: calculatePlatformFee → 10)
     expect(capturedBookingData.totalPrice).toBe(160)
+  })
+
+  it('rejects an unknown voucher code', async () => {
+    mockGetServerSession.mockResolvedValueOnce(makeSession() as any)
+    ;(mockPrisma.service.findUnique as jest.Mock).mockResolvedValueOnce(fakeService)
+    setupAvailabilityMocks()
+    ;(mockPrisma.customerProfile.findUnique as jest.Mock).mockResolvedValueOnce({ membership: 'FREE' })
+    ;(mockPrisma.giftVoucher.findUnique as jest.Mock).mockResolvedValueOnce(null)
+
+    const req = makeRequest('http://localhost/api/bookings', 'POST', {
+      ...validBody,
+      giftVoucherCode: 'DOESNOTEXIST',
+    })
+    const res = await bookingsPOST(req)
+
+    expect(res.status).toBe(400)
+    const json = await res.json()
+    expect(json.error).toBe('Invalid or inactive voucher code.')
   })
 
   it('does not apply an expired gift voucher', async () => {
@@ -381,8 +464,19 @@ describe('POST /api/bookings', () => {
     ;(mockPrisma.service.findUnique as jest.Mock).mockResolvedValueOnce(fakeService)
     setupAvailabilityMocks()
     ;(mockPrisma.customerProfile.findUnique as jest.Mock).mockResolvedValueOnce({ membership: 'FREE' })
-    // Atomic updateMany returns count 0 (voucher expired/invalid)
-    ;(mockPrisma.giftVoucher.updateMany as jest.Mock).mockResolvedValueOnce({ count: 0 })
+    // BL-7: handler adds a 90-min grace buffer on expiresAt — set to 2h in the
+    // past so we're definitely past the grace window.
+    ;(mockPrisma.giftVoucher.findUnique as jest.Mock).mockResolvedValueOnce({
+      id: 'voucher-old',
+      code: 'OLD50',
+      amount: 50,
+      usedAmount: 0,
+      isRedeemed: false,
+      expiresAt: new Date(Date.now() - 2 * 3600 * 1000),
+      recipientEmail: null,
+      heldByUserId: null,
+      heldAt: null,
+    })
 
     const req = makeRequest('http://localhost/api/bookings', 'POST', {
       ...validBody,
@@ -390,7 +484,6 @@ describe('POST /api/bookings', () => {
     })
     const res = await bookingsPOST(req)
 
-    // The route now returns 400 when voucher is invalid/expired
     expect(res.status).toBe(400)
     const json = await res.json()
     expect(json.error).toBe('Voucher is invalid, expired, or already used')
@@ -434,16 +527,46 @@ describe('POST /api/bookings', () => {
 describe('PATCH /api/bookings/[id]', () => {
   const params = { id: 'booking-1' }
 
+  // audit-017 rewrote PATCH to take full booking shape including
+  // provider.providerProfile (for Stripe Connect gating), a real Date (for
+  // availability lookup), customer include, and refundStatus. Keep this
+  // fixture in sync with the `include` at src/app/api/bookings/[id]/route.ts:50.
   const fakeBooking = {
     id: 'booking-1',
     customerId: 'user-customer-1',
     providerId: 'user-provider-1',
+    serviceId: 'service-1',
     status: 'PENDING',
     totalPrice: 210,
     platformFee: 10,
+    commissionRate: 0.15,
     stripePaymentId: 'pi_test_123',
-    service: { id: 'service-1', title: 'Gel Manicure', provider: { id: 'provider-profile-1' } },
-    provider: { providerProfile: { id: 'provider-profile-1' } },
+    giftVoucherCode: null,
+    refundStatus: 'NONE',
+    date: new Date('2026-05-01T00:00:00Z'),
+    time: '10:00',
+    createdAt: new Date('2026-04-20T10:00:00Z'),
+    rescheduleDate: null,
+    rescheduleTime: null,
+    service: {
+      id: 'service-1',
+      title: 'Gel Manicure',
+      duration: 60,
+      provider: { id: 'provider-profile-1' },
+    },
+    provider: {
+      id: 'user-provider-1',
+      name: 'Provider Jane',
+      email: 'provider@example.com',
+      providerProfile: {
+        id: 'provider-profile-1',
+        stripeAccountId: 'acct_test_123',
+        stripeChargesEnabled: true,
+        stripePayoutsEnabled: true,
+        tier: 'TRUSTED',
+      },
+    },
+    customer: { id: 'user-customer-1', name: 'Emma', email: 'emma@example.com' },
   }
 
   beforeEach(() => jest.clearAllMocks())
