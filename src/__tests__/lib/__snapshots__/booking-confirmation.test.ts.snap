@@ -1,0 +1,82 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`getConfirmationCopy — snapshots matches snapshot for mode=confirmed 1`] = `
+{
+  "headline": "Booking confirmed!",
+  "iconBgClass": "bg-[#f3ece9]",
+  "iconColorClass": "text-[#E96B56]",
+  "iconKey": "check",
+  "nextSteps": [
+    {
+      "desc": "We've sent your booking details and a calendar invite.",
+      "step": "1",
+      "title": "Check your email",
+    },
+    {
+      "desc": "Add it to your calendar so you don't miss it — links below.",
+      "step": "2",
+      "title": "Prep for your appointment",
+    },
+    {
+      "desc": "After your appointment, you'll be able to leave a review.",
+      "step": "3",
+      "title": "Enjoy your visit",
+    },
+  ],
+  "subtext": "You're all set — Lily is looking forward to your appointment.",
+}
+`;
+
+exports[`getConfirmationCopy — snapshots matches snapshot for mode=failed 1`] = `
+{
+  "headline": "Payment issue",
+  "iconBgClass": "bg-amber-100",
+  "iconColorClass": "text-amber-500",
+  "iconKey": "alert",
+  "nextSteps": [
+    {
+      "desc": "Use the retry button above to enter new card details.",
+      "step": "1",
+      "title": "Update your payment method",
+    },
+    {
+      "desc": "Once payment clears, your artist will be notified automatically.",
+      "step": "2",
+      "title": "We'll confirm with the artist",
+    },
+    {
+      "desc": "We'll email you as soon as everything is set.",
+      "step": "3",
+      "title": "You'll get a confirmation",
+    },
+  ],
+  "subtext": "Your booking is confirmed but payment could not be processed. Please retry below.",
+}
+`;
+
+exports[`getConfirmationCopy — snapshots matches snapshot for mode=pending 1`] = `
+{
+  "headline": "Booking request sent!",
+  "iconBgClass": "bg-[#f3ece9]",
+  "iconColorClass": "text-[#E96B56]",
+  "iconKey": "clock",
+  "nextSteps": [
+    {
+      "desc": "Your artist has up to until Thursday 6pm to confirm or decline.",
+      "step": "1",
+      "title": "Artist reviews your request",
+    },
+    {
+      "desc": "We'll notify you by email as soon as they respond.",
+      "step": "2",
+      "title": "You'll get a notification",
+    },
+    {
+      "desc": "Your card is only charged once your artist confirms the booking.",
+      "step": "3",
+      "title": "Payment only on confirmation",
+    },
+  ],
+  "subtext": "Lily has until Thursday 6pm to accept your request.",
+}
+`;
