@@ -86,7 +86,7 @@ export const authOptions: NextAuthOptions = {
       }
       return true
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       // TS-2: Use the more restrictive (higher severity) accountStatus between User and ProviderProfile.
       // This prevents a SUSPENDED provider from bypassing checks via their User-level ACTIVE status.
       const STATUS_SEVERITY: Record<string, number> = {
@@ -134,14 +134,24 @@ export const authOptions: NextAuthOptions = {
         // Reduced from 5 minutes (300s) to 60s so suspended accounts lose access faster.
         // Using a sliding window pattern avoids a DB hit on every single request while
         // still detecting suspensions within a short window.
+        // QA-002: An explicit `trigger === 'update'` (e.g. after the user
+        // upgrades CUSTOMER → BOTH at /register/provider) bypasses the
+        // throttle so the new role lands in the JWT immediately. Without
+        // this, the upgraded artist would see /dashboard/provider as their
+        // old CUSTOMER session and have no path forward.
         const STATUS_CHECK_INTERVAL = 60 * 1000
         const statusCheckedAt = (token.statusCheckedAt as number) ?? 0
-        if (Date.now() - statusCheckedAt > STATUS_CHECK_INTERVAL) {
+        const forceCheck = trigger === 'update'
+        if (forceCheck || Date.now() - statusCheckedAt > STATUS_CHECK_INTERVAL) {
           const freshUser = await prisma.user.findUnique({
             where: { id: token.id as string },
             select: { accountStatus: true, role: true },
           })
           if (freshUser) {
+            // QA-002: Sync `token.role` from the DB on refresh so role upgrades
+            // (e.g. CUSTOMER → BOTH via /api/user/upgrade-role) propagate to
+            // the session within one refresh cycle.
+            token.role = freshUser.role
             if (freshUser.role === 'PROVIDER' || freshUser.role === 'BOTH') {
               const freshProfile = await prisma.providerProfile.findUnique({
                 where: { userId: token.id as string },
