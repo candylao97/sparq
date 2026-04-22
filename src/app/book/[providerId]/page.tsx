@@ -31,6 +31,7 @@ import {
   getCategoryLabel,
 } from '@/lib/utils'
 import { parseBookingUrlState, buildBookingUrl } from '@/lib/booking-url-state'
+import { to24Hour } from '@/lib/booking-time'
 import toast from 'react-hot-toast'
 
 function getDaysInMonth(year: number, month: number) {
@@ -314,6 +315,13 @@ export default function BookingPage({ params }: { params: { providerId: string }
       toast.error('Please enter your full street address for the at-home visit.')
       return
     }
+    // Defend against 12-hour display strings ("3:30 PM") leaking into wizard
+    // state via URL deep-links. The API enforces strict HH:MM and would 400.
+    const canonicalTime = to24Hour(bookingData.time)
+    if (!canonicalTime) {
+      toast.error('Please select a valid time slot')
+      return
+    }
     setLoading(true)
     try {
       const res = await fetch('/api/bookings', {
@@ -322,7 +330,7 @@ export default function BookingPage({ params }: { params: { providerId: string }
         body: JSON.stringify({
           serviceId: selectedService.id,
           date: bookingData.date,
-          time: bookingData.time,
+          time: canonicalTime,
           locationType: bookingData.locationType,
           address: bookingData.locationType === 'AT_HOME' ? bookingData.address : undefined,
           notes: bookingData.notes,
