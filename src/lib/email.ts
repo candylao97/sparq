@@ -8,7 +8,18 @@
  *   1. Sign up at resend.com and get an API key
  *   2. Add RESEND_API_KEY=re_xxx to your .env.local
  *   3. Set RESEND_FROM_EMAIL=noreply@yourdomain.com
+ *
+ * FIND-6 compliance:
+ *   - Every send runs through `sendEmail` which (a) checks the
+ *     Suppression table and aborts for non-transactional sends to
+ *     suppressed addresses, and (b) appends the unsubscribe footer +
+ *     List-Unsubscribe / List-Unsubscribe-Post headers.
+ *   - Each exported `send*` helper declares its category —
+ *     'transactional' bypasses the suppression check per s.5 Spam
+ *     Act carve-outs; 'marketing' is subject to it.
  */
+import { prisma } from './prisma'
+import { unsubscribeToken, isTransactional, type EmailCategory } from './unsubscribe'
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'Sparq <noreply@sparq.com.au>'
@@ -18,14 +29,57 @@ interface EmailPayload {
   to: string
   subject: string
   html: string
+  /** FIND-6: required. Drives the suppression check + footer inclusion. */
+  category: EmailCategory
+}
+
+function unsubscribeFooterHtml(email: string): string {
+  const token = unsubscribeToken(email)
+  const url = `${APP_URL}/api/unsubscribe?token=${token}`
+  return `
+    <div style="border-top:1px solid #e8e1de;margin-top:32px;padding-top:16px;font-size:11px;color:#999;text-align:center;font-family:system-ui,-apple-system,sans-serif;">
+      <p style="margin:0 0 8px;">You're receiving this because your Sparq account is set to receive updates at ${email}.</p>
+      <p style="margin:0;"><a href="${url}" style="color:#717171;text-decoration:underline;">Unsubscribe from Sparq emails</a></p>
+    </div>
+  `.trim()
 }
 
 async function sendEmail(payload: EmailPayload): Promise<void> {
+  const normalized = payload.to.trim().toLowerCase()
+
+  // FIND-6: suppression check. Transactional categories bypass the list per
+  // Spam Act s.5 (account/service updates aren't "commercial electronic
+  // messages"). Marketing emails must skip if the address is suppressed.
+  if (!isTransactional(payload.category)) {
+    const suppressed = await prisma.suppression.findUnique({
+      where: { email: normalized },
+      select: { email: true },
+    }).catch(() => null)
+    if (suppressed) {
+      console.info(`[EMAIL] Skipping ${payload.category} send to suppressed address: ${normalized}`)
+      return
+    }
+  }
+
+  // Append the unsubscribe footer to every outgoing email, including
+  // transactional ones — legal best-practice is to make it always findable
+  // even on transactional mail, so users never feel trapped. The Spam Act
+  // only requires it on marketing, but showing it on all is always safe.
+  const htmlWithFooter = `${payload.html}\n${unsubscribeFooterHtml(normalized)}`
+
+  // RFC 8058 headers — Gmail/Outlook/Apple Mail render a native
+  // "Unsubscribe" button that fires a one-click POST against the URL below.
+  const token = unsubscribeToken(normalized)
+  const unsubUrl = `${APP_URL}/api/unsubscribe?token=${token}`
+  const unsubHeader = `<${unsubUrl}>`
+  const listUnsubPost = 'List-Unsubscribe=One-Click'
+
   if (!RESEND_API_KEY) {
     // Dev fallback — log to console
-    console.log(`[EMAIL] To: ${payload.to}`)
+    console.log(`[EMAIL] To: ${normalized}  (category=${payload.category})`)
     console.log(`[EMAIL] Subject: ${payload.subject}`)
-    console.log(`[EMAIL] Body preview: ${payload.html.replace(/<[^>]+>/g, '').slice(0, 200)}`)
+    console.log(`[EMAIL] List-Unsubscribe: ${unsubHeader}`)
+    console.log(`[EMAIL] Body preview: ${htmlWithFooter.replace(/<[^>]+>/g, '').slice(0, 200)}`)
     return
   }
 
@@ -37,9 +91,13 @@ async function sendEmail(payload: EmailPayload): Promise<void> {
     },
     body: JSON.stringify({
       from: FROM_EMAIL,
-      to: payload.to,
+      to: normalized,
       subject: payload.subject,
-      html: payload.html,
+      html: htmlWithFooter,
+      headers: {
+        'List-Unsubscribe': unsubHeader,
+        'List-Unsubscribe-Post': listUnsubPost,
+      },
     }),
   })
 
@@ -65,6 +123,7 @@ export async function sendVerificationEmail(email: string, token: string): Promi
         <p style="color:#aaa;font-size:12px;margin-top:32px;">This link expires in 24 hours. If you didn't create a Sparq account, you can ignore this email.</p>
       </div>
     `,
+    category: 'transactional' as const,
   })
 }
 
@@ -98,6 +157,7 @@ export async function sendBookingConfirmationEmail(
         <p style="color:#aaa;font-size:12px;margin-top:24px;">Free cancellation up to 24 hours before your appointment.</p>
       </div>
     `,
+    category: 'transactional' as const,
   })
 }
 
@@ -129,6 +189,7 @@ export async function sendBookingRequestEmail(
         <p style="color:#aaa;font-size:12px;margin-top:24px;">You have 24 hours to accept before the request expires.</p>
       </div>
     `,
+    category: 'marketing' as const,
   })
 }
 
@@ -161,6 +222,7 @@ export async function sendBookingConfirmationToCustomer(
         <p style="color:#aaa;font-size:12px;margin-top:24px;">Your card won't be charged until your artist confirms.</p>
       </div>
     `,
+    category: 'transactional' as const,
   })
 }
 
@@ -183,6 +245,7 @@ export async function sendPayoutEmail(
         <a href="${APP_URL}/dashboard/provider" style="display:inline-block;background:#E96B56;color:#fff;font-weight:600;padding:12px 24px;border-radius:10px;text-decoration:none;font-size:14px;">View dashboard</a>
       </div>
     `,
+    category: 'transactional' as const,
   })
 }
 
@@ -223,6 +286,7 @@ export async function sendBookingReminderEmail(
         <p style="color:#aaa;font-size:12px;margin-top:24px;">Need to cancel? You can cancel up to 24 hours before your appointment for a full refund.</p>
       </div>
     `,
+    category: 'marketing' as const,
   })
 }
 
@@ -243,6 +307,7 @@ export async function sendPaymentExpiryWarningEmail(
         <p style="color:#aaa;font-size:12px;margin-top:24px;">Questions? Contact us at support@sparq.com.au</p>
       </div>
     `,
+    category: 'marketing' as const,
   })
 }
 
@@ -262,6 +327,7 @@ export async function sendPaymentFailedEmail(
         <p style="color:#aaa;font-size:12px;margin-top:24px;">If you need help, contact us at support@sparq.com.au</p>
       </div>
     `,
+    category: 'marketing' as const,
   })
 }
 
@@ -281,6 +347,7 @@ export async function sendRefundConfirmationEmail(
         <a href="${APP_URL}/bookings" style="display:inline-block;background:#E96B56;color:#fff;font-weight:600;padding:12px 24px;border-radius:10px;text-decoration:none;font-size:14px;">View my bookings</a>
       </div>
     `,
+    category: 'marketing' as const,
   })
 }
 
@@ -300,6 +367,7 @@ export async function sendWaitlistNotificationEmail(
         <p style="color:#aaa;font-size:12px;margin-top:24px;">You received this because you joined the waitlist on Sparq. Manage your preferences at ${APP_URL}/dashboard/customer</p>
       </div>
     `,
+    category: 'marketing' as const,
   })
 }
 
@@ -332,6 +400,7 @@ export async function sendBookingCancelledEmail(
         <p style="color:#aaa;font-size:12px;margin-top:24px;">Questions? Contact us at support@sparq.com.au</p>
       </div>
     `,
+    category: 'marketing' as const,
   })
 }
 
@@ -351,6 +420,7 @@ export async function sendBookingDeclinedEmail(
         <p style="color:#aaa;font-size:12px;margin-top:24px;">Questions? Contact us at support@sparq.com.au</p>
       </div>
     `,
+    category: 'marketing' as const,
   })
 }
 
@@ -370,6 +440,7 @@ export async function sendReviewReminderEmail(
         <p style="color:#aaa;font-size:12px;margin-top:24px;">Reviews can be submitted within 30 days of your appointment.</p>
       </div>
     `,
+    category: 'marketing' as const,
   })
 }
 
@@ -385,6 +456,7 @@ export async function sendPasswordResetEmail(email: string, resetUrl: string): P
         <p style="color:#aaa;font-size:12px;margin-top:24px;">This link expires in 1 hour. If you didn't request this, you can safely ignore this email.</p>
       </div>
     `,
+    category: 'transactional' as const,
   })
 }
 
@@ -411,6 +483,7 @@ export async function sendDisputeOpenedEmail(
         <p style="color:#aaa;font-size:12px;margin-top:24px;">Questions? Contact us at support@sparq.com.au</p>
       </div>
     `,
+    category: 'marketing' as const,
   })
 }
 
@@ -433,6 +506,7 @@ export async function sendKycDecisionEmail(
           <p style="color:#aaa;font-size:12px;margin-top:24px;">Thank you for helping keep Sparq a trusted community.</p>
         </div>
       `,
+      category: 'marketing' as const,
     })
   } else {
     await sendEmail({
@@ -452,6 +526,7 @@ export async function sendKycDecisionEmail(
           <p style="color:#aaa;font-size:12px;margin-top:24px;">Need help? Contact us at support@sparq.com.au</p>
         </div>
       `,
+      category: 'marketing' as const,
     })
   }
 }
@@ -484,6 +559,7 @@ export async function sendReviewReplyEmail(
         <p style="color:#aaa;font-size:12px;margin-top:24px;">Thank you for being part of the Sparq community.</p>
       </div>
     `,
+    category: 'marketing' as const,
   })
 }
 
@@ -510,6 +586,7 @@ export async function sendNewMessageEmail(
         <p style="color:#aaa;font-size:12px;margin-top:24px;">You can manage your notification preferences in your Sparq account settings.</p>
       </div>
     `,
+    category: 'marketing' as const,
   })
 }
 
@@ -532,5 +609,6 @@ export async function sendBookingExpiredEmail(
         <p style="color:#aaa;font-size:12px;margin-top:24px;">Questions? Contact us at support@sparq.com.au</p>
       </div>
     `,
+    category: 'marketing' as const,
   })
 }
