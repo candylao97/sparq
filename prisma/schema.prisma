@@ -717,6 +717,33 @@ model PromoCodeUsage {
   @@index([userId])
 }
 
+// FIND-6 — Email suppression list for unsubscribe compliance
+// (AU Spam Act 2003 requires a functional unsubscribe on every
+// commercial electronic message).
+//
+// Adding an email here skips all subsequent NON-transactional sends
+// to that address. Transactional emails (booking_confirmation,
+// password_reset, payout_initiated, account_verification, etc.) are
+// still delivered — they're not "commercial electronic messages"
+// under s.5 of the Act.
+//
+// `reason` is free-text but conventionally one of:
+//   'user_unsubscribe' | 'bounce' | 'complaint' | 'admin_block'
+// `sourceCampaign` lets us attribute unsubscribes back to a specific
+// send for future campaign-quality reporting.
+model Suppression {
+  email           String   @id
+  suppressedAt    DateTime @default(now())
+  reason          String   @default("user_unsubscribe")
+  sourceCampaign  String?
+  // Stored so ops can re-validate the original click if a user disputes
+  // an unsubscribe. `null` when the entry was written by a system path
+  // (bounce/complaint/admin) rather than a user unsubscribe click.
+  unsubscribeToken String?
+
+  @@index([suppressedAt])
+}
+
 model ProcessedWebhookEvent {
   id        String   @id @default(cuid())
   eventId   String   @unique

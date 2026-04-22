@@ -348,14 +348,53 @@ original ids (10-13). READINESS definitions renumbered to 14-17.*
   default.
 
 ### FIND-6 — No email unsubscribe mechanism (compliance blocker)
-- Status: ESCALATED
-- Branch: none
-- Evidence: READINESS_OUTPUT.md line 38
-- Notes: AU Spam Act 2003 requires a functional unsubscribe on every
-  commercial electronic message. `src/lib/email.ts` has 20
-  templates and no unsubscribe footer. Needs decision on email
-  categories (transactional vs marketing), token signing, and
-  unsubscribe SLA. Owner: Legal + Marketing.
+- Status: IN_REVIEW (code landed on `fix/find-6-email-unsubscribe`;
+  depends on `fix/find-4-tos-consent` being merged first for the
+  migration chain to apply cleanly)
+- Branch: `fix/find-6-email-unsubscribe`
+- Evidence: migration
+  `prisma/migrations/20260425_add_suppression_table`; new
+  `Suppression` model; `src/lib/unsubscribe.ts` (HMAC token +
+  verify); `src/app/api/unsubscribe/route.ts` (GET + POST); new
+  `/unsubscribe` confirmation page; `src/lib/email.ts`
+  `sendEmail` rewritten to run suppression pre-check, append
+  footer, and emit List-Unsubscribe + List-Unsubscribe-Post
+  headers (RFC 8058 one-click).
+- **Transactional classification — flagged for human review.** Per
+  the brief, only 5 helpers are tagged `category: 'transactional'`
+  (the narrow list):
+  - `sendVerificationEmail`
+  - `sendBookingConfirmationEmail`
+  - `sendBookingConfirmationToCustomer`
+  - `sendPayoutEmail`
+  - `sendPasswordResetEmail`
+  Everything else (`sendBookingRequestEmail`,
+  `sendBookingReminderEmail`, `sendPaymentExpiryWarningEmail`,
+  `sendPaymentFailedEmail`, `sendRefundConfirmationEmail`,
+  `sendWaitlistNotificationEmail`, `sendBookingCancelledEmail`,
+  `sendBookingDeclinedEmail`, `sendReviewReminderEmail`,
+  `sendDisputeOpenedEmail`, `sendKycDecisionEmail`,
+  `sendReviewReplyEmail`, `sendNewMessageEmail`,
+  `sendBookingExpiredEmail`) is `category: 'marketing'` and will
+  be skipped for suppressed recipients. **Product/Legal should
+  confirm** whether any of these (especially billing-related like
+  `sendPaymentFailedEmail` and `sendRefundConfirmationEmail`) should
+  be reclassified as transactional. To reclassify: change the
+  `category` literal in the helper.
+- **Required env var:** `UNSUBSCRIBE_SECRET` (falls back to
+  `NEXTAUTH_SECRET`). Dev uses an unsafe fallback; production
+  throws if neither is set. Document in `.env.example` when that
+  file is created.
+- Suppression scope: reason defaults to `user_unsubscribe`; also
+  accepts `bounce` / `complaint` / `admin_block` for future
+  bounce-handling / admin-driven paths. Ops can query the
+  `Suppression` table directly to list unsubscribed addresses or
+  reverse an entry (no UI for that yet — out of scope).
+- Still escalated: Legal must review the narrow transactional list
+  above. Marketing must decide suppression SLA for bounce-based
+  entries (auto-reactivate after N months? never?). Out of scope
+  for this commit.
+- Owner: Legal + Product (classification review); Engineering done.
 
 ### FIND-7 — Cancellation policy stored but not enforced
 - Status: OPEN — blocked on AUDIT-013
