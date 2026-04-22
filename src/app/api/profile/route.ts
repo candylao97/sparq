@@ -26,10 +26,33 @@ export async function GET() {
             reviews: true,
           },
         },
+        reviews: {
+          where: { isVisible: true },
+          orderBy: { createdAt: 'desc' },
+          take: 3,
+          select: {
+            id: true,
+            rating: true,
+            text: true,
+            createdAt: true,
+            booking: {
+              select: {
+                provider: {
+                  select: { name: true, image: true },
+                },
+                service: { select: { title: true } },
+              },
+            },
+          },
+        },
       },
     })
 
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
+
+    const avgRating = user.reviews.length
+      ? Math.round((user.reviews.reduce((s, r) => s + r.rating, 0) / user.reviews.length) * 10) / 10
+      : null
 
     return NextResponse.json({
       id: user.id,
@@ -41,6 +64,8 @@ export async function GET() {
       createdAt: user.createdAt,
       totalBookings: user._count.bookingsAsCustomer,
       totalReviews: user._count.reviews,
+      avgRating,
+      recentReviews: user.reviews,
       providerProfile: user.providerProfile,
       customerProfile: user.customerProfile,
     })
@@ -93,15 +118,28 @@ export async function PUT(req: NextRequest) {
           }
         }
 
+        // UX09: Build update data including yearsExperience and cancellation policy fields
+        const profileUpdateData: Record<string, unknown> = {
+          ...(providerData.bio !== undefined && { bio: sanitizedBio }),
+          ...(providerData.tagline !== undefined && { tagline: sanitizedTagline }),
+          ...(providerData.suburb !== undefined && { suburb: providerData.suburb }),
+          ...(providerData.city !== undefined && { city: providerData.city }),
+          ...(providerData.languages !== undefined && { languages: providerData.languages }),
+          ...(providerData.offerAtHome !== undefined && { offerAtHome: Boolean(providerData.offerAtHome) }),
+          ...(providerData.offerAtStudio !== undefined && { offerAtStudio: Boolean(providerData.offerAtStudio) }),
+          ...(providerData.studioAddress !== undefined && { studioAddress: providerData.studioAddress }),
+          ...(providerData.cancellationPolicy !== undefined && { cancellationPolicy: providerData.cancellationPolicy }),
+          ...(providerData.cancellationPolicyType !== undefined && { cancellationPolicyType: providerData.cancellationPolicyType }),
+          ...(providerData.yearsExperience !== undefined && {
+            yearsExperience: typeof providerData.yearsExperience === 'number'
+              ? providerData.yearsExperience
+              : parseInt(providerData.yearsExperience),
+          }),
+        }
+
         updatedProvider = await prisma.providerProfile.update({
           where: { userId: session.user.id },
-          data: {
-            ...(providerData.bio !== undefined && { bio: sanitizedBio }),
-            ...(providerData.tagline !== undefined && { tagline: sanitizedTagline }),
-            ...(providerData.suburb !== undefined && { suburb: providerData.suburb }),
-            ...(providerData.city !== undefined && { city: providerData.city }),
-            ...(providerData.languages !== undefined && { languages: providerData.languages }),
-          },
+          data: profileUpdateData,
         })
 
         // Log contact leakage flags

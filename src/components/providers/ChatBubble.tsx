@@ -21,6 +21,9 @@ const QUICK_PROMPTS = [
   'I need support with a booking',
 ]
 
+const AUTH_ROUTES = ['/login', '/register', '/onboarding', '/forgot-password']
+const FULLSCREEN_ROUTES = ['/book', '/nearby']
+
 export function ChatBubble() {
   const { data: session } = useSession()
   const pathname = usePathname()
@@ -35,6 +38,9 @@ export function ChatBubble() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
+
+  if (AUTH_ROUTES.some(r => pathname === r || pathname.startsWith(r + '/'))) return null
+  if (FULLSCREEN_ROUTES.some(r => pathname === r || pathname.startsWith(r + '/'))) return null
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -77,9 +83,9 @@ export function ChatBubble() {
     <>
       {/* Chat Window */}
       {open && (
-        <div className="fixed bottom-24 right-4 z-50 flex h-[560px] w-[calc(100vw-24px)] max-w-[420px] flex-col overflow-hidden rounded-[28px] border border-[#e8e1de] bg-white shadow-[0_28px_70px_rgba(15,23,42,0.18)] animate-fade-in sm:right-6 sm:w-[420px]">
+        <div className="fixed bottom-24 right-4 z-50 hidden sm:flex h-[560px] w-[calc(100vw-24px)] max-w-[420px] flex-col overflow-hidden rounded-[28px] border border-[#e8e1de] bg-white shadow-[0_28px_70px_rgba(15,23,42,0.18)] animate-fade-in sm:right-6 sm:w-[420px]">
           {/* Header */}
-          <div className="flex items-center gap-3 bg-gradient-to-r from-gray-900 to-gray-800 p-4">
+          <div className="flex items-center gap-3 bg-gradient-to-r from-[#1A1A1A] to-[#2a2a2a] p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/12">
               <Bot className="w-5 h-5 text-white" />
             </div>
@@ -108,7 +114,7 @@ export function ChatBubble() {
                   key={prompt}
                   type="button"
                   onClick={() => startPrompt(prompt)}
-                  className="rounded-full border border-[#e8e1de] bg-white px-3 py-1.5 text-xs text-[#717171] transition-colors hover:border-gray-400 hover:text-[#1A1A1A]"
+                  className="rounded-full border border-[#e8e1de] bg-white px-3 py-1.5 text-xs text-[#717171] transition-colors hover:border-[#717171] hover:text-[#1A1A1A]"
                 >
                   {prompt}
                 </button>
@@ -128,7 +134,7 @@ export function ChatBubble() {
                   session ? (
                     <Avatar src={session.user?.image} name={session.user?.name} size="xs" />
                   ) : (
-                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gray-700 text-xs font-semibold text-white">
+                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#333] text-xs font-semibold text-white">
                       You
                     </div>
                   )
@@ -170,7 +176,7 @@ export function ChatBubble() {
               value={input}
               onChange={e => setInput(e.target.value)}
               placeholder="Ask about bookings, artists, payments, or support..."
-              className="flex-1 rounded-xl border border-[#e8e1de] bg-[#fbfaf7] px-3.5 py-2.5 text-sm text-[#1A1A1A] focus:outline-none focus:ring-2 focus:ring-gray-400"
+              className="flex-1 rounded-xl border border-[#e8e1de] bg-[#fbfaf7] px-3.5 py-2.5 text-sm text-[#1A1A1A] focus:outline-none focus:ring-2 focus:ring-[#E96B56]"
             />
             <button type="submit" disabled={!input.trim() || loading}
               className="rounded-xl bg-[#1A1A1A] p-2.5 text-white transition-colors hover:bg-[#1A1A1A] disabled:opacity-50">
@@ -183,7 +189,7 @@ export function ChatBubble() {
       {/* Bubble Button */}
       <button
         onClick={() => setOpen(!open)}
-        className="fixed bottom-5 right-4 z-50 flex h-14 items-center gap-2 rounded-full bg-gradient-to-r from-gray-900 to-gray-800 px-5 shadow-xl transition-transform hover:scale-[1.03] sm:bottom-6 sm:right-6"
+        className="fixed bottom-5 right-4 z-50 hidden sm:flex h-14 items-center gap-2 rounded-full bg-gradient-to-r from-[#1A1A1A] to-[#2a2a2a] px-5 shadow-xl transition-transform hover:scale-[1.03] sm:bottom-6 sm:right-6"
       >
         {open ? <X className="w-6 h-6 text-white" /> : <MessageCircle className="w-6 h-6 text-white" />}
         {!open && <span className="hidden text-sm font-semibold text-white sm:block">Ask Sparq AI</span>}

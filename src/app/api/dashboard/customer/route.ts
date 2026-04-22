@@ -26,7 +26,7 @@ export async function GET() {
         where: { customerId: session.user.id },
         include: {
           service: true,
-          provider: { include: { providerProfile: { select: { tier: true, suburb: true } } } },
+          provider: { include: { providerProfile: { select: { tier: true, suburb: true, offerAtHome: true, offerAtStudio: true } } } },
           review: true,
         },
         orderBy: { createdAt: 'desc' },
@@ -107,6 +107,19 @@ export async function GET() {
       .sort((a, b) => a.date.getTime() - b.date.getTime() || a.time.localeCompare(b.time))
       .map(mapBooking)
 
+    // Appointments within the next 24 hours for urgency banner
+    const in24h = new Date(now.getTime() + 24 * 60 * 60 * 1000)
+    const imminent = bookings
+      .filter(b => {
+        if (!['CONFIRMED', 'PENDING'].includes(b.status)) return false
+        const [bh, bm] = b.time.split(':').map(Number)
+        const apptTime = new Date(b.date)
+        apptTime.setHours(bh, bm, 0, 0)
+        return apptTime >= now && apptTime <= in24h
+      })
+      .sort((a, b) => a.date.getTime() - b.date.getTime() || a.time.localeCompare(b.time))
+      .map(mapBooking)
+
     const past = bookings
       .filter(b => ['COMPLETED', 'CANCELLED', 'DECLINED'].includes(b.status))
       .sort((a, b) => b.date.getTime() - a.date.getTime())
@@ -123,6 +136,7 @@ export async function GET() {
     const talentMap = new Map<string, {
       id: string; name: string; image: string | null; tier: string; suburb: string | null
       bookingCount: number; lastBookingDate: Date; services: Map<string, number>; ratings: number[]
+      offerAtHome: boolean; offerAtStudio: boolean
     }>()
 
     for (const b of completed) {
@@ -145,8 +159,24 @@ export async function GET() {
           lastBookingDate: b.date,
           services,
           ratings: b.review ? [b.review.rating] : [],
+          offerAtHome: b.provider.providerProfile?.offerAtHome ?? true,
+          offerAtStudio: b.provider.providerProfile?.offerAtStudio ?? false,
         })
       }
+    }
+
+    // Batch-fetch min prices for favourite talent providers
+    const talentProviderIds = Array.from(talentMap.keys())
+    const talentServices = talentProviderIds.length > 0
+      ? await prisma.service.findMany({
+          where: { providerId: { in: talentProviderIds }, isActive: true },
+          select: { providerId: true, price: true },
+        })
+      : []
+    const minPriceMap = new Map<string, number>()
+    for (const svc of talentServices) {
+      const current = minPriceMap.get(svc.providerId)
+      if (current === undefined || svc.price < current) minPriceMap.set(svc.providerId, svc.price)
     }
 
     const favouriteTalents = Array.from(talentMap.values())
@@ -170,6 +200,9 @@ export async function GET() {
           averageRating: t.ratings.length > 0
             ? t.ratings.reduce((s, r) => s + r, 0) / t.ratings.length
             : 0,
+          minPrice: minPriceMap.get(t.id) ?? 0,
+          offerAtHome: t.offerAtHome,
+          offerAtStudio: t.offerAtStudio,
         }
       })
 
@@ -216,6 +249,7 @@ export async function GET() {
         memberSince: user.createdAt.toISOString(),
       },
       upcomingBookings: upcoming,
+      imminentBookings: imminent,
       pastBookings: past.slice(0, 20),
       unreviewedBookings: unreviewed.slice(0, 5),
       reviewsLeft,

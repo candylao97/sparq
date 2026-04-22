@@ -46,8 +46,8 @@ export async function POST(req: NextRequest) {
     const existingCount = await prisma.portfolioPhoto.count({
       where: { providerId: profile.id },
     })
-    if (existingCount >= 12) {
-      return NextResponse.json({ error: 'Maximum 12 photos allowed' }, { status: 400 })
+    if (existingCount >= 20) {
+      return NextResponse.json({ error: 'Maximum 20 photos allowed' }, { status: 400 })
     }
 
     const body = await req.json()
@@ -76,6 +76,7 @@ export async function POST(req: NextRequest) {
       data: {
         providerId: profile.id,
         url: uploadResult.secure_url,
+        publicId: uploadResult.public_id,
         caption: caption || null,
         order: (maxOrder?.order ?? -1) + 1,
       },

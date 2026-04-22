@@ -53,27 +53,27 @@ const TRUST = [
 
 export default function HowToBookPage() {
   return (
-    <div className="bg-[#FDFBF7] min-h-screen">
+    <div className="bg-white min-h-screen">
 
       {/* ── Back ── */}
-      <div className="pt-24 pb-0 px-6 max-w-5xl mx-auto">
+      <div className="pt-24 pb-0 px-4 sm:px-8 lg:px-12 xl:px-20 max-w-[1600px] mx-auto">
         <Link
           href="/how-it-works"
-          className="inline-flex items-center gap-1.5 text-sm text-[#555] hover:text-[#1A1A1A] transition-colors"
+          className="inline-flex items-center gap-1.5 text-sm text-[#717171] hover:text-[#1A1A1A] transition-colors"
         >
           <ChevronLeft className="w-4 h-4" /> How it works
         </Link>
       </div>
 
       {/* ── Hero ── */}
-      <section className="pt-8 pb-16 md:pb-20 text-center px-6">
-        <div className="mx-auto max-w-xl">
+      <section className="pt-8 pb-16 md:pb-20 text-center px-4 sm:px-8 lg:px-12 xl:px-20">
+        <div className="mx-auto max-w-[1600px]">
           <p className="section-label mb-4">For clients</p>
           <h1 className="font-headline text-4xl md:text-[3rem] text-[#1A1A1A] leading-[1.1] mb-5">
             Your appointment,<br />
             <span className="italic text-[#E96B56]">in 3 simple steps.</span>
           </h1>
-          <p className="text-base text-[#555] leading-relaxed">
+          <p className="text-base text-[#717171] leading-relaxed">
             No DMs. No waiting. Just browse, compare, and book.
           </p>
         </div>
@@ -81,7 +81,7 @@ export default function HowToBookPage() {
 
       {/* ── Steps ── */}
       <section className="bg-[#f9f2ef] py-16 md:py-20">
-        <div className="mx-auto max-w-5xl px-6">
+        <div className="mx-auto max-w-[1600px] px-4 sm:px-8 lg:px-12 xl:px-20">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {STEPS.map((step) => {
               const Icon = step.icon
@@ -96,7 +96,7 @@ export default function HowToBookPage() {
                     </div>
                   </div>
                   <h3 className="font-headline text-xl text-[#1A1A1A] mb-3">{step.title}</h3>
-                  <p className="text-sm text-[#555] leading-relaxed flex-1">{step.description}</p>
+                  <p className="text-sm text-[#717171] leading-relaxed flex-1">{step.description}</p>
                   <div className="flex items-center gap-2 pt-5 mt-5 border-t border-[#f3ece9]">
                     <CheckCircle2 className="w-4 h-4 text-[#E96B56] flex-shrink-0" />
                     <span className="text-xs text-[#8A8A8A] font-medium">{step.trust}</span>
@@ -110,7 +110,7 @@ export default function HowToBookPage() {
 
       {/* ── Trust ── */}
       <section className="py-16 md:py-20">
-        <div className="mx-auto max-w-5xl px-6">
+        <div className="mx-auto max-w-[1600px] px-4 sm:px-8 lg:px-12 xl:px-20">
           <div className="text-center mb-10">
             <p className="section-label mb-3">Your protection</p>
             <h2 className="font-headline text-3xl md:text-4xl text-[#1A1A1A] leading-[1.1]">
@@ -137,8 +137,8 @@ export default function HowToBookPage() {
       </section>
 
       {/* ── CTA ── */}
-      <section className="pb-20 md:pb-24 px-6">
-        <div className="mx-auto max-w-2xl">
+      <section className="pb-20 md:pb-24 px-4 sm:px-8 lg:px-12 xl:px-20">
+        <div className="mx-auto max-w-[1600px]">
           <div className="bg-[#1A1A1A] rounded-[1.875rem] px-8 py-14 text-center relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-[#E96B56]/10 rounded-full blur-3xl pointer-events-none" />
             <div className="relative">

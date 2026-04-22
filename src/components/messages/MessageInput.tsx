@@ -1,14 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { Send } from 'lucide-react'
+import { Send, PlusCircle, FileText, Images } from 'lucide-react'
 
 interface Props {
   onSend: (text: string) => void
   disabled: boolean
+  otherPartyName?: string
 }
 
-export function MessageInput({ onSend, disabled }: Props) {
+export function MessageInput({ onSend, disabled, otherPartyName }: Props) {
   const [text, setText] = useState('')
 
   function handleSubmit(e: React.FormEvent) {
@@ -26,32 +27,45 @@ export function MessageInput({ onSend, disabled }: Props) {
   }
 
   return (
-    <footer className="p-4 bg-[#FDFBF7]">
-      <form onSubmit={handleSubmit} className="max-w-4xl mx-auto flex items-end gap-3 bg-[#f9f2ef] p-2 rounded-2xl shadow-sm border border-[#1A1A1A]/5">
-        <div className="flex-1">
+    <footer className="p-6 border-t border-[#E96B56]/5 bg-white/80 backdrop-blur-md">
+      {/* Action pills */}
+      <div className="flex items-center gap-2 mb-4 flex-wrap">
+        <button className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#E96B56]/10 text-[#1A1A1A] text-[10px] font-bold uppercase tracking-wider hover:bg-[#E96B56]/20 transition-colors">
+          <PlusCircle className="h-3.5 w-3.5" />
+          Share Service
+        </button>
+        <button className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#fce8e5] text-[#1A1A1A] text-[10px] font-bold uppercase tracking-wider hover:bg-[#f9d4cf] transition-colors">
+          <FileText className="h-3.5 w-3.5" />
+          Send Quote
+        </button>
+        <button className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#E96B56]/5 text-[#717171] text-[10px] font-bold uppercase tracking-wider hover:bg-[#E96B56]/10 transition-colors">
+          <Images className="h-3.5 w-3.5" />
+          Portfolio
+        </button>
+      </div>
+
+      {/* Input row */}
+      <form onSubmit={handleSubmit} className="flex items-end gap-4">
+        <div className="flex-1 bg-[#fdf6f4] rounded-2xl p-4 min-h-[56px] flex items-center border border-[#E96B56]/5 shadow-inner">
           <textarea
             value={text}
             onChange={e => setText(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Write your message..."
+            placeholder={otherPartyName ? `Type your message to ${otherPartyName}...` : 'Write your message...'}
             rows={1}
-            className="w-full bg-transparent border-none focus:ring-0 text-sm py-3 px-3 resize-none text-[#1A1A1A] placeholder:text-[#717171]/50 outline-none"
+            disabled={disabled}
+            className="w-full bg-transparent border-none focus:ring-0 text-sm resize-none py-0 placeholder:text-[#1A1A1A]/40 text-[#1A1A1A] outline-none"
             style={{ maxHeight: '128px' }}
           />
         </div>
-        <div className="flex items-center gap-1 p-1">
-          <button
-            type="submit"
-            disabled={!text.trim() || disabled}
-            className="h-10 w-10 flex items-center justify-center bg-[#E96B56] text-white rounded-full hover:scale-105 active:scale-95 transition-all shadow-md disabled:opacity-50"
-          >
-            <Send className="h-4 w-4" />
-          </button>
-        </div>
+        <button
+          type="submit"
+          disabled={!text.trim() || disabled}
+          className="w-14 h-14 flex-shrink-0 rounded-2xl bg-[#1A1A1A] text-white flex items-center justify-center shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-40"
+        >
+          <Send className="h-5 w-5" />
+        </button>
       </form>
-      <p className="text-center text-[10px] text-[#717171] mt-3 opacity-60">
-        Sparq Secure · All messages are encrypted for your privacy.
-      </p>
     </footer>
   )
 }

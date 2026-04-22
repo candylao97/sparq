@@ -1,14 +1,42 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { Star, ArrowRight, BadgeCheck, Lock } from 'lucide-react'
+import { Star, ArrowRight, BadgeCheck, Lock, Search, Zap } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
+
+async function getPlatformStats() {
+  try {
+    const [reviewStats, verifiedCount] = await Promise.all([
+      prisma.review.aggregate({
+        where: { isVisible: true },
+        _avg: { rating: true },
+        _count: { rating: true },
+      }),
+      prisma.providerProfile.count({ where: { isVerified: true } }),
+    ])
+    const avg = reviewStats._avg.rating ?? 0
+    return {
+      avgRating: avg > 0 ? avg.toFixed(1) : null,
+      verifiedCount,
+    }
+  } catch {
+    return { avgRating: null, verifiedCount: 0 }
+  }
+}
 
 async function getFeaturedProviders() {
   try {
+    // P4-6: Order by isFeatured desc first, then accountStatus ACTIVE only,
+    // then createdAt desc so featured/verified artists appear above recent newcomers.
     const providers = await prisma.user.findMany({
       where: {
         role: { in: ['PROVIDER', 'BOTH'] },
-        providerProfile: { isNot: null },
+        providerProfile: {
+          is: {
+            accountStatus: 'ACTIVE',
+            bio: { not: null },
+            suburb: { not: null },
+          },
+        },
       },
       include: {
         providerProfile: {
@@ -18,7 +46,11 @@ async function getFeaturedProviders() {
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: [
+        { providerProfile: { isFeatured: 'desc' } },
+        { providerProfile: { isVerified: 'desc' } },
+        { createdAt: 'desc' },
+      ],
       take: 6,
     })
 
@@ -52,197 +84,131 @@ async function getFeaturedProviders() {
 }
 
 export default async function HomePage() {
-  const featured = await getFeaturedProviders()
+  const [featured, platformStats] = await Promise.all([
+    getFeaturedProviders(),
+    getPlatformStats(),
+  ])
 
   return (
     <div className="bg-[#FDFBF7]">
 
-      {/* ─── 1. Hero — What Sparq is + primary CTA ─── */}
-      <section className="px-6 pt-20 pb-16 md:pt-28 md:pb-20 text-center">
-        <div className="mx-auto max-w-3xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#E96B56] mb-6">
-            Nail &amp; lash artists near you
-          </p>
-          <h1 className="font-headline text-[3rem] md:text-[4.5rem] lg:text-[5.5rem] text-[#1A1A1A] leading-[1.05] tracking-[-0.02em] mb-6">
-            Book beauty,
-            <br />
-            <span className="italic text-[#E96B56]">effortlessly.</span>
+      {/* ─── 1. HERO — clean, text-forward, cream background ─── */}
+      <section className="py-20 md:py-28 px-6 sm:px-10">
+        <div className="max-w-2xl mx-auto text-center">
+
+          <h1 className="font-headline
+                         text-[2.6rem] sm:text-[3.4rem] lg:text-[4rem]
+                         text-[#1A1A1A] leading-[1.08] tracking-[-0.02em] mb-5">
+            Book trusted nail and<br className="hidden sm:block" />
+            {' '}lash artists near you
           </h1>
-          <p className="text-lg md:text-xl text-[#3D3D3D] leading-[1.7] mb-10 max-w-lg mx-auto">
-            Explore real work, read genuine reviews, and book in minutes — at home or in-studio.
+
+          <p className="text-base sm:text-lg text-[#717171] leading-relaxed mb-10 max-w-md mx-auto">
+            Browse real portfolios, read honest reviews, and book in minutes.
           </p>
 
-          <div className="flex flex-wrap items-center justify-center gap-3 mb-10">
-            <Link
-              href="/search"
-              className="inline-flex items-center gap-2 rounded-full bg-[#E96B56] px-8 py-4 text-base font-semibold text-white hover:bg-[#a63a29] transition-colors shadow-lg shadow-[#E96B56]/20"
+          {/* Search bar */}
+          <form
+            action="/search"
+            method="GET"
+            className="flex items-center bg-white rounded-full shadow-lg shadow-black/8
+                       border border-[#e8e1de] overflow-hidden mb-6 mx-auto max-w-xl"
+          >
+            <Search className="h-4 w-4 text-[#717171] flex-shrink-0 ml-5 mr-1" />
+            <input
+              type="text"
+              name="q"
+              placeholder="Gel nails, lash extensions, nail art…"
+              className="flex-1 pl-2 pr-4 py-4 text-sm text-[#1A1A1A]
+                         placeholder:text-[#717171] focus:outline-none bg-transparent"
+            />
+            <button
+              type="submit"
+              className="bg-[#E96B56] hover:bg-[#a63a29] transition-colors
+                         text-white font-semibold text-sm
+                         px-7 py-4 flex-shrink-0 flex items-center gap-2"
             >
-              Book your appointment
+              Search
               <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              href="/register"
-              className="inline-flex items-center gap-2 rounded-full border border-[#1A1A1A]/20 px-8 py-4 text-base font-semibold text-[#1A1A1A] hover:bg-[#1A1A1A]/5 transition-colors"
-            >
-              Become an artist
-            </Link>
-          </div>
+            </button>
+          </form>
 
-          <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-[#717171]">
-            <span className="flex items-center gap-2">
-              <Star className="w-4 h-4 fill-[#E96B56] text-[#E96B56]" />
-              <span className="font-semibold text-[#1A1A1A]">4.9</span> average rating
-            </span>
-            <span className="w-px h-4 bg-[#e8e1de]" />
-            <span className="flex items-center gap-2">
-              <BadgeCheck className="w-4 h-4 text-[#E96B56]" />
-              Verified artists
-            </span>
-            <span className="w-px h-4 bg-[#e8e1de]" />
-            <span className="flex items-center gap-2">
-              <Lock className="w-4 h-4 text-[#E96B56]" />
-              Secure payments
-            </span>
+          {/* Quick-search chips */}
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            {[
+              { label: 'Gel nails', q: 'gel nails' },
+              { label: 'Lash extensions', q: 'lash extensions' },
+              { label: 'Nail art', q: 'nail art' },
+              { label: 'Volume lashes', q: 'volume lashes' },
+              { label: 'At home', q: 'at home' },
+            ].map(({ label, q }) => (
+              <Link
+                key={label}
+                href={`/search?q=${encodeURIComponent(q)}`}
+                className="bg-white border border-[#e8e1de] text-[#717171] text-xs
+                           font-medium px-4 py-2 rounded-full hover:border-[#E96B56]
+                           hover:text-[#E96B56] transition-colors"
+              >
+                {label}
+              </Link>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ─── 2. Service Mode — HOW do you want it? ─── */}
-      <section className="bg-white border-y border-[#e8e1de] py-14">
-        <div className="px-6 max-w-[1600px] mx-auto">
 
-          {/* Header */}
-          <div className="mb-8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
-            <div>
-              <p className="section-label mb-3">Your experience</p>
-              <h2 className="font-headline text-3xl md:text-4xl text-[#1A1A1A] leading-[1.1]">
-                Choose how you want your service
-              </h2>
-            </div>
-            <p className="text-sm text-[#8A8A8A] sm:text-right sm:max-w-[220px] leading-relaxed flex-shrink-0">
-              At home or in a studio —<br className="hidden sm:block" /> whatever fits your day.
-            </p>
-          </div>
-
-          {/* Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
-
-            {/* ── At-home card ── */}
-            <Link
-              href="/search?mode=HOME"
-              className="group relative rounded-[1.875rem] overflow-hidden block min-h-[400px] md:min-h-[440px] bg-[#f3ece9] cursor-pointer"
-            >
-              <Image
-                src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=900&h=700&fit=crop&q=85"
-                alt="At-home beauty service"
-                fill
-                sizes="(max-width: 640px) 100vw, 50vw"
-                className="object-cover group-hover:scale-[1.04] transition-transform duration-700"
-              />
-
-              {/* Warm gradient — intimate, soft */}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#1c0800]/82 via-black/20 to-black/0" />
-
-              {/* Most popular badge */}
-              <div className="absolute top-5 left-5">
-                <span className="inline-flex items-center gap-1.5 bg-[#E96B56] text-white text-[11px] font-semibold uppercase tracking-[0.15em] px-3 py-1.5 rounded-full">
-                  <span className="w-1.5 h-1.5 rounded-full bg-white/70" />
-                  Most popular
-                </span>
-              </div>
-
-              {/* Bottom overlay */}
-              <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
-                {/* Tags */}
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {['No travel', 'More comfort'].map(tag => (
-                    <span
-                      key={tag}
-                      className="bg-white/12 backdrop-blur-sm border border-white/18 text-white/85 text-xs font-medium px-3 py-1 rounded-full"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-                <h3 className="font-headline text-2xl md:text-[1.75rem] text-white leading-[1.1] mb-2">
-                  At-home service
-                </h3>
-                <p className="text-white/60 text-sm leading-relaxed">
-                  Relax while your artist comes to you.
-                </p>
-              </div>
-            </Link>
-
-            {/* ── Studio card ── */}
-            <Link
-              href="/search?mode=STUDIO"
-              className="group relative rounded-[1.875rem] overflow-hidden block min-h-[400px] md:min-h-[440px] bg-[#e8e4e0] cursor-pointer"
-            >
-              <Image
-                src="https://images.unsplash.com/photo-1560066984-138dadb4c035?w=900&h=700&fit=crop&q=85"
-                alt="Studio beauty experience"
-                fill
-                sizes="(max-width: 640px) 100vw, 50vw"
-                className="object-cover object-center group-hover:scale-[1.04] transition-transform duration-700"
-              />
-
-              {/* Cool/neutral gradient — clean, professional */}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d0d]/82 via-black/18 to-black/0" />
-
-              {/* Bottom overlay */}
-              <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
-                {/* Tags */}
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {['Dedicated space', 'Salon quality'].map(tag => (
-                    <span
-                      key={tag}
-                      className="bg-white/12 backdrop-blur-sm border border-white/18 text-white/85 text-xs font-medium px-3 py-1 rounded-full"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-                <h3 className="font-headline text-2xl md:text-[1.75rem] text-white leading-[1.1] mb-2">
-                  Studio experience
-                </h3>
-                <p className="text-white/60 text-sm leading-relaxed">
-                  Enjoy a professional beauty setup.
-                </p>
-              </div>
-            </Link>
-
-          </div>
+      {/* ─── 2. Trust Strip ─── */}
+      <div className="border-t border-b border-[#e8e1de] bg-white px-6 py-5">
+        <div className="flex flex-wrap items-center justify-center gap-x-7 gap-y-2 text-sm text-[#717171]">
+          <span className="flex items-center gap-2">
+            <BadgeCheck className="h-4 w-4 text-[#E96B56]" />
+            Every artist is verified
+          </span>
+          <span className="hidden sm:block w-px h-4 bg-[#e8e1de]" />
+          <span className="flex items-center gap-2">
+            <Lock className="h-4 w-4 text-[#E96B56]" />
+            Secure payments
+          </span>
+          <span className="hidden sm:block w-px h-4 bg-[#e8e1de]" />
+          <span>Honest reviews</span>
+          <span className="hidden sm:block w-px h-4 bg-[#e8e1de]" />
+          <span>Free cancellation</span>
         </div>
-      </section>
+      </div>
 
-      {/* ─── 3. Categories — WHAT service do you want? ─── */}
-      <section className="px-6 py-16 max-w-[1600px] mx-auto">
+
+      {/* ─── 3. Category Cards — Nails + Lashes ─── */}
+      <section className="px-6 sm:px-10 lg:px-16 xl:px-24 py-20">
         <div className="mb-10">
-          <p className="section-label mb-3">Services</p>
-          <h2 className="font-headline text-3xl md:text-4xl text-[#1A1A1A] leading-[1.1]">
-            Browse by category
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#E96B56] mb-3">Browse by category</p>
+          <h2 className="font-headline text-3xl md:text-4xl text-[#1A1A1A] leading-[1.05]">
+            What are you looking for?
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl">
+
           {/* Nails */}
           <Link
             href="/search?category=NAILS"
-            className="group relative aspect-[4/3] rounded-[1.875rem] overflow-hidden block bg-[#f3ece9]"
+            className="group flex items-center gap-5 bg-white border border-[#e8e1de]
+                       rounded-2xl p-5 hover:shadow-md hover:border-[#E96B56]/30
+                       transition-all duration-200"
           >
-            <Image
-              src="https://images.unsplash.com/photo-1604654894610-df63bc536371?w=900&h=675&fit=crop&q=85"
-              alt="Nail art close-up"
-              fill
-              sizes="(max-width: 640px) 100vw, 50vw"
-              className="object-cover group-hover:scale-[1.04] transition-transform duration-700"
-              priority
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
-              <h3 className="font-headline text-2xl md:text-[1.75rem] text-white mb-1.5">Nails</h3>
-              <p className="text-white/60 text-sm leading-relaxed mb-5">Gel, acrylics, nail art, manicures &amp; more</p>
-              <span className="inline-flex items-center gap-2 bg-white text-[#1A1A1A] text-sm font-semibold px-5 py-2.5 rounded-full group-hover:bg-[#E96B56] group-hover:text-white transition-all duration-300">
+            <div className="relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0">
+              <Image
+                src="https://images.unsplash.com/photo-1604654894610-df63bc536371?w=200&h=200&fit=crop&q=80"
+                alt="Nail services"
+                fill
+                sizes="80px"
+                className="object-cover group-hover:scale-[1.08] transition-transform duration-500"
+              />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-headline text-xl text-[#1A1A1A] mb-1">Nails</h3>
+              <p className="text-sm text-[#717171] mb-3">Gel, acrylic, nail art &amp; more</p>
+              <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#E96B56]
+                               group-hover:gap-2 transition-all duration-200">
                 Browse artists <ArrowRight className="w-3.5 h-3.5" />
               </span>
             </div>
@@ -251,20 +217,24 @@ export default async function HomePage() {
           {/* Lashes */}
           <Link
             href="/search?category=LASHES"
-            className="group relative aspect-[4/3] rounded-[1.875rem] overflow-hidden block bg-[#f3ece9]"
+            className="group flex items-center gap-5 bg-white border border-[#e8e1de]
+                       rounded-2xl p-5 hover:shadow-md hover:border-[#E96B56]/30
+                       transition-all duration-200"
           >
-            <Image
-              src="https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=900&h=675&fit=crop&q=85"
-              alt="Lash extensions close-up"
-              fill
-              sizes="(max-width: 640px) 100vw, 50vw"
-              className="object-cover group-hover:scale-[1.04] transition-transform duration-700"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
-              <h3 className="font-headline text-2xl md:text-[1.75rem] text-white mb-1.5">Lashes</h3>
-              <p className="text-white/60 text-sm leading-relaxed mb-5">Classic, volume, hybrid, lifts &amp; tints</p>
-              <span className="inline-flex items-center gap-2 bg-white text-[#1A1A1A] text-sm font-semibold px-5 py-2.5 rounded-full group-hover:bg-[#E96B56] group-hover:text-white transition-all duration-300">
+            <div className="relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0">
+              <Image
+                src="https://images.unsplash.com/photo-1516914943479-89db7d9ae7f2?w=200&h=200&fit=crop&q=80"
+                alt="Lash services"
+                fill
+                sizes="80px"
+                className="object-cover group-hover:scale-[1.08] transition-transform duration-500"
+              />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-headline text-xl text-[#1A1A1A] mb-1">Lashes</h3>
+              <p className="text-sm text-[#717171] mb-3">Extensions, lifts, tints &amp; more</p>
+              <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#E96B56]
+                               group-hover:gap-2 transition-all duration-200">
                 Browse artists <ArrowRight className="w-3.5 h-3.5" />
               </span>
             </div>
@@ -272,35 +242,36 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ─── 4. Trending Looks — WHO do you choose? ─── */}
+
+      {/* ─── 4. Featured Artists ─── */}
       {featured.length > 0 && (
-        <section className="px-6 py-16 max-w-[1600px] mx-auto">
+        <section className="px-6 sm:px-10 lg:px-16 xl:px-24 py-20 bg-[#f9f2ef]">
           <div className="flex items-end justify-between mb-10">
             <div>
-              <p className="section-label mb-3">Trending now</p>
-              <h2 className="font-headline text-3xl md:text-4xl text-[#1A1A1A] leading-[1.1]">
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#E96B56] mb-3">Trending now</p>
+              <h2 className="font-headline text-3xl md:text-4xl lg:text-5xl text-[#1A1A1A] leading-[1.05]">
                 Looks people are loving
               </h2>
-              <p className="text-base text-[#555] mt-2 leading-relaxed">
+              <p className="text-base text-[#717171] mt-2 leading-relaxed">
                 Styles clients keep coming back for.
               </p>
             </div>
             <Link
               href="/search"
-              className="hidden md:inline-flex items-center gap-1.5 text-sm font-semibold text-[#E96B56] hover:text-[#a63a29] transition-colors"
+              className="hidden md:inline-flex items-center gap-1.5 text-sm font-semibold
+                         text-[#E96B56] hover:text-[#a63a29] transition-colors"
             >
-              See all looks <ArrowRight className="w-4 h-4" />
+              See all <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">
             {featured.slice(0, 4).map((provider) => (
               <Link
                 key={provider.id}
                 href={`/providers/${provider.id}`}
                 className="group relative aspect-[3/4] rounded-2xl overflow-hidden block bg-[#f3ece9] cursor-pointer"
               >
-                {/* Result image — fills the full card */}
                 {provider.image ? (
                   <Image
                     src={provider.image}
@@ -317,25 +288,30 @@ export default async function HomePage() {
                   </div>
                 )}
 
-                {/* Gradient overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-black/0" />
 
-                {/* Top — category tag + rating */}
+                {/* Top: category + rating */}
                 <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
                   {provider.category && (
-                    <span className="bg-white/15 backdrop-blur-md border border-white/20 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full">
+                    <span className="bg-white/15 backdrop-blur-md border border-white/20
+                                     text-white text-[11px] font-semibold px-2.5 py-1 rounded-full">
                       {provider.category === 'NAILS' ? 'Nails' : provider.category === 'LASHES' ? 'Lashes' : provider.category}
                     </span>
                   )}
-                  <div className="ml-auto bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm">
-                    <Star className="h-3 w-3 fill-[#E96B56] text-[#E96B56]" />
-                    <span className="text-xs font-bold text-[#1A1A1A]">
-                      {provider.rating > 0 ? provider.rating.toFixed(1) : '5.0'}
-                    </span>
-                  </div>
+                  {provider.reviewCount > 0 ? (
+                    <div className="ml-auto bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-full
+                                    flex items-center gap-1 shadow-sm">
+                      <Star className="h-3 w-3 fill-[#E96B56] text-[#E96B56]" />
+                      <span className="text-xs font-bold text-[#1A1A1A]">
+                        {provider.rating.toFixed(1)}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="ml-auto text-xs font-medium px-2 py-0.5 rounded-full bg-[#f9f2ef] text-[#717171]">New</span>
+                  )}
                 </div>
 
-                {/* Bottom — style name is hero, artist is footnote */}
+                {/* Bottom: service name + artist + price */}
                 <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5">
                   <p className="font-headline text-[1.1rem] md:text-xl text-white leading-snug mb-1.5 line-clamp-2">
                     {provider.service}
@@ -356,12 +332,71 @@ export default async function HomePage() {
           </div>
 
           <div className="mt-8 text-center md:hidden">
-            <Link href="/search" className="text-sm font-semibold text-[#E96B56] hover:text-[#a63a29] transition-colors">
+            <Link href="/search" className="text-sm font-semibold text-[#E96B56] hover:text-[#a63a29]">
               See all looks →
             </Link>
           </div>
         </section>
       )}
+
+
+      {/* ─── 5. How It Works ─── */}
+      <section className="px-6 sm:px-10 lg:px-16 xl:px-24 py-20 bg-white">
+        <div className="mb-14">
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#E96B56] mb-4">
+            Simple by design
+          </p>
+          <h2 className="font-headline text-3xl md:text-4xl text-[#1A1A1A] leading-[1.05]">
+            Book in three steps
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8 mb-12">
+          {[
+            {
+              step: '01',
+              icon: <Search className="w-5 h-5 text-[#E96B56]" />,
+              title: 'Browse',
+              body: 'Explore real portfolios, read verified reviews, and find the style you love.',
+            },
+            {
+              step: '02',
+              icon: <Zap className="w-5 h-5 text-[#E96B56]" />,
+              title: 'Book',
+              body: 'Pick your service, choose a time that works, and confirm in seconds.',
+            },
+            {
+              step: '03',
+              icon: <Star className="w-5 h-5 text-[#E96B56]" />,
+              title: 'Enjoy',
+              body: 'Your artist arrives ready. Sit back, relax, and leave looking your best.',
+            },
+          ].map(({ step, icon, title, body }) => (
+            <div key={step} className="flex gap-5">
+              <div className="flex-shrink-0">
+                <div className="w-10 h-10 rounded-full bg-[#f9f2ef] flex items-center justify-center">
+                  {icon}
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-[#717171] mb-1">{step}</p>
+                <h3 className="font-headline text-xl text-[#1A1A1A] mb-2">{title}</h3>
+                <p className="text-[#717171] leading-relaxed text-sm">{body}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <Link
+          href="/search"
+          className="inline-flex items-center gap-2 bg-[#E96B56] hover:bg-[#a63a29]
+                     transition-colors text-white font-semibold px-8 py-4 rounded-full
+                     text-base shadow-lg shadow-[#E96B56]/20"
+        >
+          Find an artist near you
+          <ArrowRight className="h-4 w-4" />
+        </Link>
+      </section>
 
     </div>
   )

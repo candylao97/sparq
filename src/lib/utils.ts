@@ -12,12 +12,19 @@ export function formatCurrency(amount: number): string {
   }).format(amount)
 }
 
+// BL-1: All date display functions pin to Australia/Sydney so they render
+// correctly during AEDT (UTC+11, Oct–Apr) as well as AEST (UTC+10, Apr–Oct).
+// This matters because Node.js defaults to UTC when parsing date strings, and
+// any hardcoded "+10:00" offset is wrong during daylight saving time.
+const SYDNEY_LOCALE_OPTIONS = { timeZone: 'Australia/Sydney' } as const
+
 export function formatDate(date: Date | string): string {
   return new Intl.DateTimeFormat('en-AU', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
     day: 'numeric',
+    ...SYDNEY_LOCALE_OPTIONS,
   }).format(new Date(date))
 }
 
@@ -26,6 +33,7 @@ export function formatShortDate(date: Date | string): string {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
+    ...SYDNEY_LOCALE_OPTIONS,
   }).format(new Date(date))
 }
 
@@ -37,13 +45,20 @@ export function formatTime(time: string): string {
   return `${displayH}:${minutes} ${ampm}`
 }
 
+// Must stay in sync with settings.ts DEFAULTS — use getCommissionRateAsync() for live values
+// Settings DEFAULTS: NEWCOMER=0.15, RISING=0.15, TRUSTED=0.13, PRO=0.12, ELITE=0.10
 export function getCommissionRate(tier: string): number {
   switch (tier) {
-    case 'PRO':
     case 'ELITE':
       return 0.10
+    case 'PRO':
+      return 0.12
     case 'TRUSTED':
       return 0.13
+    case 'RISING':
+      return 0.15
+    case 'NEWCOMER':
+      return 0.15
     default:
       return 0.15
   }
@@ -51,11 +66,23 @@ export function getCommissionRate(tier: string): number {
 
 export function getTierColor(tier: string): string {
   switch (tier) {
-    case 'ELITE': return '#1A1A1A'
-    case 'PRO': return '#E96B56'
-    case 'TRUSTED': return '#a63a29'
-    case 'RISING': return '#E96B56'
-    default: return '#6B7280'
+    case 'ELITE': return '#1A1A1A'      // near black — exclusive
+    case 'PRO': return '#a63a29'        // primary dark — premium
+    case 'TRUSTED': return '#E96B56'    // coral — established
+    case 'RISING': return '#c97d5a'     // warm amber — growing
+    case 'NEWCOMER': return '#9C7E6A'   // muted warm brown — starting
+    default: return '#717171'
+  }
+}
+
+export function getTierLabel(tier: string): string {
+  switch (tier) {
+    case 'ELITE': return 'Sparq Elite'
+    case 'PRO': return 'Sparq Pro'
+    case 'TRUSTED': return 'Top Rated'
+    case 'RISING': return 'Rising Star'
+    case 'NEWCOMER': return 'New Artist'
+    default: return tier
   }
 }
 
@@ -63,6 +90,13 @@ export function getCategoryIcon(category: string): string {
   switch (category) {
     case 'NAILS': return 'Nails'
     case 'LASHES': return 'Lashes'
+    case 'HAIR': return 'Hair'
+    case 'MAKEUP': return 'Makeup'
+    case 'BROWS': return 'Brows'
+    case 'WAXING': return 'Waxing'
+    case 'MASSAGE': return 'Massage'
+    case 'FACIALS': return 'Facials'
+    case 'OTHER': return 'Other'
     default: return 'Service'
   }
 }
@@ -71,6 +105,13 @@ export function getCategoryLabel(category: string): string {
   switch (category) {
     case 'NAILS': return 'Nails'
     case 'LASHES': return 'Lashes'
+    case 'HAIR': return 'Hair'
+    case 'MAKEUP': return 'Makeup'
+    case 'BROWS': return 'Brows'
+    case 'WAXING': return 'Waxing'
+    case 'MASSAGE': return 'Massage'
+    case 'FACIALS': return 'Facials'
+    case 'OTHER': return 'Other'
     default: return category
   }
 }
@@ -88,6 +129,10 @@ export function calculatePlatformFee(price: number, isMember: boolean): number {
   if (isMember) return 0
   return price * 0.15
 }
+
+// ── Async settings-driven variants ───────────────────────────────────────────
+// Moved to '@/lib/utils.server' to keep this file safe for client components.
+// API routes should import from '@/lib/utils.server' directly.
 
 export function relativeTime(date: Date | string): string {
   const diff = Date.now() - new Date(date).getTime()
@@ -122,26 +167,30 @@ export function getBookingStatusLabel(status: string): string {
     CANCELLED: 'Cancelled',
     DECLINED: 'Declined',
     CANCELLED_BY_CUSTOMER: 'Cancelled by Customer',
-    CANCELLED_BY_PROVIDER: 'Cancelled by Provider',
+    CANCELLED_BY_PROVIDER: 'Cancelled by Artist',
     REFUNDED: 'Refunded',
     EXPIRED: 'Expired',
     DISPUTED: 'Disputed',
+    RESCHEDULE_REQUESTED: 'Reschedule Requested',
+    NO_SHOW: 'No Show',
   }
   return labels[status] || status
 }
 
 export function getBookingStatusColor(status: string): string {
   const colors: Record<string, string> = {
-    PENDING: 'bg-amber-100 text-amber-800',
-    CONFIRMED: 'bg-green-100 text-green-800',
-    COMPLETED: 'bg-blue-100 text-blue-800',
+    PENDING: 'bg-[#fdf6ec] text-[#a88443]',
+    CONFIRMED: 'bg-[#eaf6ef] text-[#2e7d52]',
+    COMPLETED: 'bg-[#eaf0fa] text-[#2c5ea8]',
     CANCELLED: 'bg-[#f3ece9] text-[#717171]',
-    DECLINED: 'bg-red-100 text-red-800',
+    DECLINED: 'bg-[#fceae8] text-[#a63a29]',
     CANCELLED_BY_CUSTOMER: 'bg-[#f3ece9] text-[#717171]',
-    CANCELLED_BY_PROVIDER: 'bg-orange-100 text-orange-800',
-    REFUNDED: 'bg-purple-100 text-purple-800',
+    CANCELLED_BY_PROVIDER: 'bg-[#fceae8] text-[#a63a29]',
+    REFUNDED: 'bg-[#f3ece9] text-[#717171]',
     EXPIRED: 'bg-[#f3ece9] text-[#717171]',
-    DISPUTED: 'bg-red-100 text-red-800',
+    DISPUTED: 'bg-[#fceae8] text-[#E96B56]',
+    RESCHEDULE_REQUESTED: 'bg-[#fdf6ec] text-[#a88443]',
+    NO_SHOW: 'bg-[#f3ece9] text-[#717171]',
   }
   return colors[status] || 'bg-[#f3ece9] text-[#717171]'
 }

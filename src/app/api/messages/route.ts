@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { filterContactInfo } from '@/lib/content-filter'
+import { rateLimit } from '@/lib/rate-limit'
+import { sendNewMessageEmail } from '@/lib/email'
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -19,11 +21,22 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Not authorized' }, { status: 403 })
   }
 
-  const messages = await prisma.message.findMany({
-    where: { bookingId },
-    include: { sender: true },
-    orderBy: { createdAt: 'asc' },
-  })
+  const [messages] = await Promise.all([
+    prisma.message.findMany({
+      where: { bookingId },
+      include: { sender: true },
+      orderBy: { createdAt: 'asc' },
+    }),
+    // Mark all unread messages sent by the other party as read
+    prisma.message.updateMany({
+      where: {
+        bookingId,
+        senderId: { not: session.user.id },
+        read: false,
+      },
+      data: { read: true },
+    }),
+  ])
 
   return NextResponse.json({ messages })
 }
@@ -31,6 +44,18 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const allowed = await rateLimit(`message:${session.user.id}`, 60, 60)
+  if (!allowed) return NextResponse.json({ error: 'Too many messages' }, { status: 429 })
+
+  // Verify the sender's account is active before allowing messages
+  const senderUser = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { accountStatus: true },
+  })
+  if (senderUser?.accountStatus && senderUser.accountStatus !== 'ACTIVE') {
+    return NextResponse.json({ error: 'Your account is not active' }, { status: 403 })
+  }
 
   try {
     const { bookingId, text } = await req.json()
@@ -50,30 +75,43 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 })
     }
 
-    // Filter contact info from message content
+    // P1-4: Per-recipient throttle — max 3 messages per minute per (sender, recipient) pair.
+    // Prevents a provider or customer from flooding a single conversation partner.
+    const recipientId = session.user.id === booking.customerId ? booking.providerId : booking.customerId
+    const perRecipientAllowed = await rateLimit(`msg-pair:${session.user.id}:${recipientId}`, 3, 60)
+    if (!perRecipientAllowed) {
+      return NextResponse.json({ error: 'Sending too fast. Please wait a moment.' }, { status: 429 })
+    }
+
+    // BL-L2: Block messages containing contact info to prevent off-platform leakage
     const filterResult = filterContactInfo(text.trim())
-    const sanitizedText = filterResult.flagged ? filterResult.text : text.trim()
-
-    const message = await prisma.message.create({
-      data: { bookingId, senderId: session.user.id, text: sanitizedText },
-      include: { sender: true },
-    })
-
-    // Create leakage flag if contact info was detected
     if (filterResult.flagged) {
+      // Log the attempt for admin review without delivering the message
       await prisma.contactLeakageFlag.create({
         data: {
-          messageId: message.id,
+          messageId: null,
           userId: session.user.id,
           bookingId: bookingId,
           flagType: filterResult.flagType!,
           snippet: filterResult.matches.join(', '),
         },
       })
+      return NextResponse.json(
+        {
+          error:
+            'Your message appears to contain contact information (phone number, email, or social handle). For your protection, all bookings and payments must stay on Sparq.',
+          code: 'CONTACT_LEAKAGE',
+        },
+        { status: 422 }
+      )
     }
 
-    // Notify the other party
-    const recipientId = session.user.id === booking.customerId ? booking.providerId : booking.customerId
+    const message = await prisma.message.create({
+      data: { bookingId, senderId: session.user.id, text: text.trim() },
+      include: { sender: true },
+    })
+
+    // Notify the other party (recipientId already resolved above for P1-4 rate limit)
     await Promise.all([
       prisma.notification.create({
         data: {
@@ -89,6 +127,34 @@ export async function POST(req: NextRequest) {
         data: { updatedAt: new Date() },
       }),
     ])
+
+    // Send email to recipient — dedup: skip if a message was already sent in the last 10 min
+    const recentMessage = await prisma.message.findFirst({
+      where: {
+        bookingId,
+        senderId: session.user.id,
+        createdAt: { gt: new Date(Date.now() - 10 * 60 * 1000) },
+        id: { not: message.id },
+      },
+    })
+
+    if (!recentMessage) {
+      const recipient = await prisma.user.findUnique({
+        where: { id: recipientId },
+        select: { email: true, name: true },
+      })
+      if (recipient?.email) {
+        const preview = text.trim().substring(0, 100) + (text.trim().length > 100 ? '...' : '')
+        const senderName = message.sender.name ?? 'Someone'
+        sendNewMessageEmail(
+          recipient.email,
+          recipient.name ?? 'there',
+          senderName,
+          preview,
+          '/messages'
+        ).catch(() => {})
+      }
+    }
 
     return NextResponse.json({ message })
   } catch (error) {

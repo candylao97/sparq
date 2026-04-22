@@ -69,7 +69,7 @@ export default function WishlistsPage() {
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#FDFBF7_100%)]">
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-10">
+      <div className="mx-auto max-w-[1600px] px-4 py-10 sm:px-8 lg:px-12 xl:px-20">
         {/* Header */}
         <div className="mb-8 flex items-center gap-3">
           <Heart className="h-7 w-7 fill-rose-500 text-rose-500" />
@@ -105,17 +105,13 @@ export default function WishlistsPage() {
 
         {/* Provider grid */}
         {!loading && providers.length > 0 && (
-          <div className="grid grid-cols-2 gap-x-5 gap-y-8 md:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
             {providers.map((provider) => {
               const primaryService = provider.services[0]
               const tierLabel =
-                provider.tier === 'PRO'
-                  ? 'Sparq Pro'
-                  : provider.tier === 'TRUSTED'
-                    ? 'Top Rated'
-                    : provider.tier === 'ELITE'
-                      ? 'Sparq Elite'
-                      : null
+                provider.tier === 'TRUSTED'
+                  ? 'Top Rated'
+                  : null
 
               return (
                 <div key={provider.id} className="group relative">
@@ -131,7 +127,7 @@ export default function WishlistsPage() {
                           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                         />
                       ) : (
-                        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+                        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[#f9f2ef] to-[#f3ece9]">
                           <span className="text-5xl font-bold text-[#717171]">
                             {provider.name?.charAt(0) ?? 'A'}
                           </span>
@@ -161,7 +157,7 @@ export default function WishlistsPage() {
                         <Heart
                           className={`h-6 w-6 drop-shadow-md transition-colors ${
                             removingId === provider.id
-                              ? 'fill-gray-400 text-[#717171]'
+                              ? 'fill-[#e8e1de] text-[#717171]'
                               : 'fill-rose-500 text-rose-500'
                           }`}
                         />
@@ -179,7 +175,7 @@ export default function WishlistsPage() {
                         </p>
                         {provider.reviewCount > 0 && (
                           <div className="flex flex-shrink-0 items-center gap-1">
-                            <Star className="h-3.5 w-3.5 fill-gray-800 text-[#1A1A1A]" />
+                            <Star className="h-3.5 w-3.5 fill-[#1A1A1A] text-[#1A1A1A]" />
                             <span className="text-sm font-medium text-[#1A1A1A]">
                               {provider.averageRating.toFixed(2)}
                             </span>

@@ -15,27 +15,38 @@ function formatMessageTime(date: string) {
 
 export function MessageBubble({ message, isOwn, showAvatar }: Props) {
   return (
-    <div className={`flex gap-3 ${isOwn ? 'flex-row-reverse' : ''} max-w-2xl ${isOwn ? 'self-end' : ''}`}>
-      {!isOwn && showAvatar ? (
-        <div className="flex-shrink-0 w-8 h-8 rounded-full overflow-hidden mt-1">
-          <Avatar src={message.sender.image} name={message.sender.name} size="xs" />
+    <div className={`flex gap-4 max-w-2xl ${isOwn ? 'ml-auto flex-row-reverse' : ''}`}>
+      {/* Avatar — only for received messages */}
+      {!isOwn && (
+        <div className="flex-shrink-0 w-8 h-8 mt-1">
+          {showAvatar ? (
+            <div className="w-8 h-8 rounded-lg overflow-hidden">
+              <Avatar src={message.sender.image} name={message.sender.name} size="xs" className="w-full h-full rounded-lg" />
+            </div>
+          ) : (
+            <div className="w-8" />
+          )}
         </div>
-      ) : !isOwn ? (
-        <div className="w-8 flex-shrink-0" />
-      ) : null}
-      <div className={`flex flex-col ${isOwn ? 'items-end' : ''} gap-1.5`}>
-        <div
-          className={`p-4 text-sm leading-relaxed shadow-sm ${
-            isOwn
-              ? 'bg-[#E96B56] text-white rounded-tl-xl rounded-bl-xl rounded-br-xl'
-              : 'bg-[#f9f2ef] text-[#1A1A1A] rounded-tr-xl rounded-br-xl rounded-bl-xl'
-          }`}
-        >
+      )}
+
+      <div className={`flex flex-col gap-1.5 ${isOwn ? 'items-end' : 'items-start'}`}>
+        <div className={`p-5 text-sm leading-relaxed shadow-sm ${
+          isOwn
+            ? 'bg-[#E96B56] text-white rounded-2xl rounded-tr-none shadow-[#E96B56]/10'
+            : 'bg-[#fdf6f4] text-[#1A1A1A] rounded-2xl rounded-tl-none border border-[#E96B56]/10'
+        }`}>
           {message.text}
         </div>
-        <span className={`text-[10px] text-[#717171] ${isOwn ? 'mr-1' : 'ml-1'}`}>
-          {formatMessageTime(message.createdAt)}
-        </span>
+        <div className={`flex items-center gap-1.5 ${isOwn ? 'pr-1 justify-end' : 'pl-1'}`}>
+          <span className="text-[10px] font-medium text-[#717171]">
+            {formatMessageTime(message.createdAt)}
+          </span>
+          {isOwn && (
+            <span className="text-[10px] text-[#717171]">
+              {message.read ? '✓✓' : '✓'}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   )

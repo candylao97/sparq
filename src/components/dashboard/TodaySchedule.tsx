@@ -82,9 +82,26 @@ export function TodaySchedule({ bookings }: Props) {
             })}
           </div>
         ) : (
-          <div className="py-8 text-center">
-            <Calendar className="mx-auto mb-2 h-8 w-8 text-[#e8e1de]" />
-            <p className="text-body-compact text-[#717171]">No appointments today. Enjoy your day off!</p>
+          <div className="py-6 text-center">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f9f2ef]">
+              <Calendar className="h-6 w-6 text-[#e8e1de]" />
+            </div>
+            <p className="text-body-compact font-medium text-[#717171]">No appointments today</p>
+            <p className="mt-1 text-label text-[#717171]">Use this time to grow your bookings</p>
+            <div className="mt-4 flex items-center justify-center gap-2">
+              <a
+                href="/dashboard/provider/availability"
+                className="rounded-xl border border-[#e8e1de] bg-white px-3 py-2 text-xs font-semibold text-[#1A1A1A] transition-colors hover:border-[#E96B56] hover:text-[#E96B56]"
+              >
+                Update availability
+              </a>
+              <a
+                href="/dashboard/provider/services"
+                className="rounded-xl bg-[#E96B56] px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-[#a63a29]"
+              >
+                Review services
+              </a>
+            </div>
           </div>
         )}
       </div>

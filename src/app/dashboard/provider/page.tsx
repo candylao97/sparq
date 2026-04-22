@@ -112,6 +112,8 @@ export default function ProviderDashboardPage() {
         {/* Zone 8 — Growth Insights */}
         <GrowthInsights
           stats={data.stats}
+          portfolioCount={data.stats.portfolioPhotoCount}
+          unrespondedCount={data.unrespondedReviews.length}
           weeklyInsight={aiInsights?.weeklyInsight}
           benchmarkNote={aiInsights?.benchmarkNote}
           aiLoading={aiLoading}

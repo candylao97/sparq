@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { v2 as cloudinary } from 'cloudinary'
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+})
 
 export async function PATCH(
   req: NextRequest,
@@ -65,6 +72,11 @@ export async function DELETE(
     })
     if (!photo || photo.providerId !== profile.id) {
       return NextResponse.json({ error: 'Photo not found' }, { status: 404 })
+    }
+
+    // Delete from Cloudinary if we have a publicId
+    if (photo.publicId) {
+      await cloudinary.uploader.destroy(photo.publicId).catch(() => null)
     }
 
     await prisma.portfolioPhoto.delete({

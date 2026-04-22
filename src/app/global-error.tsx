@@ -13,7 +13,7 @@ export default function GlobalError({
       <body>
         <div style={{ display: 'flex', minHeight: '100vh', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', textAlign: 'center', fontFamily: 'system-ui, sans-serif' }}>
           <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#111' }}>Something went wrong</h1>
-          <p style={{ marginTop: '12px', fontSize: '14px', color: '#666', maxWidth: '400px' }}>
+          <p style={{ marginTop: '12px', fontSize: '14px', color: '#717171', maxWidth: '400px' }}>
             We hit an unexpected issue. Try refreshing the page.
           </p>
           <button

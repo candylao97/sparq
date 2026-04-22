@@ -170,6 +170,32 @@ export function ServiceAreaMap({ data, providerName, onUpdate }: Props) {
               ))}
             </div>
 
+            {/* Smart radius intelligence tip */}
+            <div className={`mt-3 rounded-xl border px-3 py-2.5 text-xs ${
+              radius < 8
+                ? 'border-amber-100 bg-amber-50/60 text-amber-700'
+                : radius > 30
+                ? 'border-blue-100 bg-blue-50/40 text-blue-700'
+                : 'border-emerald-100 bg-emerald-50/40 text-emerald-700'
+            }`}>
+              {radius < 8 ? (
+                <>
+                  <span className="font-semibold">💡 Tip:</span> A 10–20 km radius typically doubles your potential client pool.
+                  Expanding slightly could significantly increase your bookings.
+                </>
+              ) : radius > 30 ? (
+                <>
+                  <span className="font-semibold">💡 Tip:</span> A focused 15–25 km radius often leads to better booking quality
+                  and shorter travel times — saving you time between appointments.
+                </>
+              ) : (
+                <>
+                  <span className="font-semibold">✓ Good radius:</span> {radius} km is a strong sweet spot. You&apos;re accessible
+                  to a large client pool without excessive travel time.
+                </>
+              )}
+            </div>
+
             {/* Save button */}
             {dirty && (
               <div className="mt-4 flex justify-end">

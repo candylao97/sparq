@@ -16,7 +16,7 @@ export async function GET() {
     if (!profile) return NextResponse.json({ error: 'Provider profile not found' }, { status: 404 })
 
     const services = await prisma.service.findMany({
-      where: { providerId: profile.id },
+      where: { providerId: profile.id, isDeleted: false },
       orderBy: { createdAt: 'desc' },
     })
 
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
     if (!profile) return NextResponse.json({ error: 'Provider profile not found' }, { status: 404 })
 
     const body = await req.json()
-    const { title, category, description, price, duration, locationTypes, maxGuests } = body
+    const { title, category, description, price, duration, locationTypes, maxGuests, instantBook } = body
 
     if (!title || !category || !price || !duration) {
       return NextResponse.json({ error: 'Title, category, price, and duration are required' }, { status: 400 })
@@ -65,6 +65,28 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // P2-3: Enforce max services limit per provider (50)
+    const SERVICE_LIMIT = 50
+    const serviceCount = await prisma.service.count({
+      where: { providerId: profile.id, isDeleted: false },
+    })
+    if (serviceCount >= SERVICE_LIMIT) {
+      return NextResponse.json(
+        { error: 'Service limit reached', message: 'You can have up to 50 services. Archive unused services to create new ones.' },
+        { status: 400 }
+      )
+    }
+
+    // T&S-R3: Warn if a service with a very similar title already exists for this provider
+    const existingServices = await prisma.service.findMany({
+      where: { providerId: profile.id, isDeleted: false },
+      select: { title: true },
+    })
+    const titleLower = sanitizedTitle.toLowerCase().replace(/\s+/g, ' ').trim()
+    const duplicateWarning = existingServices.some(s =>
+      s.title.toLowerCase().replace(/\s+/g, ' ').trim() === titleLower
+    )
+
     const service = await prisma.service.create({
       data: {
         providerId: profile.id,
@@ -75,7 +97,8 @@ export async function POST(req: NextRequest) {
         duration: Number(duration),
         locationTypes: locationTypes || 'BOTH',
         maxGuests: maxGuests ? Number(maxGuests) : null,
-        isActive: true,
+        isActive: body.isActive !== false,
+        instantBook: instantBook === true,
       },
     })
 
@@ -94,7 +117,10 @@ export async function POST(req: NextRequest) {
       }).catch(() => {})
     }
 
-    return NextResponse.json({ service })
+    return NextResponse.json({
+      service,
+      ...(duplicateWarning ? { warning: 'A service with this title already exists. Clients may find it confusing — consider using a different name.' } : {}),
+    })
   } catch (error) {
     console.error('Service create error:', error)
     return NextResponse.json({ error: 'Failed to create service' }, { status: 500 })

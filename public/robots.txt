@@ -1,0 +1,21 @@
+User-agent: *
+Allow: /
+Allow: /search
+Allow: /providers/
+Allow: /about
+Allow: /blog
+Allow: /contact
+Allow: /trust
+Allow: /community
+
+Disallow: /dashboard/
+Disallow: /admin/
+Disallow: /api/
+Disallow: /login
+Disallow: /register
+Disallow: /account-settings
+Disallow: /bookings
+Disallow: /messages
+Disallow: /notifications
+
+Sitemap: https://sparq.com.au/sitemap.xml

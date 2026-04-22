@@ -47,7 +47,7 @@ export function AISearchBar() {
   return (
     <div className="w-full max-w-xl mx-auto">
       <form onSubmit={handleSearch}>
-        <div className="flex items-center gap-3 rounded-full border border-[#e8e1de] bg-white py-2 pl-6 pr-2 shadow-search transition-all duration-500 hover:shadow-search-focus focus-within:shadow-search-focus focus-within:border-[#CCCCC]">
+        <div className="flex items-center gap-3 rounded-full border border-[#e8e1de] bg-white py-2 pl-6 pr-2 shadow-search transition-all duration-500 hover:shadow-search-focus focus-within:shadow-search-focus focus-within:border-[#e8e1de]">
           <Search className="h-4 w-4 flex-shrink-0 text-[#BEBEBE]" />
           <input
             type="text"
@@ -80,7 +80,7 @@ export function AISearchBar() {
               setQuery(s)
               router.push(`/search?query=${encodeURIComponent(s)}`)
             }}
-            className="rounded-full border border-[#e8e1de] bg-white px-3.5 py-1.5 text-[12px] text-[#999] transition-all duration-300 hover:border-[#CCC] hover:text-[#666]"
+            className="rounded-full border border-[#e8e1de] bg-white px-3.5 py-1.5 text-[12px] text-[#717171] transition-all duration-300 hover:border-[#e8e1de] hover:text-[#717171]"
           >
             {s}
           </button>

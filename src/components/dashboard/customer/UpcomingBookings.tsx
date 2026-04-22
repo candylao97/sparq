@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Calendar, Clock, MapPin, MessageSquare, Zap, CalendarClock, XCircle } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
 import { BookingStatusPill } from '@/components/providers/BookingStatusPill'
 import { AiText } from '../AiText'
 import { RescheduleModal } from '@/components/booking/RescheduleModal'
@@ -62,13 +61,35 @@ export function UpcomingBookings({ bookings, nextBookingSummary, aiLoading, onRe
 
   if (bookings.length === 0) {
     return (
-      <div className="mb-6 rounded-2xl border border-[#e8e1de] bg-white p-8 text-center shadow-sm">
-        <Calendar className="mx-auto mb-3 h-10 w-10 text-[#e8e1de]" />
-        <p className="mb-1 text-sm font-semibold text-[#1A1A1A]">Nothing booked yet</p>
-        <p className="mb-4 text-xs text-[#717171]">Find an artist you&apos;ll love and book your next appointment</p>
-        <Link href="/search">
-          <Button variant="primary" size="sm">Browse Artists</Button>
-        </Link>
+      <div className="mb-6 overflow-hidden rounded-2xl bg-[#1A1A1A]">
+        <div className="relative p-8 text-center sm:p-10">
+          <div className="absolute -left-16 -top-16 h-64 w-64 rounded-full bg-[radial-gradient(circle,rgba(233,107,86,0.18)_0%,transparent_70%)]" />
+          <div className="absolute -bottom-16 -right-16 h-64 w-64 rounded-full bg-[radial-gradient(circle,rgba(233,107,86,0.12)_0%,transparent_70%)]" />
+          <div className="relative">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-[#E96B56]">Your calendar is clear</p>
+            <h2 className="font-headline mb-2 text-2xl font-bold text-white sm:text-3xl">
+              Ready for your next appointment?
+            </h2>
+            <p className="mb-6 text-sm text-white/50">Browse nail artists and lash techs near you — book in minutes.</p>
+            <div className="flex flex-wrap justify-center gap-3">
+              <Link href="/search?category=NAILS">
+                <button className="rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-[#1A1A1A] transition-all hover:-translate-y-0.5 hover:shadow-md">
+                  Nail artists
+                </button>
+              </Link>
+              <Link href="/search?category=LASHES">
+                <button className="rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-[#1A1A1A] transition-all hover:-translate-y-0.5 hover:shadow-md">
+                  Lash techs
+                </button>
+              </Link>
+              <Link href="/search">
+                <button className="rounded-full border border-white/20 bg-white/10 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/[0.18]">
+                  Browse all
+                </button>
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
     )
   }

@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { stripe } from '@/lib/stripe'
+import { sendRefundConfirmationEmail } from '@/lib/email'
 
 export async function POST(
   req: NextRequest,
@@ -54,6 +55,15 @@ export async function POST(
       }
     }
 
+    // Cancel any scheduled/processing payout to prevent double-payment
+    await prisma.payout.updateMany({
+      where: {
+        bookingId: params.id,
+        status: { in: ['SCHEDULED', 'PROCESSING'] },
+      },
+      data: { status: 'CANCELLED' },
+    })
+
     const updatedBooking = await prisma.booking.update({
       where: { id: params.id },
       data: {
@@ -70,6 +80,27 @@ export async function POST(
         service: { select: { id: true, title: true } },
       },
     })
+
+    // Notify customer of refund
+    await prisma.notification.create({
+      data: {
+        userId: updatedBooking.customer.id,
+        type: 'REFUND_PROCESSED',
+        title: 'Refund Processed',
+        message: `A refund of $${refundAmount.toFixed(2)} for your ${updatedBooking.service.title} booking has been processed and should appear within 5–10 business days.`,
+        link: '/dashboard/customer',
+      },
+    }).catch(() => {})
+
+    // Send refund confirmation email (non-blocking)
+    if (updatedBooking.customer?.email) {
+      sendRefundConfirmationEmail(updatedBooking.customer.email, {
+        name: updatedBooking.customer.name ?? 'there',
+        serviceTitle: updatedBooking.service.title,
+        amount: refundAmount,
+        reason: refundReason,
+      }).catch(err => console.error('Refund confirmation email error:', err))
+    }
 
     return NextResponse.json(updatedBooking)
   } catch (error) {

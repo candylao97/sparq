@@ -25,6 +25,8 @@ enum BookingStatus {
   REFUNDED
   EXPIRED
   DISPUTED
+  NO_SHOW
+  RESCHEDULE_REQUESTED
 }
 
 enum PaymentStatus {
@@ -34,6 +36,7 @@ enum PaymentStatus {
   CAPTURED
   AUTH_RELEASED
   REFUNDED
+  PARTIAL_REFUND
   FAILED
 }
 
@@ -46,6 +49,14 @@ enum ServiceLocation {
 enum ServiceCategory {
   NAILS
   LASHES
+  HAIR
+  MAKEUP
+  BROWS
+  WAXING
+  MASSAGE
+  FACIALS
+  TUTORING
+  OTHER
 }
 
 enum AccountStatus {
@@ -105,6 +116,20 @@ enum DisputeStatus {
   CLOSED
 }
 
+enum KYCStatus {
+  PENDING
+  REQUIRES_ACTION
+  UNDER_REVIEW
+  VERIFIED
+  REJECTED
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
 enum NotificationType {
   NEW_BOOKING
   BOOKING_ACCEPTED
@@ -117,6 +142,13 @@ enum NotificationType {
   PAYOUT_SENT
   BOOKING_EXPIRED
   BOOKING_DISPUTED
+  REVIEW_REMINDER
+  RESCHEDULE_REQUESTED
+  REVIEW_REPLY
+  DISPUTE_RESOLVED
+  REFUND_PROCESSED
+  TIER_CHANGE
+  GENERAL
 }
 
 model Account {
@@ -159,11 +191,15 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
-  password      String?
-  role          UserRole  @default(CUSTOMER)
-  phone         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  password          String?
+  passwordChangedAt DateTime?
+  role              UserRole  @default(CUSTOMER)
+  phone             String?
+  accountStatus     AccountStatus    @default(ACTIVE)
+  // P0-1: Persisted notification preference map (email, SMS, push channels)
+  notificationPreferences Json?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   accounts           Account[]
   sessions           Session[]
@@ -176,16 +212,24 @@ model User {
   reviews            Review[]         @relation("CustomerReviews")
   adminNotes         AdminNote[]      @relation("AdminNotes")
   leakageFlags       ContactLeakageFlag[]
+  auditLogs          AuditLog[] @relation("AdminAuditLogs")
+  waitlistAsCustomer WaitlistEntry[] @relation("CustomerWaitlist")
+  waitlistAsProvider WaitlistEntry[] @relation("ProviderWaitlist")
+  promoCodes         PromoCode[]
+  promoCodeUsages    PromoCodeUsage[]
+  referralsSent      Referral[] @relation("ReferrerReferrals")
+  referralsReceived  Referral[] @relation("ReferredReferrals")
 }
 
 model CustomerProfile {
-  id               String             @id @default(cuid())
-  userId           String             @unique
-  membership       CustomerMembership @default(FREE)
-  savedProviders   String[]
-  stripeCustomerId String?
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
+  id                   String             @id @default(cuid())
+  userId               String             @unique
+  membership           CustomerMembership @default(FREE)
+  savedProviders       String[]
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -206,7 +250,10 @@ model ProviderProfile {
   offerAtStudio    Boolean          @default(false)
   tier             ProviderTier     @default(NEWCOMER)
   subscriptionPlan SubscriptionPlan @default(FREE)
-  stripeAccountId  String?
+  stripeAccountId        String?
+  stripeChargesEnabled   Boolean @default(false)
+  stripePayoutsEnabled   Boolean @default(false)
+  stripeDetailsSubmitted Boolean @default(false)
   isVerified       Boolean          @default(false)
   backgroundCheck  Boolean          @default(false)
   yearsExperience  Int?
@@ -214,12 +261,28 @@ model ProviderProfile {
   accountStatus    AccountStatus    @default(ACTIVE)
   suspendReason    String?          @db.Text
   suspendedAt      DateTime?
-  responseTimeHours  Float           @default(24)
-  completionRate     Float            @default(100)
-  totalEarnings      Float            @default(0)
-  cancellationPolicy String?          @db.Text
-  createdAt          DateTime         @default(now())
-  updatedAt          DateTime         @updatedAt
+  responseTimeHours       Float            @default(24)
+  completionRate          Float            @default(100)
+  totalEarnings           Float            @default(0)
+  // MH-6: Cancellation strike system — tracks consecutive provider cancellations for account health
+  cancellationCount       Int              @default(0)
+  cancellationCountResetAt DateTime?
+  cancellationPolicy      String?          @db.Text
+  cancellationPolicyType  String           @default("MODERATE")
+  isFeatured              Boolean          @default(false)
+  featuredUntil           DateTime?
+  stripeSubscriptionId    String?
+  stripeSubscriptionStatus String?
+  icalToken               String?          @unique
+  icalTokenExpiresAt      DateTime?
+  timezone                String           @default("Australia/Sydney")
+  profileViews            Int              @default(0)
+  createdAt               DateTime         @default(now())
+  aiSummary               String?          @db.Text
+  // P1-2: Tracks when the AI summary was last generated — used as the 24h cooldown check.
+  // Separating from updatedAt avoids resetting the cooldown on unrelated profile updates.
+  aiSummaryUpdatedAt      DateTime?
+  updatedAt               DateTime         @updatedAt
 
   user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   services     Service[]
@@ -227,6 +290,7 @@ model ProviderProfile {
   portfolio    PortfolioPhoto[]
   verification Verification?
   scoreFactors ScoreFactors?
+  kycRecord    KYCRecord?
 }
 
 model ScoreFactors {
@@ -256,11 +320,15 @@ model Service {
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 
-  provider ProviderProfile @relation(fields: [providerId], references: [id], onDelete: Cascade)
-  bookings Booking[]
-  addons   ServiceAddon[]
+  instantBook   Boolean   @default(false)
+
+  provider  ProviderProfile @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  bookings  Booking[]
+  addons    ServiceAddon[]
+  isDeleted Boolean         @default(false)
 
   @@index([providerId])
+  @@index([isDeleted])
 }
 
 model Availability {
@@ -270,6 +338,8 @@ model Availability {
   timeSlots  String[]
   isBlocked  Boolean  @default(false)
   createdAt  DateTime @default(now())
+  // P1-7: Optimistic lock field — used by availability update endpoint to detect concurrent writes
+  updatedAt  DateTime @updatedAt
 
   provider ProviderProfile @relation(fields: [providerId], references: [id], onDelete: Cascade)
 
@@ -299,20 +369,27 @@ model Booking {
   refundAmount    Float?
   refundReason    String?         @db.Text
   refundedAt       DateTime?
-  acceptDeadline   DateTime?
-  completedAt      DateTime?
-  disputeDeadline  DateTime?
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
+  acceptDeadline       DateTime?
+  completedAt          DateTime?
+  disputeDeadline      DateTime?
+  rescheduleDate       DateTime?
+  rescheduleTime       String?
+  rescheduleReason     String?      @db.Text
+  rescheduleRequestedAt    DateTime?
+  paymentExpiryWarnedAt    DateTime?
+  reminderSentAt           DateTime?
+  createdAt                DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
 
   customer User      @relation("CustomerBookings", fields: [customerId], references: [id])
   provider User      @relation("ProviderBookings", fields: [providerId], references: [id])
   service  Service   @relation(fields: [serviceId], references: [id])
-  review        Review?
-  messages      Message[]
-  payout        Payout?
-  statusHistory BookingStatusHistory[]
-  dispute       Dispute?
+  review          Review?
+  messages        Message[]
+  payout          Payout?
+  statusHistory   BookingStatusHistory[]
+  dispute         Dispute?
+  promoCodeUsage  PromoCodeUsage?
 
   @@index([customerId])
   @@index([providerId])
@@ -344,6 +421,7 @@ model PortfolioPhoto {
   id         String   @id @default(cuid())
   providerId String
   url        String
+  publicId   String?
   caption    String?
   order      Int      @default(0)
   createdAt  DateTime @default(now())
@@ -432,14 +510,21 @@ model PlatformSetting {
 }
 
 model GiftVoucher {
-  id         String   @id @default(cuid())
-  code       String   @unique
-  amount     Float
-  issuedBy   String
-  usedBy     String?
-  isRedeemed Boolean  @default(false)
-  expiresAt  DateTime
-  createdAt  DateTime @default(now())
+  id               String   @id @default(cuid())
+  code             String   @unique
+  amount           Float
+  usedAmount       Float    @default(0)
+  remainingBalance Float?
+  issuedBy         String
+  usedBy           String?
+  isRedeemed       Boolean  @default(false)
+  expiresAt        DateTime
+  createdAt        DateTime @default(now())
+  recipientEmail   String?
+  // M-3: Reservation hold — prevents double-spend race conditions during concurrent checkout.
+  // A voucher held by another user within the last 15 minutes will be temporarily blocked.
+  heldByUserId     String?
+  heldAt           DateTime?
 }
 
 model ContactLeakageFlag {
@@ -469,6 +554,9 @@ model Payout {
   processedAt      DateTime?
   failedAt         DateTime?
   failureReason    String?
+  // P1-B: For negative (penalty) payout records, tracks when the penalty expires (90 days from creation).
+  // Expired penalties are excluded from deductions during payout processing.
+  penaltyExpiresAt DateTime?
   createdAt        DateTime     @default(now())
 
   booking Booking @relation(fields: [bookingId], references: [id])
@@ -507,15 +595,135 @@ model Dispute {
   booking Booking @relation(fields: [bookingId], references: [id])
 }
 
+model WaitlistEntry {
+  id         String   @id @default(cuid())
+  customerId String
+  providerId String
+  serviceId  String?
+  date       DateTime
+  notified   Boolean  @default(false)
+  sequence   Int      @default(autoincrement())
+  createdAt  DateTime @default(now())
+
+  customer User @relation("CustomerWaitlist", fields: [customerId], references: [id], onDelete: Cascade)
+  provider User @relation("ProviderWaitlist", fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([providerId, date])
+  @@index([customerId])
+}
+
 model ServiceAddon {
-  id        String  @id @default(cuid())
-  serviceId String
-  name      String
-  price     Float
-  duration  Int     @default(0)
-  isActive  Boolean @default(true)
+  id         String  @id @default(cuid())
+  serviceId  String
+  name       String
+  price      Float
+  duration   Int     @default(0)
+  isActive   Boolean @default(true)
+  usageCount Int     @default(0)
 
   service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
 
   @@index([serviceId])
+}
+
+model KYCRecord {
+  id              String    @id @default(cuid())
+  providerId      String    @unique
+  status          KYCStatus @default(PENDING)
+  riskLevel       RiskLevel @default(LOW)
+  riskSignals     Json?
+  stripeStatus    String?
+  chargesEnabled  Boolean   @default(false)
+  payoutsEnabled  Boolean   @default(false)
+  requirementsDue Json?
+  adminNotes      String?   @db.Text
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  rejectedReason  String?   @db.Text
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  provider ProviderProfile @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([riskLevel])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String
+  action     String
+  targetType String
+  targetId   String?
+  details    Json?
+  reason     String?
+  createdAt  DateTime @default(now())
+
+  actor User @relation("AdminAuditLogs", fields: [actorId], references: [id])
+
+  @@index([actorId])
+  @@index([targetType, targetId])
+  @@index([createdAt])
+}
+
+model PromoCode {
+  id             String    @id @default(cuid())
+  code           String    @unique
+  description    String?
+  discountType   String    @default("PERCENT")   // PERCENT | FIXED
+  discountValue  Float                            // e.g. 15 for 15% or 10 for $10
+  minOrderAmount Float     @default(0)
+  maxUses        Int?                             // null = unlimited
+  currentUses    Int       @default(0)
+  isActive       Boolean   @default(true)
+  expiresAt      DateTime?
+  createdAt      DateTime  @default(now())
+  source         String?                          // e.g. 'instagram_jan', 'referral', 'partnership_xyz'
+  campaign       String?                          // e.g. 'summer_launch_2026'
+  createdById    String?
+  // M-6: Budget cap — maximum total discount amount this code can issue across all redemptions
+  budgetCap               Float?   // null = no cap
+  totalDiscountIssued     Float    @default(0)   // running total of discounts issued
+  createdBy      User?     @relation(fields: [createdById], references: [id])
+  usages         PromoCodeUsage[]
+}
+
+model PromoCodeUsage {
+  id          String    @id @default(cuid())
+  promoCodeId String
+  userId      String
+  bookingId   String?   @unique
+  usedAt      DateTime  @default(now())
+
+  promoCode PromoCode @relation(fields: [promoCodeId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
+  booking   Booking?  @relation(fields: [bookingId], references: [id])
+
+  @@unique([promoCodeId, userId])
+  @@index([userId])
+}
+
+model ProcessedWebhookEvent {
+  id        String   @id @default(cuid())
+  eventId   String   @unique
+  source    String   @default("stripe")
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model Referral {
+  id            String    @id @default(cuid())
+  referrerId    String
+  referrer      User      @relation("ReferrerReferrals", fields: [referrerId], references: [id])
+  referredEmail String
+  referredId    String?
+  referred      User?     @relation("ReferredReferrals", fields: [referredId], references: [id])
+  status        String    @default("PENDING") // PENDING | COMPLETED | EXPIRED
+  rewardGranted Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  completedAt   DateTime?
+
+  @@index([referrerId])
+  @@index([referredEmail])
 }

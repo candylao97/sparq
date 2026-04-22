@@ -60,27 +60,27 @@ const PERKS = [
 
 export default function HowToEarnPage() {
   return (
-    <div className="bg-[#FDFBF7] min-h-screen">
+    <div className="bg-white min-h-screen">
 
       {/* ── Back ── */}
-      <div className="pt-24 pb-0 px-6 max-w-5xl mx-auto">
+      <div className="pt-24 pb-0 px-4 sm:px-8 lg:px-12 xl:px-20 max-w-[1600px] mx-auto">
         <Link
           href="/how-it-works"
-          className="inline-flex items-center gap-1.5 text-sm text-[#555] hover:text-[#1A1A1A] transition-colors"
+          className="inline-flex items-center gap-1.5 text-sm text-[#717171] hover:text-[#1A1A1A] transition-colors"
         >
           <ChevronLeft className="w-4 h-4" /> How it works
         </Link>
       </div>
 
       {/* ── Hero ── */}
-      <section className="pt-8 pb-16 md:pb-20 text-center px-6">
-        <div className="mx-auto max-w-xl">
+      <section className="pt-8 pb-16 md:pb-20 text-center px-4 sm:px-8 lg:px-12 xl:px-20">
+        <div className="mx-auto max-w-[1600px]">
           <p className="section-label mb-4">For artists</p>
           <h1 className="font-headline text-4xl md:text-[3rem] text-[#1A1A1A] leading-[1.1] mb-5">
             Your skill.<br />
             <span className="italic text-[#E96B56]">Your income.</span>
           </h1>
-          <p className="text-base text-[#555] leading-relaxed mb-8 max-w-sm mx-auto">
+          <p className="text-base text-[#717171] leading-relaxed mb-8 max-w-sm mx-auto">
             Join 2,400+ artists already earning on Sparq. Free to join. No monthly fees.
           </p>
           <Link
@@ -95,7 +95,7 @@ export default function HowToEarnPage() {
 
       {/* ── Perks strip ── */}
       <div className="border-y border-[#e8e1de] bg-white py-6 px-6">
-        <div className="mx-auto max-w-3xl grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-0 sm:divide-x sm:divide-[#e8e1de]">
+        <div className="mx-auto max-w-[1600px] grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-0 sm:divide-x sm:divide-[#e8e1de]">
           {PERKS.map((perk) => {
             const Icon = perk.icon
             return (
@@ -115,7 +115,7 @@ export default function HowToEarnPage() {
 
       {/* ── Steps ── */}
       <section className="py-16 md:py-20">
-        <div className="mx-auto max-w-5xl px-6">
+        <div className="mx-auto max-w-[1600px] px-4 sm:px-8 lg:px-12 xl:px-20">
           <div className="text-center mb-10">
             <p className="section-label mb-3">Getting started</p>
             <h2 className="font-headline text-3xl md:text-4xl text-[#1A1A1A] leading-[1.1]">
@@ -137,7 +137,7 @@ export default function HowToEarnPage() {
                     </div>
                   </div>
                   <h3 className="font-headline text-xl text-[#1A1A1A] mb-3">{step.title}</h3>
-                  <p className="text-sm text-[#555] leading-relaxed flex-1">{step.description}</p>
+                  <p className="text-sm text-[#717171] leading-relaxed flex-1">{step.description}</p>
                   <div className="flex items-center gap-2 pt-5 mt-5 border-t border-[#f3ece9]">
                     <CheckCircle2 className="w-4 h-4 text-[#E96B56] flex-shrink-0" />
                     <span className="text-xs text-[#8A8A8A] font-medium">{step.note}</span>
@@ -152,7 +152,7 @@ export default function HowToEarnPage() {
       {/* ── Dark CTA ── */}
       <section className="bg-[#1A1A1A] py-20 md:py-24 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-[#E96B56]/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="mx-auto max-w-5xl px-6 relative text-center">
+        <div className="mx-auto max-w-[1600px] px-4 sm:px-8 lg:px-12 xl:px-20 relative text-center">
           <p className="section-label text-[#E96B56]/70 mb-4">The deal</p>
           <h2 className="font-headline text-3xl md:text-4xl text-white leading-[1.1] mb-10">
             No catch. Just earnings.

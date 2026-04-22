@@ -95,6 +95,31 @@ export function useDashboardData() {
     if (session) fetchData()
   }, [session, fetchData])
 
+  // ── Lightweight poll: refresh if a new PENDING booking arrives (30s interval) ──
+  useEffect(() => {
+    if (status !== 'authenticated') return
+    const poll = async () => {
+      try {
+        const res = await fetch('/api/bookings?role=provider&status=PENDING&limit=1')
+        if (!res.ok) return
+        const d = await res.json()
+        const latestCount: number = d.count ?? 0
+        setData(prev => {
+          if (!prev) return prev
+          if (latestCount !== prev.pendingBookings.length) {
+            // New booking detected — trigger full refresh (non-blocking)
+            fetchData()
+          }
+          return prev
+        })
+      } catch {
+        // Non-critical poll — silent fail
+      }
+    }
+    const interval = setInterval(poll, 30_000)
+    return () => clearInterval(interval)
+  }, [status, fetchData])
+
   const handleBookingAction = useCallback(async (bookingId: string, newStatus: string) => {
     try {
       const res = await fetch(`/api/bookings/${bookingId}`, {

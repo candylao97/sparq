@@ -9,8 +9,26 @@ export default withAuth(
     // Admin routes - check role
     if (pathname.startsWith('/admin')) {
       if (token?.role !== 'ADMIN') {
+        // P0-4: PROVIDER and BOTH users redirect to provider dashboard, not customer
+        if (token?.role === 'PROVIDER' || token?.role === 'BOTH') {
+          return NextResponse.redirect(new URL('/dashboard/provider', req.url))
+        }
         return NextResponse.redirect(new URL('/dashboard/customer', req.url))
       }
+    }
+
+    // Redirect BANNED/SUSPENDED/UNDER_REVIEW providers away from their dashboard
+    // P0-4: Cover BOTH role (users who are both provider and customer)
+    if (pathname.startsWith('/dashboard/provider') && (token?.role === 'PROVIDER' || token?.role === 'BOTH')) {
+      const status = (token as any).accountStatus
+      if (status === 'BANNED' || status === 'SUSPENDED' || status === 'UNDER_REVIEW') {
+        return NextResponse.redirect(new URL('/account-suspended', req.url))
+      }
+    }
+
+    // Redirect BANNED users (any role) away from all protected routes
+    if ((token as any).accountStatus === 'BANNED') {
+      return NextResponse.redirect(new URL('/account-suspended', req.url))
     }
 
     return NextResponse.next()

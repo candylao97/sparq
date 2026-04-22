@@ -153,6 +153,9 @@ export interface FavouriteTalent {
   lastBookingDate: string
   topService: string
   averageRating: number
+  minPrice: number
+  offerAtHome: boolean
+  offerAtStudio: boolean
 }
 
 export interface CustomerSpending {
@@ -198,6 +201,7 @@ export interface CustomerDashboardData {
     memberSince: string
   }
   upcomingBookings: CustomerBooking[]
+  imminentBookings: CustomerBooking[]
   pastBookings: CustomerBooking[]
   unreviewedBookings: CustomerBooking[]
   reviewsLeft: Array<{

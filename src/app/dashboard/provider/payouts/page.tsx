@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -32,6 +32,14 @@ interface EarningsSummary {
 }
 
 export default function ProviderPayoutsPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-sm text-[#717171]">Loading payouts…</div>}>
+      <ProviderPayoutsPageInner />
+    </Suspense>
+  )
+}
+
+function ProviderPayoutsPageInner() {
   const { data: session, status: authStatus } = useSession()
   const router = useRouter()
   const searchParams = useSearchParams()

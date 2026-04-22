@@ -81,6 +81,9 @@ export function ReviewReplyModal({ open, onClose, review, onSubmitted }: Props) 
         body: JSON.stringify({ response }),
       })
       if (!res.ok) {
+        if (res.status === 422) {
+          throw new Error('Response contains contact information (phone/email/social). Please remove it and try again.')
+        }
         const data = await res.json()
         throw new Error(data.error || 'Failed to submit')
       }

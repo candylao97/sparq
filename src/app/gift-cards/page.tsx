@@ -14,6 +14,7 @@ export default function GiftCardsPage() {
   const [recipientEmail, setRecipientEmail] = useState('')
   const [personalMessage, setPersonalMessage] = useState('')
   const [redeemCode, setRedeemCode] = useState('')
+  const [purchasing, setPurchasing] = useState(false)
 
   const displayAmount = customAmount ? Number(customAmount) : selectedAmount
 
@@ -30,10 +31,38 @@ export default function GiftCardsPage() {
     }
   }
 
-  function handlePurchase() {
-    toast('Gift card purchases coming soon!', {
-      icon: '🎁',
-    })
+  async function handlePurchase() {
+    if (!recipientEmail || !recipientEmail.includes('@')) {
+      toast.error('Please enter a valid recipient email address.')
+      return
+    }
+    if (!displayAmount || displayAmount < 10) {
+      toast.error('Minimum gift card amount is $10.')
+      return
+    }
+    setPurchasing(true)
+    try {
+      const res = await fetch('/api/gift-cards/purchase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: displayAmount,
+          recipientName,
+          recipientEmail,
+          personalMessage,
+        }),
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || 'Purchase failed')
+      }
+      const { url } = await res.json()
+      window.location.href = url
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Purchase failed')
+    } finally {
+      setPurchasing(false)
+    }
   }
 
   function handleRedeem() {
@@ -41,16 +70,14 @@ export default function GiftCardsPage() {
       toast.error('Please enter a gift card code.')
       return
     }
-    toast('Gift card redemption coming soon!', {
-      icon: '🎉',
-    })
+    toast.success('Add this code at checkout to apply your gift card balance!', { duration: 5000 })
   }
 
   return (
     <div className="min-h-screen bg-white">
       {/* Hero */}
       <section className="bg-[linear-gradient(180deg,#ffffff_0%,#FDFBF7_100%)] py-16">
-        <div className="mx-auto max-w-3xl px-4 text-center">
+        <div className="mx-auto max-w-[1600px] px-4 sm:px-8 lg:px-12 xl:px-20 text-center">
           <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-[#1A1A1A]">
             <Gift className="h-7 w-7 text-[#E96B56]" />
           </div>
@@ -61,7 +88,7 @@ export default function GiftCardsPage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-3xl px-4 py-12">
+      <section className="mx-auto max-w-[1600px] px-4 sm:px-8 lg:px-12 xl:px-20 py-12">
         <div className="grid gap-8 md:grid-cols-2">
           {/* Left column */}
           <div className="space-y-8">
@@ -172,9 +199,10 @@ export default function GiftCardsPage() {
               <button
                 type="button"
                 onClick={handlePurchase}
-                className="w-full rounded-xl bg-[#E96B56] py-3.5 text-sm font-semibold text-white transition-all hover:bg-[#a63a29] hover:shadow-lg"
+                disabled={purchasing}
+                className="w-full rounded-xl bg-[#E96B56] py-3.5 text-sm font-semibold text-white transition-all hover:bg-[#a63a29] hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                Purchase Gift Card
+                {purchasing ? 'Redirecting…' : 'Purchase Gift Card'}
               </button>
               <p className="mt-2 text-center text-xs text-[#717171]">
                 Gift cards are delivered instantly via email

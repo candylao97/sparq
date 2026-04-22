@@ -10,15 +10,32 @@ export async function GET() {
   }
 
   try {
-    const [users, bookings, reviews, providers] = await Promise.all([
+    const todayStart = new Date()
+    todayStart.setHours(0, 0, 0, 0)
+
+    const [
+      users, bookings, reviews, providers,
+      pendingVerifications, openDisputes, todayBookings,
+      failedPayouts, pendingKYC, highRiskKYC, requiresActionKYC,
+    ] = await Promise.all([
       prisma.user.count(),
       prisma.booking.findMany({ select: { totalPrice: true, status: true } }),
       prisma.review.count({ where: { isFlagged: true } }),
       prisma.providerProfile.count(),
+      prisma.verification.count({ where: { status: 'PENDING' } }),
+      prisma.dispute.count({ where: { status: { in: ['OPEN', 'UNDER_REVIEW'] } } }),
+      prisma.booking.count({ where: { createdAt: { gte: todayStart } } }),
+      prisma.payout.count({ where: { status: 'FAILED' } }),
+      prisma.kYCRecord.count({ where: { status: 'PENDING' } }),
+      prisma.kYCRecord.count({ where: { riskLevel: 'HIGH' } }),
+      prisma.kYCRecord.count({ where: { status: 'REQUIRES_ACTION' } }),
     ])
 
-    const gmv = bookings.filter(b => b.status === 'COMPLETED').reduce((s, b) => s + b.totalPrice, 0)
-    const pendingVerifications = await prisma.verification.count({ where: { status: 'PENDING' } })
+    const completedBookings = bookings.filter(b => b.status === 'COMPLETED')
+    // GMV includes CONFIRMED bookings (revenue committed but not yet settled) + COMPLETED
+    const gmv = bookings
+      .filter(b => b.status === 'COMPLETED' || b.status === 'CONFIRMED')
+      .reduce((s, b) => s + b.totalPrice, 0)
 
     return NextResponse.json({
       users,
@@ -27,6 +44,12 @@ export async function GET() {
       totalBookings: bookings.length,
       flaggedReviews: reviews,
       pendingVerifications,
+      openDisputes,
+      todayBookings,
+      failedPayouts,
+      pendingKYC,
+      highRiskKYC,
+      requiresActionKYC,
     })
   } catch (error) {
     console.error('Admin stats error:', error)

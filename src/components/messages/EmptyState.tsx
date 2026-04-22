@@ -9,7 +9,7 @@ interface Props {
 
 export function EmptyState({ variant }: Props) {
   return (
-    <div className="flex min-w-0 flex-1 flex-col items-center justify-center bg-[#FDFBF7]">
+    <div className="flex min-w-0 flex-1 flex-col items-center justify-center bg-white">
       <MessageSquare className="mb-4 h-12 w-12 text-[#717171]/30" />
       {variant === 'no-conversations' ? (
         <>

@@ -1,10 +1,14 @@
 'use client'
 
-import { Suspense } from 'react'
+import { Suspense, useEffect, useRef } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useMessages } from '@/hooks/useMessages'
 import { MessagesLayout } from '@/components/messages/MessagesLayout'
 
 function MessagesContent() {
+  const searchParams = useSearchParams()
+  const providerId = searchParams.get('providerId')
+
   const {
     conversations,
     activeBookingId,
@@ -17,9 +21,22 @@ function MessagesContent() {
     setSearchQuery,
     selectConversation,
     sendMessage,
+    fetchConversations,
+    lastFetchedAt,
     session,
     status,
   } = useMessages()
+
+  // Auto-select the most recent conversation with the target provider
+  const didAutoSelect = useRef(false)
+  useEffect(() => {
+    if (!providerId || loading || conversations.length === 0 || didAutoSelect.current) return
+    const match = conversations.find(c => c.otherParty.id === providerId)
+    if (match && match.bookingId !== activeBookingId) {
+      didAutoSelect.current = true
+      selectConversation(match.bookingId)
+    }
+  }, [providerId, conversations, loading, activeBookingId, selectConversation])
 
   if (status === 'loading') {
     return (
@@ -43,6 +60,8 @@ function MessagesContent() {
         onSearchChange={setSearchQuery}
         onSelectConversation={selectConversation}
         onSendMessage={sendMessage}
+        onRefresh={() => fetchConversations(false)}
+        lastFetchedAt={lastFetchedAt}
         currentUserId={session?.user?.id || ''}
       />
     </div>

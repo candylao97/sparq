@@ -44,101 +44,115 @@ export function GalleryGrid({ photos, name }: GalleryGridProps) {
     )
   }
 
-  const [p0, p1, p2, p3, p4] = photos
+  const [p0, p1, p2] = photos
 
   return (
     <>
-      {/* ── Desktop: Airbnb-style 5-photo grid ── */}
-      <div className="hidden md:grid grid-cols-[2fr_1fr_1fr] grid-rows-2 gap-2 h-[480px] rounded-2xl overflow-hidden relative">
-        {/* Main photo */}
-        <button
-          className="row-span-2 relative group cursor-zoom-in overflow-hidden"
-          onClick={() => setLightboxIndex(0)}
-          aria-label="View photo 1"
-        >
-          <Image
-            src={p0.url}
-            alt={p0.caption || name}
-            fill
-            className="object-cover transition-transform duration-700 group-hover:scale-[1.02]"
-            sizes="50vw"
-            priority
-          />
-        </button>
-
-        {/* Thumb 1 */}
-        {p1 && (
-          <button
-            className="relative group cursor-zoom-in overflow-hidden"
-            onClick={() => setLightboxIndex(1)}
-            aria-label="View photo 2"
-          >
-            <Image
-              src={p1.url}
-              alt={p1.caption || name}
-              fill
-              className="object-cover transition-transform duration-700 group-hover:scale-[1.02]"
-              sizes="25vw"
-            />
-          </button>
+      {/* ── Desktop: responsive photo grid ── */}
+      <div className="hidden md:block relative">
+        {/* 1 photo: full width */}
+        {photos.length === 1 && (
+          <div className="rounded-2xl overflow-hidden relative">
+            <button
+              className="block w-full aspect-[4/3] relative group cursor-zoom-in overflow-hidden"
+              onClick={() => setLightboxIndex(0)}
+              aria-label="View photo 1"
+            >
+              <Image
+                src={p0.url}
+                alt={p0.caption || name}
+                fill
+                className="object-cover transition-transform duration-700 group-hover:scale-[1.02]"
+                sizes="80vw"
+                priority
+              />
+            </button>
+          </div>
         )}
 
-        {/* Thumb 2 */}
-        {p2 && (
-          <button
-            className="relative group cursor-zoom-in overflow-hidden"
-            onClick={() => setLightboxIndex(2)}
-            aria-label="View photo 3"
-          >
-            <Image
-              src={p2.url}
-              alt={p2.caption || name}
-              fill
-              className="object-cover transition-transform duration-700 group-hover:scale-[1.02]"
-              sizes="25vw"
-            />
-          </button>
+        {/* 2 photos: two equal columns */}
+        {photos.length === 2 && (
+          <div className="grid grid-cols-2 gap-2 rounded-2xl overflow-hidden h-[420px]">
+            {[p0, p1].map((photo, i) => (
+              <button
+                key={photo.id}
+                className="relative group cursor-zoom-in overflow-hidden"
+                onClick={() => setLightboxIndex(i)}
+                aria-label={`View photo ${i + 1}`}
+              >
+                <Image
+                  src={photo.url}
+                  alt={photo.caption || name}
+                  fill
+                  className="object-cover transition-transform duration-700 group-hover:scale-[1.02]"
+                  sizes="40vw"
+                  priority={i === 0}
+                />
+              </button>
+            ))}
+          </div>
         )}
 
-        {/* Thumb 3 */}
-        {p3 && (
-          <button
-            className="relative group cursor-zoom-in overflow-hidden"
-            onClick={() => setLightboxIndex(3)}
-            aria-label="View photo 4"
-          >
-            <Image
-              src={p3.url}
-              alt={p3.caption || name}
-              fill
-              className="object-cover transition-transform duration-700 group-hover:scale-[1.02]"
-              sizes="25vw"
-            />
-          </button>
-        )}
+        {/* 3+ photos: left tall + right two stacked */}
+        {photos.length >= 3 && (
+          <div className="grid grid-cols-[2fr_1fr] gap-2 rounded-2xl overflow-hidden h-[480px]">
+            {/* Left: one tall image */}
+            <button
+              className="relative group cursor-zoom-in overflow-hidden"
+              onClick={() => setLightboxIndex(0)}
+              aria-label="View photo 1"
+            >
+              <Image
+                src={p0.url}
+                alt={p0.caption || name}
+                fill
+                className="object-cover transition-transform duration-700 group-hover:scale-[1.02]"
+                sizes="50vw"
+                priority
+              />
+            </button>
 
-        {/* Thumb 4 — with overflow indicator */}
-        {p4 && (
-          <button
-            className="relative group cursor-zoom-in overflow-hidden"
-            onClick={() => setLightboxIndex(4)}
-            aria-label={photos.length > 5 ? `View all ${photos.length} photos` : 'View photo 5'}
-          >
-            <Image
-              src={p4.url}
-              alt={p4.caption || name}
-              fill
-              className="object-cover transition-transform duration-700 group-hover:scale-[1.02]"
-              sizes="25vw"
-            />
-            {photos.length > 5 && (
-              <div className="absolute inset-0 bg-black/50 flex items-center justify-center group-hover:bg-black/60 transition-colors">
-                <span className="text-white font-semibold text-sm flex items-center gap-1.5">
-                  <Images className="w-4 h-4" /> +{photos.length - 5} more
-                </span>
-              </div>
-            )}
-          </button>
+            {/* Right: two stacked images */}
+            <div className="flex flex-col gap-2">
+              {p1 && (
+                <button
+                  className="relative flex-1 group cursor-zoom-in overflow-hidden"
+                  onClick={() => setLightboxIndex(1)}
+                  aria-label="View photo 2"
+                >
+                  <Image
+                    src={p1.url}
+                    alt={p1.caption || name}
+                    fill
+                    className="object-cover transition-transform duration-700 group-hover:scale-[1.02]"
+                    sizes="25vw"
+                  />
+                </button>
+              )}
+              {p2 && (
+                <button
+                  className="relative flex-1 group cursor-zoom-in overflow-hidden"
+                  onClick={() => setLightboxIndex(2)}
+                  aria-label={photos.length > 3 ? `View all ${photos.length} photos` : 'View photo 3'}
+                >
+                  <Image
+                    src={p2.url}
+                    alt={p2.caption || name}
+                    fill
+                    className="object-cover transition-transform duration-700 group-hover:scale-[1.02]"
+                    sizes="25vw"
+                  />
+                  {photos.length > 3 && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center group-hover:bg-black/60 transition-colors">
+                      <span className="text-white font-semibold text-sm flex items-center gap-1.5">
+                        <Images className="w-4 h-4" /> +{photos.length - 3} more
+                      </span>
+                    </div>
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
         )}
 
         {/* Show all button */}

@@ -44,18 +44,18 @@ export default function AdminSettings() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-        <p className="text-sm text-gray-500">Platform configuration</p>
+        <h1 className="text-2xl font-bold text-[#1A1A1A]">Settings</h1>
+        <p className="text-sm text-[#717171]">Platform configuration</p>
       </div>
 
       {loading ? (
         <div className="space-y-6">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="animate-pulse rounded-2xl border border-gray-100 bg-white p-6">
-              <div className="h-5 w-28 rounded bg-gray-100" />
+            <div key={i} className="animate-pulse rounded-2xl border border-[#e8e1de] bg-white p-6">
+              <div className="h-5 w-28 rounded bg-[#f9f2ef]" />
               <div className="mt-4 space-y-3">
-                <div className="h-10 w-full rounded bg-gray-100" />
-                <div className="h-10 w-full rounded bg-gray-100" />
+                <div className="h-10 w-full rounded bg-[#f9f2ef]" />
+                <div className="h-10 w-full rounded bg-[#f9f2ef]" />
               </div>
             </div>
           ))}
@@ -63,9 +63,9 @@ export default function AdminSettings() {
       ) : (
         <div className="space-y-6">
           {groups.map(group => (
-            <div key={group} className="rounded-2xl border border-gray-100 bg-white p-6">
-              <h2 className="mb-4 flex items-center gap-2 font-bold capitalize text-gray-900">
-                <Settings className="h-4 w-4 text-gray-400" />
+            <div key={group} className="rounded-2xl border border-[#e8e1de] bg-white p-6">
+              <h2 className="mb-4 flex items-center gap-2 font-bold capitalize text-[#1A1A1A]">
+                <Settings className="h-4 w-4 text-[#717171]" />
                 {group}
               </h2>
               <div className="space-y-4">
@@ -79,10 +79,10 @@ export default function AdminSettings() {
                     return (
                       <div key={s.key} className="flex items-center gap-4">
                         <div className="min-w-[200px]">
-                          <label className="text-sm font-medium text-gray-700">
+                          <label className="text-sm font-medium text-[#1A1A1A]">
                             {s.label || s.key}
                           </label>
-                          <div className="text-xs text-gray-400">{s.key}</div>
+                          <div className="text-xs text-[#717171]">{s.key}</div>
                         </div>
                         <div className="flex flex-1 items-center gap-2">
                           {isBool ? (
@@ -94,7 +94,7 @@ export default function AdminSettings() {
                               className={`rounded-full px-4 py-1.5 text-xs font-medium transition-colors ${
                                 currentValue === 'true'
                                   ? 'bg-green-100 text-green-700'
-                                  : 'bg-gray-100 text-gray-600'
+                                  : 'bg-[#f9f2ef] text-[#717171]'
                               }`}
                             >
                               {currentValue === 'true' ? 'Enabled' : 'Disabled'}
@@ -104,14 +104,14 @@ export default function AdminSettings() {
                               type="text"
                               value={currentValue}
                               onChange={e => setEdited({ ...edited, [s.key]: e.target.value })}
-                              className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none"
+                              className="flex-1 rounded-lg border border-[#e8e1de] px-3 py-2 text-sm focus:border-[#717171] focus:outline-none"
                             />
                           )}
                           {isChanged && (
                             <button
                               onClick={() => saveSetting(s.key)}
                               disabled={saving === s.key}
-                              className="inline-flex items-center gap-1 rounded-lg bg-gray-900 px-3 py-2 text-xs font-medium text-white hover:bg-gray-800 disabled:opacity-50"
+                              className="inline-flex items-center gap-1 rounded-lg bg-[#1A1A1A] px-3 py-2 text-xs font-medium text-white hover:bg-[#1A1A1A] disabled:opacity-50"
                             >
                               {saving === s.key ? (
                                 'Saving...'

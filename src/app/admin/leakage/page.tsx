@@ -59,11 +59,11 @@ export default function LeakageFlagsPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="flex items-center gap-2 text-2xl font-bold text-gray-900">
+        <h1 className="flex items-center gap-2 text-2xl font-bold text-[#1A1A1A]">
           <ShieldAlert className="h-6 w-6" />
           Leakage Flags
         </h1>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-[#717171]">
           Contact information leakage attempts detected in messages and reviews
         </p>
       </div>
@@ -73,8 +73,8 @@ export default function LeakageFlagsPage() {
           onClick={() => setShowResolved(false)}
           className={`rounded-full px-4 py-1.5 text-xs font-medium transition-colors ${
             !showResolved
-              ? 'bg-gray-900 text-white'
-              : 'border border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+              ? 'bg-[#1A1A1A] text-white'
+              : 'border border-[#e8e1de] bg-white text-[#717171] hover:bg-[#f9f2ef]'
           }`}
         >
           Unresolved
@@ -83,18 +83,18 @@ export default function LeakageFlagsPage() {
           onClick={() => setShowResolved(true)}
           className={`rounded-full px-4 py-1.5 text-xs font-medium transition-colors ${
             showResolved
-              ? 'bg-gray-900 text-white'
-              : 'border border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+              ? 'bg-[#1A1A1A] text-white'
+              : 'border border-[#e8e1de] bg-white text-[#717171] hover:bg-[#f9f2ef]'
           }`}
         >
           Resolved
         </button>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white">
+      <div className="overflow-hidden rounded-2xl border border-[#e8e1de] bg-white">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-100 bg-gray-50/50 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+            <tr className="border-b border-[#e8e1de] bg-[#f9f2ef]/50 text-left text-xs font-medium uppercase tracking-wider text-[#717171]">
               <th className="px-5 py-3">Date</th>
               <th className="px-5 py-3">User</th>
               <th className="px-5 py-3">Flag Type</th>
@@ -103,44 +103,44 @@ export default function LeakageFlagsPage() {
               <th className="px-5 py-3">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-50">
+          <tbody className="divide-y divide-[#f9f2ef]">
             {loading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <tr key={i}>
                   {Array.from({ length: 6 }).map((_, j) => (
                     <td key={j} className="px-5 py-4">
-                      <div className="h-4 w-20 animate-pulse rounded bg-gray-100" />
+                      <div className="h-4 w-20 animate-pulse rounded bg-[#f9f2ef]" />
                     </td>
                   ))}
                 </tr>
               ))
             ) : flags.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-5 py-12 text-center text-gray-400">
+                <td colSpan={6} className="px-5 py-12 text-center text-[#717171]">
                   No {showResolved ? 'resolved' : 'unresolved'} flags found
                 </td>
               </tr>
             ) : (
               flags.map(flag => (
-                <tr key={flag.id} className="hover:bg-gray-50/50">
-                  <td className="px-5 py-4 text-gray-600">
+                <tr key={flag.id} className="hover:bg-[#f9f2ef]/50">
+                  <td className="px-5 py-4 text-[#717171]">
                     {new Date(flag.createdAt).toLocaleDateString()}{' '}
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-[#717171]">
                       {new Date(flag.createdAt).toLocaleTimeString()}
                     </span>
                   </td>
                   <td className="px-5 py-4">
-                    <div className="font-medium text-gray-900">
+                    <div className="font-medium text-[#1A1A1A]">
                       {flag.user.name || 'Unknown'}
                     </div>
-                    <div className="text-xs text-gray-400">{flag.user.email}</div>
+                    <div className="text-xs text-[#717171]">{flag.user.email}</div>
                   </td>
                   <td className="px-5 py-4">
                     <span className="inline-flex rounded-full bg-orange-50 px-2.5 py-0.5 text-xs font-medium text-orange-700">
                       {flag.flagType}
                     </span>
                   </td>
-                  <td className="max-w-xs truncate px-5 py-4 text-gray-600">
+                  <td className="max-w-xs truncate px-5 py-4 text-[#717171]">
                     {flag.snippet}
                   </td>
                   <td className="px-5 py-4">
@@ -159,7 +159,7 @@ export default function LeakageFlagsPage() {
                       <button
                         onClick={() => resolveFlag(flag.id)}
                         disabled={resolving === flag.id}
-                        className="rounded-lg bg-gray-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-800 disabled:opacity-50"
+                        className="rounded-lg bg-[#1A1A1A] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#333] disabled:opacity-50"
                       >
                         {resolving === flag.id ? 'Resolving...' : 'Resolve'}
                       </button>

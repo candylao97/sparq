@@ -6,7 +6,7 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import toast, { Toaster } from 'react-hot-toast'
-import { Upload, Trash2, ImageIcon, ArrowLeft, Loader2 } from 'lucide-react'
+import { Upload, Trash2, ImageIcon, ArrowLeft, Loader2, ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface PortfolioPhoto {
   id: string
@@ -17,7 +17,7 @@ interface PortfolioPhoto {
   createdAt: string
 }
 
-const MAX_PHOTOS = 12
+const MAX_PHOTOS = 20
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 
 export default function PortfolioPage() {
@@ -32,6 +32,8 @@ export default function PortfolioPage() {
   const [dragOver, setDragOver] = useState(false)
   const [captions, setCaptions] = useState<Record<string, string>>({})
   const [savingCaptionId, setSavingCaptionId] = useState<string | null>(null)
+  const [orderDirty, setOrderDirty] = useState(false)
+  const [savingOrder, setSavingOrder] = useState(false)
 
   // Auth guard
   useEffect(() => {
@@ -175,6 +177,38 @@ export default function PortfolioPage() {
     }
   }
 
+  // Reorder handlers
+  function movePhoto(id: string, direction: 'up' | 'down') {
+    setPhotos(prev => {
+      const idx = prev.findIndex(p => p.id === id)
+      if (idx === -1) return prev
+      const newIdx = direction === 'up' ? idx - 1 : idx + 1
+      if (newIdx < 0 || newIdx >= prev.length) return prev
+      const updated = [...prev]
+      ;[updated[idx], updated[newIdx]] = [updated[newIdx], updated[idx]]
+      return updated
+    })
+    setOrderDirty(true)
+  }
+
+  const handleSaveOrder = async () => {
+    setSavingOrder(true)
+    try {
+      const res = await fetch('/api/portfolio/reorder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderedIds: photos.map(p => p.id) }),
+      })
+      if (!res.ok) throw new Error('Reorder failed')
+      setOrderDirty(false)
+      toast.success('Order saved')
+    } catch {
+      toast.error('Failed to save order')
+    } finally {
+      setSavingOrder(false)
+    }
+  }
+
   // Drag and drop handlers
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
@@ -206,7 +240,7 @@ export default function PortfolioPage() {
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#FDFBF7_100%)]">
       <Toaster position="top-right" />
-      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-10">
+      <div className="mx-auto max-w-[1600px] px-4 py-10 sm:px-8 lg:px-12 xl:px-20">
         {/* Back link */}
         <Link
           href="/dashboard/provider"
@@ -232,7 +266,7 @@ export default function PortfolioPage() {
             relative mb-8 flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 transition-colors
             ${dragOver
               ? 'border-[#E96B56] bg-orange-50'
-              : 'border-[#e8e1de] bg-white hover:border-gray-400 hover:bg-[#f9f2ef]'
+              : 'border-[#e8e1de] bg-white hover:border-[#717171] hover:bg-[#f9f2ef]'
             }
             ${uploading ? 'pointer-events-none opacity-60' : ''}
             ${photos.length >= MAX_PHOTOS ? 'pointer-events-none opacity-50' : ''}
@@ -267,6 +301,9 @@ export default function PortfolioPage() {
           <p className="text-sm text-[#717171]">
             {photos.length} / {MAX_PHOTOS} photos
           </p>
+          {photos.length > 1 && (
+            <p className="text-xs text-[#717171]">Hover a photo to reorder</p>
+          )}
         </div>
 
         {/* Empty state */}
@@ -278,10 +315,24 @@ export default function PortfolioPage() {
           </div>
         )}
 
+        {/* Floating save order button */}
+        {orderDirty && (
+          <button
+            onClick={handleSaveOrder}
+            disabled={savingOrder}
+            className="fixed bottom-6 right-6 z-50 inline-flex items-center gap-2 rounded-full bg-[#1A1A1A] px-5 py-3 text-sm font-bold text-white shadow-lg transition-colors hover:bg-[#333] disabled:opacity-60"
+          >
+            {savingOrder ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : null}
+            Save order
+          </button>
+        )}
+
         {/* Photo grid */}
         {photos.length > 0 && (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {photos.map(photo => (
+            {photos.map((photo, index) => (
               <div
                 key={photo.id}
                 className="group relative overflow-hidden rounded-2xl border border-[#e8e1de] bg-white"
@@ -295,6 +346,26 @@ export default function PortfolioPage() {
                     className="object-cover"
                     sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                   />
+
+                  {/* Reorder arrows — top-left */}
+                  <div className="absolute left-2 top-2 z-10 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                    <button
+                      onClick={() => movePhoto(photo.id, 'up')}
+                      disabled={index === 0}
+                      className="flex h-6 w-6 items-center justify-center rounded-full bg-black/50 text-white transition-all hover:bg-black/70 disabled:opacity-30"
+                      aria-label="Move left"
+                    >
+                      <ChevronLeft className="h-3 w-3" />
+                    </button>
+                    <button
+                      onClick={() => movePhoto(photo.id, 'down')}
+                      disabled={index === photos.length - 1}
+                      className="flex h-6 w-6 items-center justify-center rounded-full bg-black/50 text-white transition-all hover:bg-black/70 disabled:opacity-30"
+                      aria-label="Move right"
+                    >
+                      <ChevronRight className="h-3 w-3" />
+                    </button>
+                  </div>
 
                   {/* Delete button overlay */}
                   <button

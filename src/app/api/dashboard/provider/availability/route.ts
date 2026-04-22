@@ -119,9 +119,16 @@ export async function POST(req: NextRequest) {
     }
 
     // Mode 2: Block a date range (vacation mode)
-    if (body.blockRange && body.startDate && body.days) {
+    if (body.blockRange && body.startDate && (body.days || body.endDate)) {
       const start = parseDateSafe(body.startDate)
-      const days = Math.min(body.days, 30) // cap at 30 days
+      let days: number
+      if (body.endDate) {
+        const end = parseDateSafe(body.endDate)
+        days = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1
+      } else {
+        days = body.days
+      }
+      days = Math.min(Math.max(days, 1), 180) // cap at 180 days
       const ops = []
 
       for (let i = 0; i < days; i++) {
@@ -141,6 +148,31 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, count: ops.length })
     }
 
+    // Mode 2b: Unblock a date range (clear vacation mode)
+    if (body.unblockRange && body.startDate && body.endDate) {
+      const start = parseDateSafe(body.startDate)
+      const end = parseDateSafe(body.endDate)
+      const days = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1
+      const capped = Math.min(Math.max(days, 1), 180)
+      const ops = []
+
+      for (let i = 0; i < capped; i++) {
+        const date = new Date(start)
+        date.setDate(date.getDate() + i)
+
+        ops.push(
+          prisma.availability.upsert({
+            where: { providerId_date: { providerId: profile.id, date } },
+            update: { isBlocked: false },
+            create: { providerId: profile.id, date, isBlocked: false, timeSlots: [] },
+          })
+        )
+      }
+
+      await prisma.$transaction(ops)
+      return NextResponse.json({ success: true, count: ops.length })
+    }
+
     // Mode 3: Single date upsert
     if (!body.date) {
       return NextResponse.json({ error: 'Date is required' }, { status: 400 })
@@ -149,6 +181,24 @@ export async function POST(req: NextRequest) {
     const date = parseDateSafe(body.date)
     const timeSlots: string[] = body.timeSlots || []
     const isBlocked: boolean = body.isBlocked || false
+
+    // P1-7: Optimistic locking for concurrent availability updates.
+    // If the client sends a `clientUpdatedAt` timestamp, we compare it against the stored
+    // updatedAt. If they differ, a concurrent write has happened — return 409 so the client
+    // can refresh and retry. On a new record (no existing row), we skip the check.
+    const clientUpdatedAt: string | undefined = body.clientUpdatedAt
+    if (clientUpdatedAt) {
+      const existing = await prisma.availability.findUnique({
+        where: { providerId_date: { providerId: profile.id, date } },
+        select: { updatedAt: true },
+      })
+      if (existing && existing.updatedAt.toISOString() !== new Date(clientUpdatedAt).toISOString()) {
+        return NextResponse.json(
+          { error: 'Schedule was updated elsewhere, please refresh and try again.' },
+          { status: 409 }
+        )
+      }
+    }
 
     const record = await prisma.availability.upsert({
       where: { providerId_date: { providerId: profile.id, date } },
@@ -160,6 +210,7 @@ export async function POST(req: NextRequest) {
       date: record.date.toISOString().split('T')[0],
       timeSlots: record.timeSlots,
       isBlocked: record.isBlocked,
+      updatedAt: record.updatedAt.toISOString(),
     })
   } catch (error) {
     console.error('Availability POST error:', error)

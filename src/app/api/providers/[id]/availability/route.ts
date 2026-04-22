@@ -1,25 +1,89 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-
-// Sentinel dates for weekly defaults — must match dashboard availability route
-const DAY_TO_SENTINEL: Record<number, string> = {
-  1: '2000-01-03', // Monday
-  2: '2000-01-04', // Tuesday
-  3: '2000-01-05', // Wednesday
-  4: '2000-01-06', // Thursday
-  5: '2000-01-07', // Friday
-  6: '2000-01-08', // Saturday
-  0: '2000-01-09', // Sunday
-}
+import { getSentinelDateString, getSentinelDate } from '@/lib/availability-sentinel'
 
 function parseDateNoonUTC(dateStr: string): Date {
   const [y, m, d] = dateStr.split('-').map(Number)
   return new Date(Date.UTC(y, m - 1, d, 12, 0, 0))
 }
 
+// P0-D/UX-H1: Batch availability — returns available dates for a date range (up to 60 days)
+// Used by the booking calendar to grey out unavailable days.
+async function getBatchAvailability(providerId: string, fromStr: string, toStr: string) {
+  const from = parseDateNoonUTC(fromStr)
+  const to = parseDateNoonUTC(toStr)
+
+  if (isNaN(from.getTime()) || isNaN(to.getTime())) return null
+
+  // Clamp range to max 60 days
+  const maxRange = 60 * 24 * 60 * 60 * 1000
+  const actualTo = new Date(Math.min(to.getTime(), from.getTime() + maxRange))
+
+  // Fetch all sentinel (weekly default) availability records for this provider
+  const sentinelDates = [0, 1, 2, 3, 4, 5, 6].map(dow => getSentinelDate(dow))
+  const sentinels = await prisma.availability.findMany({
+    where: { providerId, date: { in: sentinelDates } },
+  })
+  // Sentinel dates are in year 2000; map by DOW
+  const sentinelByDow = new Map<number, typeof sentinels[0]>()
+  for (const s of sentinels) {
+    const dow = s.date.getUTCDay()
+    sentinelByDow.set(dow, s)
+  }
+
+  // Fetch date-specific overrides in the requested range
+  const overrides = await prisma.availability.findMany({
+    where: {
+      providerId,
+      date: { gte: from, lte: actualTo },
+    },
+  })
+  const overrideMap = new Map(overrides.map(o => [o.date.toISOString().slice(0, 10), o]))
+
+  // Build list of available dates
+  const availableDates: string[] = []
+  const current = new Date(from)
+  while (current <= actualTo) {
+    const dateStr = current.toISOString().slice(0, 10)
+    const override = overrideMap.get(dateStr)
+    let isAvailable: boolean
+
+    if (override) {
+      isAvailable = !override.isBlocked && override.timeSlots.length > 0
+    } else {
+      const dow = current.getUTCDay()
+      const sentinel = sentinelByDow.get(dow)
+      isAvailable = !!sentinel && !sentinel.isBlocked && sentinel.timeSlots.length > 0
+    }
+
+    if (isAvailable) availableDates.push(dateStr)
+
+    // Advance by 1 day (using UTC)
+    current.setUTCDate(current.getUTCDate() + 1)
+    current.setUTCHours(12, 0, 0, 0)
+  }
+
+  return { availableDates }
+}
+
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const { searchParams } = new URL(req.url)
+
+    // P0-D: Batch mode — return available dates for a range
+    const fromStr = searchParams.get('from')
+    const toStr = searchParams.get('to')
+    if (fromStr && toStr) {
+      const provider = await prisma.providerProfile.findFirst({
+        where: { userId: params.id },
+        select: { id: true },
+      })
+      if (!provider) return NextResponse.json({ error: 'Provider not found' }, { status: 404 })
+      const result = await getBatchAvailability(provider.id, fromStr, toStr)
+      if (!result) return NextResponse.json({ error: 'Invalid date range' }, { status: 400 })
+      return NextResponse.json(result)
+    }
+
     const dateStr = searchParams.get('date')
     if (!dateStr) return NextResponse.json({ error: 'date query param required' }, { status: 400 })
 
@@ -55,20 +119,15 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     // If no date-specific override, fall back to weekly default
     if (!isOverride) {
       const dayOfWeek = date.getUTCDay() // Use UTC to match how we stored the date
-      const sentinel = DAY_TO_SENTINEL[dayOfWeek]
-      if (sentinel) {
-        const sentinelDate = parseDateNoonUTC(sentinel)
-        availability = await prisma.availability.findUnique({
-          where: {
-            providerId_date: {
-              providerId: provider.id,
-              date: sentinelDate,
-            },
+      const sentinelDate = getSentinelDate(dayOfWeek)
+      availability = await prisma.availability.findUnique({
+        where: {
+          providerId_date: {
+            providerId: provider.id,
+            date: sentinelDate,
           },
-        })
-      } else {
-        availability = null
-      }
+        },
+      })
     }
 
     if (!availability || availability.isBlocked) {

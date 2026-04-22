@@ -29,6 +29,7 @@ export default function AdminBookings() {
   const [refundAmount, setRefundAmount] = useState('')
   const [refundReason, setRefundReason] = useState('')
   const [saving, setSaving] = useState(false)
+  const [refundConfirmStep, setRefundConfirmStep] = useState(false)
 
   const fetchBookings = useCallback(() => {
     setLoading(true)
@@ -58,6 +59,7 @@ export default function AdminBookings() {
     setRefundModal(null)
     setRefundAmount('')
     setRefundReason('')
+    setRefundConfirmStep(false)
     fetchBookings()
   }
 
@@ -73,12 +75,12 @@ export default function AdminBookings() {
         CANCELLED: 'bg-red-50 text-red-700',
         CANCELLED_BY_CUSTOMER: 'bg-red-50 text-red-700',
         CANCELLED_BY_PROVIDER: 'bg-orange-50 text-orange-700',
-        DECLINED: 'bg-gray-100 text-gray-600',
+        DECLINED: 'bg-[#f9f2ef] text-[#717171]',
         REFUNDED: 'bg-purple-50 text-purple-700',
-        EXPIRED: 'bg-gray-100 text-gray-500',
+        EXPIRED: 'bg-[#f9f2ef] text-[#717171]',
         DISPUTED: 'bg-red-100 text-red-800',
       }
-      return map[s] || 'bg-gray-100 text-gray-600'
+      return map[s] || 'bg-[#f9f2ef] text-[#717171]'
     }
   }
 
@@ -104,19 +106,19 @@ export default function AdminBookings() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Bookings</h1>
-        <p className="text-sm text-gray-500">Manage bookings and process refunds</p>
+        <h1 className="text-2xl font-bold text-[#1A1A1A]">Bookings</h1>
+        <p className="text-sm text-[#717171]">Manage bookings and process refunds</p>
       </div>
 
       <div className="mb-6 flex flex-wrap items-center gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#717171]" />
           <input
             type="text"
             placeholder="Search by customer, provider, or service..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-10 pr-4 text-sm focus:border-gray-400 focus:outline-none"
+            className="w-full rounded-lg border border-[#e8e1de] bg-white py-2 pl-10 pr-4 text-sm focus:border-[#717171] focus:outline-none"
           />
         </div>
         {['all', 'PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED', 'CANCELLED_BY_CUSTOMER', 'CANCELLED_BY_PROVIDER', 'REFUNDED', 'EXPIRED', 'DISPUTED', 'refund'].map(f => (
@@ -124,7 +126,7 @@ export default function AdminBookings() {
             key={f}
             onClick={() => setFilter(f)}
             className={`rounded-full px-4 py-1.5 text-xs font-medium transition-colors ${
-              filter === f ? 'bg-gray-900 text-white' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+              filter === f ? 'bg-[#1A1A1A] text-white' : 'bg-white text-[#717171] border border-[#e8e1de] hover:bg-[#f9f2ef]'
             }`}
           >
             {f === 'refund' ? 'Refund Requested' : f === 'all' ? 'All' : statusLabel(f)}
@@ -132,10 +134,10 @@ export default function AdminBookings() {
         ))}
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white">
+      <div className="overflow-hidden rounded-2xl border border-[#e8e1de] bg-white">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-100 bg-gray-50/50 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+            <tr className="border-b border-[#e8e1de] bg-[#f9f2ef]/50 text-left text-xs font-medium uppercase tracking-wider text-[#717171]">
               <th className="px-5 py-3">Booking</th>
               <th className="px-5 py-3">Customer</th>
               <th className="px-5 py-3">Provider</th>
@@ -147,36 +149,36 @@ export default function AdminBookings() {
               <th className="px-5 py-3">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-50">
+          <tbody className="divide-y divide-[#f9f2ef]">
             {loading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <tr key={i}>
                   {Array.from({ length: 9 }).map((_, j) => (
                     <td key={j} className="px-5 py-4">
-                      <div className="h-4 w-16 animate-pulse rounded bg-gray-100" />
+                      <div className="h-4 w-16 animate-pulse rounded bg-[#f9f2ef]" />
                     </td>
                   ))}
                 </tr>
               ))
             ) : bookings.length === 0 ? (
               <tr>
-                <td colSpan={9} className="px-5 py-12 text-center text-gray-400">
+                <td colSpan={9} className="px-5 py-12 text-center text-[#717171]">
                   No bookings found
                 </td>
               </tr>
             ) : (
               bookings.map(b => (
-                <tr key={b.id} className="hover:bg-gray-50/50">
+                <tr key={b.id} className="hover:bg-[#f9f2ef]/50">
                   <td className="px-5 py-4">
-                    <div className="font-medium text-gray-900">{b.service.title}</div>
-                    <div className="text-xs text-gray-400">{b.id.slice(0, 8)}...</div>
+                    <div className="font-medium text-[#1A1A1A]">{b.service.title}</div>
+                    <div className="text-xs text-[#717171]">{b.id.slice(0, 8)}...</div>
                   </td>
-                  <td className="px-5 py-4 text-gray-600">{b.customer.name || b.customer.email}</td>
-                  <td className="px-5 py-4 text-gray-600">{b.provider.name}</td>
-                  <td className="px-5 py-4 text-gray-600">
+                  <td className="px-5 py-4 text-[#717171]">{b.customer.name || b.customer.email}</td>
+                  <td className="px-5 py-4 text-[#717171]">{b.provider.name}</td>
+                  <td className="px-5 py-4 text-[#717171]">
                     {new Date(b.date).toLocaleDateString()} {b.time}
                   </td>
-                  <td className="px-5 py-4 font-medium text-gray-900">{formatCurrency(b.totalPrice)}</td>
+                  <td className="px-5 py-4 font-medium text-[#1A1A1A]">{formatCurrency(b.totalPrice)}</td>
                   <td className="px-5 py-4">
                     <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${statusColor(b.status)}`}>
                       {statusLabel(b.status)}
@@ -184,9 +186,9 @@ export default function AdminBookings() {
                   </td>
                   <td className="px-5 py-4">
                     {b.paymentStatus ? (
-                      <span className="text-xs text-gray-600">{b.paymentStatus}</span>
+                      <span className="text-xs text-[#717171]">{b.paymentStatus}</span>
                     ) : (
-                      <span className="text-xs text-gray-300">-</span>
+                      <span className="text-xs text-[#D5CEC9]">-</span>
                     )}
                   </td>
                   <td className="px-5 py-4">
@@ -196,11 +198,11 @@ export default function AdminBookings() {
                           {b.refundStatus}
                         </span>
                         {b.refundAmount && (
-                          <div className="mt-1 text-xs text-gray-400">{formatCurrency(b.refundAmount)}</div>
+                          <div className="mt-1 text-xs text-[#717171]">{formatCurrency(b.refundAmount)}</div>
                         )}
                       </div>
                     ) : (
-                      <span className="text-xs text-gray-300">-</span>
+                      <span className="text-xs text-[#D5CEC9]">-</span>
                     )}
                   </td>
                   <td className="px-5 py-4">
@@ -228,53 +230,101 @@ export default function AdminBookings() {
       {refundModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-            <h3 className="mb-1 flex items-center gap-2 text-lg font-bold text-gray-900">
-              <DollarSign className="h-5 w-5" /> Process Refund
-            </h3>
-            <p className="mb-4 text-sm text-gray-500">
-              {refundModal.service.title} - {refundModal.customer.name}
-            </p>
+            {!refundConfirmStep ? (
+              <>
+                <h3 className="mb-1 flex items-center gap-2 text-lg font-bold text-[#1A1A1A]">
+                  <DollarSign className="h-5 w-5" /> Process Refund
+                </h3>
+                <p className="mb-4 text-sm text-[#717171]">
+                  {refundModal.service.title} — {refundModal.customer.name}
+                </p>
 
-            <div className="mb-4">
-              <label className="mb-1 block text-sm font-medium text-gray-700">
-                Refund Amount (Original: {formatCurrency(refundModal.totalPrice)})
-              </label>
-              <input
-                type="number"
-                value={refundAmount}
-                onChange={e => setRefundAmount(e.target.value)}
-                max={refundModal.totalPrice}
-                step="0.01"
-                className="w-full rounded-lg border border-gray-200 p-3 text-sm focus:border-gray-400 focus:outline-none"
-              />
-            </div>
+                <div className="mb-4">
+                  <label className="mb-1 block text-sm font-medium text-[#1A1A1A]">
+                    Refund Amount (Original: {formatCurrency(refundModal.totalPrice)})
+                  </label>
+                  <input
+                    type="number"
+                    value={refundAmount}
+                    onChange={e => setRefundAmount(e.target.value)}
+                    max={refundModal.totalPrice}
+                    step="0.01"
+                    className="w-full rounded-lg border border-[#e8e1de] p-3 text-sm focus:border-[#717171] focus:outline-none"
+                  />
+                </div>
 
-            <div className="mb-4">
-              <label className="mb-1 block text-sm font-medium text-gray-700">Reason</label>
-              <textarea
-                value={refundReason}
-                onChange={e => setRefundReason(e.target.value)}
-                rows={3}
-                className="w-full rounded-lg border border-gray-200 p-3 text-sm focus:border-gray-400 focus:outline-none"
-                placeholder="Enter refund reason..."
-              />
-            </div>
+                <div className="mb-4">
+                  <label className="mb-1 block text-sm font-medium text-[#1A1A1A]">Reason</label>
+                  <textarea
+                    value={refundReason}
+                    onChange={e => setRefundReason(e.target.value)}
+                    rows={3}
+                    className="w-full rounded-lg border border-[#e8e1de] p-3 text-sm focus:border-[#717171] focus:outline-none"
+                    placeholder="Enter refund reason..."
+                  />
+                </div>
 
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => { setRefundModal(null); setRefundAmount(''); setRefundReason('') }}
-                className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={processRefund}
-                disabled={saving || !refundAmount || !refundReason}
-                className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
-              >
-                {saving ? 'Processing...' : 'Process Refund'}
-              </button>
-            </div>
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => { setRefundModal(null); setRefundAmount(''); setRefundReason(''); setRefundConfirmStep(false) }}
+                    className="rounded-lg border border-[#e8e1de] px-4 py-2 text-sm font-medium text-[#717171] hover:bg-[#f9f2ef]"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => setRefundConfirmStep(true)}
+                    disabled={!refundAmount || !refundReason}
+                    className="rounded-lg bg-[#1A1A1A] px-4 py-2 text-sm font-medium text-white hover:bg-[#1A1A1A] disabled:opacity-50"
+                  >
+                    Review refund →
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <h3 className="mb-1 flex items-center gap-2 text-lg font-bold text-[#1A1A1A]">
+                  <DollarSign className="h-5 w-5" /> Confirm Refund
+                </h3>
+                <p className="mb-4 text-sm text-[#717171]">
+                  Please review before processing — this action cannot be undone.
+                </p>
+
+                <div className="mb-5 rounded-xl border border-[#e8e1de] bg-[#f9f2ef] p-4 space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-[#717171]">Customer</span>
+                    <span className="font-medium text-[#1A1A1A]">{refundModal.customer.name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#717171]">Service</span>
+                    <span className="font-medium text-[#1A1A1A]">{refundModal.service.title}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#717171]">Refund amount</span>
+                    <span className="font-bold text-orange-600">{formatCurrency(parseFloat(refundAmount))}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#717171]">Reason</span>
+                    <span className="text-[#1A1A1A] text-right max-w-[60%]">{refundReason}</span>
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => setRefundConfirmStep(false)}
+                    className="rounded-lg border border-[#e8e1de] px-4 py-2 text-sm font-medium text-[#717171] hover:bg-[#f9f2ef]"
+                  >
+                    ← Edit
+                  </button>
+                  <button
+                    onClick={processRefund}
+                    disabled={saving}
+                    className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 disabled:opacity-50"
+                  >
+                    {saving ? 'Processing…' : 'Confirm & refund'}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

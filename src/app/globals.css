@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* UX-L3: Limit visible toasts to max 3 — 4th+ are hidden until earlier ones expire.
+   Defined here (not in layout.tsx <style>) to avoid SSR/hydration mismatch. */
+[data-hot-toast-container] > div:nth-child(n+4) {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
 :root {
   /* ── Brand Colors ──────────────────────────────────── */
   --coral:          #E96B56;   /* Primary CTA */

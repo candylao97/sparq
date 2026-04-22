@@ -35,6 +35,10 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: 'Key and value are required' }, { status: 400 })
     }
 
+    if (String(value).length > 500) {
+      return NextResponse.json({ error: 'Value too long' }, { status: 400 })
+    }
+
     const setting = await prisma.platformSetting.update({
       where: { key },
       data: { value: String(value) },

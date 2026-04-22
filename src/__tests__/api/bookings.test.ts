@@ -114,10 +114,10 @@ function makeRequest(
   method: string = 'GET',
   body?: object,
 ): NextRequest {
-  const init: RequestInit = { method }
+  const init: ConstructorParameters<typeof NextRequest>[1] = { method }
   if (body) {
-    init.body = JSON.stringify(body)
-    init.headers = { 'Content-Type': 'application/json' }
+    init!.body = JSON.stringify(body)
+    init!.headers = { 'Content-Type': 'application/json' }
   }
   return new NextRequest(url, init)
 }

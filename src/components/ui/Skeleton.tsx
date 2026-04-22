@@ -5,7 +5,7 @@ interface SkeletonProps {
 }
 
 export function Skeleton({ className }: SkeletonProps) {
-  return <div className={cn('animate-pulse bg-[#e8e1de] dark:bg-gray-700 rounded-lg', className)} />
+  return <div className={cn('animate-pulse bg-[#e8e1de] dark:bg-[#333] rounded-lg', className)} />
 }
 
 export function ProviderCardSkeleton() {

@@ -15,7 +15,8 @@ export async function GET(req: NextRequest) {
     const refundStatus = searchParams.get('refundStatus')
     const search = searchParams.get('search')
     const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '20')
+    const limitParam = searchParams.get('limit')
+    const limit = Math.min(parseInt(limitParam || '25', 10) || 25, 100)
     const skip = (page - 1) * limit
 
     const where: Record<string, unknown> = {}

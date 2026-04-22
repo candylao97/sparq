@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { filterContactInfo } from '@/lib/content-filter'
 
 export async function PATCH(
   req: NextRequest,
@@ -14,13 +15,25 @@ export async function PATCH(
 
   try {
     const body = await req.json()
-    const { isFlagged, isVisible, flagReason } = body
+    const { isFlagged, isVisible, flagReason, text } = body
 
     const updateData: Record<string, unknown> = {}
 
     if (typeof isFlagged === 'boolean') updateData.isFlagged = isFlagged
     if (typeof isVisible === 'boolean') updateData.isVisible = isVisible
     if (flagReason !== undefined) updateData.flagReason = flagReason
+
+    // TS08: Filter PII from admin-edited review text to prevent admin-injected PII bypassing content filters
+    if (text !== undefined && typeof text === 'string') {
+      const textFilter = filterContactInfo(text.trim())
+      if (textFilter.flagged) {
+        return NextResponse.json(
+          { error: 'Review text appears to contain contact information. Please remove it before saving.' },
+          { status: 422 }
+        )
+      }
+      updateData.text = text.trim()
+    }
 
     // Always set moderation metadata when moderating
     updateData.moderatedAt = new Date()

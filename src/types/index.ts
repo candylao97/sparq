@@ -55,10 +55,22 @@ export type ProviderCardData = {
     price: number
     duration: number
     locationTypes: ServiceLocation
+    instantBook?: boolean
   }[]
   portfolio: PortfolioPhoto[]
   averageRating: number
   reviewCount: number
+  /** Completed bookings in the last 30 days — used for social proof */
+  monthlyBookings?: number
+  /** Avg response time in hours — shown as a badge on provider cards */
+  responseTimeHours?: number | null
+  /** Geo coordinates — used for map view on search page */
+  latitude?: number | null
+  longitude?: number | null
+  /** Distance from user if geo search was used */
+  distanceKm?: number | null
+  /** Next available date for booking — shown on search cards */
+  nextAvailableDate?: string | Date | null
 }
 
 export type SearchFilters = {

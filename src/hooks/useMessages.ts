@@ -20,6 +20,7 @@ export function useMessages() {
   const [messagesLoading, setMessagesLoading] = useState(false)
   const [sending, setSending] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [lastFetchedAt, setLastFetchedAt] = useState<Date>(new Date())
   const activeBookingRef = useRef<string | null>(null)
   const lastMessageIdRef = useRef<string | null>(null)
   // Track whether initial load auto-selected, to avoid double-fetch from the effect
@@ -40,6 +41,7 @@ export function useMessages() {
       }
       const data = await res.json()
       setConversations(data.conversations)
+      setLastFetchedAt(new Date())
 
       // Auto-select from URL or first conversation (only on initial load)
       if (!silent && data.conversations.length > 0) {
@@ -239,6 +241,8 @@ export function useMessages() {
     setSearchQuery,
     selectConversation,
     sendMessage,
+    fetchConversations,
+    lastFetchedAt,
     session,
     status,
   }

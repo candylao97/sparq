@@ -4,8 +4,9 @@ import './globals.css'
 import { Providers } from './providers'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
+import { MainWrapper } from '@/components/layout/MainWrapper'
 import { ChatBubble } from '@/components/providers/ChatBubble'
-import { Toaster } from 'react-hot-toast'
+import { ToasterClient } from '@/components/layout/ToasterClient'
 
 const notoSerif = Noto_Serif({
   subsets: ['latin'],
@@ -23,12 +24,12 @@ const plusJakarta = Plus_Jakarta_Sans({
 })
 
 export const metadata: Metadata = {
-  title: 'Sparq – Find your next go-to nail and lash artist',
-  description: 'Discover trusted nail and lash artists near you. Browse real portfolios, read honest reviews, and book your next appointment in minutes.',
+  title: 'Sparq — Book trusted nail & lash artists near you',
+  description: 'Browse real portfolios, read honest reviews, and book in minutes. Verified artists across Australia.',
   keywords: 'nail artist, lash artist, gel nails, lash extensions, lash lift, beauty booking, nail salon, beauty marketplace, Australia',
   openGraph: {
-    title: 'Sparq',
-    description: 'Discover trusted nail and lash artists near you. Book your next appointment in minutes.',
+    title: 'Sparq — Book trusted nail & lash artists near you',
+    description: 'Browse real portfolios, read honest reviews, and book in minutes.',
     type: 'website',
   },
 }
@@ -39,25 +40,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${notoSerif.variable} ${plusJakarta.variable} font-sans antialiased`}>
         <Providers>
           <Navbar />
-          <main className="pt-[72px] min-h-screen">
+          <MainWrapper>
             {children}
-          </main>
+          </MainWrapper>
           <Footer />
           <ChatBubble />
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              duration: 4000,
-              style: {
-                borderRadius: '12px',
-                background: '#fff',
-                color: '#111827',
-                boxShadow: '0 4px 24px rgba(0,0,0,0.12)',
-                fontFamily: 'var(--font-jakarta), sans-serif',
-                fontSize: '14px',
-              },
-            }}
-          />
+          {/* ToasterClient is 'use client' — prevents SSR/hydration mismatch from react-hot-toast style injection */}
+          <ToasterClient />
         </Providers>
       </body>
     </html>

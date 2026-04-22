@@ -35,7 +35,7 @@ export async function POST() {
       },
     },
     metadata: {
-      provider_id: provider.id,
+      provider_id: session.user.id,  // Store userId so webhook lookup-by-userId is always correct
       user_id: session.user.id,
     },
     return_url: `${process.env.NEXTAUTH_URL}/dashboard/provider?verified=1`,

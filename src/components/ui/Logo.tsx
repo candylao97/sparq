@@ -6,18 +6,31 @@ interface LogoMarkProps {
 
 export function LogoMark({ size = 36, className = '', dark = false }: LogoMarkProps) {
   const color = dark ? '#FDFBF7' : '#1A1A1A'
+  const dotSize = Math.round(size * 0.22)
   return (
     <span
-      className={`inline-flex items-center justify-center flex-shrink-0 font-sans ${className}`}
+      className={`relative inline-block flex-shrink-0 ${className}`}
       style={{
         fontSize: size,
-        fontWeight: 700,
+        fontWeight: 800,
         color,
         lineHeight: 1,
-        letterSpacing: '-0.02em',
+        letterSpacing: '0.06em',
+        paddingRight: dotSize,
       }}
     >
-      S<span style={{ color: '#E96B56' }}>·</span>
+      S
+      <span
+        style={{
+          position: 'absolute',
+          top: Math.round(size * 0.04),
+          right: 0,
+          width: dotSize,
+          height: dotSize,
+          borderRadius: '50%',
+          backgroundColor: '#E96B56',
+        }}
+      />
     </span>
   )
 }
@@ -28,21 +41,34 @@ interface LogoFullProps {
 }
 
 export function LogoFull({ dark = false, size = 'md' }: LogoFullProps) {
-  const fontSize = { sm: 22, md: 26, lg: 32 }[size]
-  const textColor = dark ? '#FDFBF7' : '#1A1A1A'
+  const fontSize   = { sm: 18, md: 21, lg: 28 }[size]
+  const textColor  = dark ? '#FDFBF7' : '#1A1A1A'
+  const dotSize    = Math.round(fontSize * 0.24)
 
   return (
     <span
-      className="font-sans"
+      className="relative inline-block font-sans select-none"
       style={{
         fontSize,
-        fontWeight: 700,
-        letterSpacing: '-0.03em',
+        fontWeight: 800,
+        letterSpacing: '0.08em',
         color: textColor,
         lineHeight: 1,
+        paddingRight: dotSize + 2,
       }}
     >
-      Sparq<span style={{ color: '#E96B56' }}>·</span>
+      SPARQ
+      <span
+        style={{
+          position: 'absolute',
+          top: Math.round(fontSize * 0.02),
+          right: 0,
+          width: dotSize,
+          height: dotSize,
+          borderRadius: '50%',
+          backgroundColor: '#E96B56',
+        }}
+      />
     </span>
   )
 }

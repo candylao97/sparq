@@ -82,28 +82,28 @@ export default function AdminProviders() {
       ACTIVE: 'bg-green-50 text-green-700',
       SUSPENDED: 'bg-red-50 text-red-700',
       UNDER_REVIEW: 'bg-yellow-50 text-yellow-700',
-      BANNED: 'bg-gray-100 text-gray-700',
+      BANNED: 'bg-[#f9f2ef] text-[#1A1A1A]',
     }
-    return map[status] || 'bg-gray-100 text-gray-600'
+    return map[status] || 'bg-[#f9f2ef] text-[#717171]'
   }
 
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Providers</h1>
-        <p className="text-sm text-gray-500">Manage provider verification, status, and profiles</p>
+        <h1 className="text-2xl font-bold text-[#1A1A1A]">Providers</h1>
+        <p className="text-sm text-[#717171]">Manage provider verification, status, and profiles</p>
       </div>
 
       {/* Filters */}
       <div className="mb-6 flex flex-wrap items-center gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#717171]" />
           <input
             type="text"
             placeholder="Search by name or email..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-10 pr-4 text-sm focus:border-gray-400 focus:outline-none"
+            className="w-full rounded-lg border border-[#e8e1de] bg-white py-2 pl-10 pr-4 text-sm focus:border-[#717171] focus:outline-none"
           />
         </div>
         {['all', 'pending', 'verified', 'unverified', 'suspended'].map(f => (
@@ -111,7 +111,7 @@ export default function AdminProviders() {
             key={f}
             onClick={() => setFilter(f)}
             className={`rounded-full px-4 py-1.5 text-xs font-medium capitalize transition-colors ${
-              filter === f ? 'bg-gray-900 text-white' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+              filter === f ? 'bg-[#1A1A1A] text-white' : 'bg-white text-[#717171] border border-[#e8e1de] hover:bg-[#f9f2ef]'
             }`}
           >
             {f}
@@ -120,10 +120,10 @@ export default function AdminProviders() {
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white">
+      <div className="overflow-hidden rounded-2xl border border-[#e8e1de] bg-white">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-100 bg-gray-50/50 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+            <tr className="border-b border-[#e8e1de] bg-[#f9f2ef]/50 text-left text-xs font-medium uppercase tracking-wider text-[#717171]">
               <th className="px-5 py-3">Provider</th>
               <th className="px-5 py-3">Location</th>
               <th className="px-5 py-3">Verified</th>
@@ -132,45 +132,45 @@ export default function AdminProviders() {
               <th className="px-5 py-3">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-50">
+          <tbody className="divide-y divide-[#f9f2ef]">
             {loading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <tr key={i}>
                   {Array.from({ length: 6 }).map((_, j) => (
                     <td key={j} className="px-5 py-4">
-                      <div className="h-4 w-20 animate-pulse rounded bg-gray-100" />
+                      <div className="h-4 w-20 animate-pulse rounded bg-[#f9f2ef]" />
                     </td>
                   ))}
                 </tr>
               ))
             ) : providers.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-5 py-12 text-center text-gray-400">
+                <td colSpan={6} className="px-5 py-12 text-center text-[#717171]">
                   No providers found
                 </td>
               </tr>
             ) : (
               providers.map(p => (
-                <tr key={p.id} className="hover:bg-gray-50/50">
+                <tr key={p.id} className="hover:bg-[#f9f2ef]/50">
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-xs font-bold text-gray-600">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f9f2ef] text-xs font-bold text-[#717171]">
                         {(p.user.name || '?')[0].toUpperCase()}
                       </div>
                       <div>
-                        <div className="font-medium text-gray-900">{p.user.name || 'Unnamed'}</div>
-                        <div className="text-xs text-gray-400">{p.user.email}</div>
+                        <div className="font-medium text-[#1A1A1A]">{p.user.name || 'Unnamed'}</div>
+                        <div className="text-xs text-[#717171]">{p.user.email}</div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-5 py-4 text-gray-600">{p.suburb || p.city}</td>
+                  <td className="px-5 py-4 text-[#717171]">{p.suburb || p.city}</td>
                   <td className="px-5 py-4">
                     {p.isVerified ? (
                       <ShieldCheck className="h-5 w-5 text-green-500" />
                     ) : p.verification?.status === 'PENDING' ? (
                       <Shield className="h-5 w-5 text-yellow-500" />
                     ) : (
-                      <ShieldX className="h-5 w-5 text-gray-300" />
+                      <ShieldX className="h-5 w-5 text-[#D5CEC9]" />
                     )}
                   </td>
                   <td className="px-5 py-4">
@@ -178,7 +178,7 @@ export default function AdminProviders() {
                       {p.accountStatus}
                     </span>
                   </td>
-                  <td className="px-5 py-4 text-gray-600">{p._count.services}</td>
+                  <td className="px-5 py-4 text-[#717171]">{p._count.services}</td>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-1">
                       {!p.isVerified && p.verification?.status === 'PENDING' && (
@@ -220,7 +220,7 @@ export default function AdminProviders() {
                         href={`/providers/${p.userId}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                        className="rounded-lg p-1.5 text-[#717171] hover:bg-[#f9f2ef] hover:text-[#717171]"
                         title="View profile"
                       >
                         <Eye className="h-4 w-4" />
@@ -238,21 +238,21 @@ export default function AdminProviders() {
       {actionModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-            <h3 className="mb-1 text-lg font-bold capitalize text-gray-900">
+            <h3 className="mb-1 text-lg font-bold capitalize text-[#1A1A1A]">
               {actionModal.action} Provider
             </h3>
-            <p className="mb-4 text-sm text-gray-500">
+            <p className="mb-4 text-sm text-[#717171]">
               {actionModal.provider.user.name} ({actionModal.provider.user.email})
             </p>
 
             {['reject', 'suspend', 'ban'].includes(actionModal.action) && (
               <div className="mb-4">
-                <label className="mb-1 block text-sm font-medium text-gray-700">Reason</label>
+                <label className="mb-1 block text-sm font-medium text-[#1A1A1A]">Reason</label>
                 <textarea
                   value={reason}
                   onChange={e => setReason(e.target.value)}
                   rows={3}
-                  className="w-full rounded-lg border border-gray-200 p-3 text-sm focus:border-gray-400 focus:outline-none"
+                  className="w-full rounded-lg border border-[#e8e1de] p-3 text-sm focus:border-[#717171] focus:outline-none"
                   placeholder="Enter reason..."
                 />
               </div>
@@ -261,14 +261,14 @@ export default function AdminProviders() {
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => { setActionModal(null); setReason('') }}
-                className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
+                className="rounded-lg border border-[#e8e1de] px-4 py-2 text-sm font-medium text-[#717171] hover:bg-[#f9f2ef]"
               >
                 Cancel
               </button>
               <button
                 onClick={handleAction}
                 disabled={saving || (['reject', 'suspend', 'ban'].includes(actionModal.action) && !reason)}
-                className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
+                className="rounded-lg bg-[#1A1A1A] px-4 py-2 text-sm font-medium text-white hover:bg-[#1A1A1A] disabled:opacity-50"
               >
                 {saving ? 'Processing...' : `Confirm ${actionModal.action}`}
               </button>

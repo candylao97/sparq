@@ -25,24 +25,22 @@ export async function createProviderPayout(bookingId: string) {
   if (transferAmount <= 0) return null
 
   try {
-    const transfer = await stripe.transfers.create({
-      amount: Math.round(transferAmount * 100), // cents
-      currency: 'aud',
-      destination: stripeAccountId,
-      transfer_group: booking.id,
-      metadata: {
-        bookingId: booking.id,
-        providerId: booking.providerId,
+    const transfer = await stripe.transfers.create(
+      {
+        amount: Math.round(transferAmount * 100), // cents
+        currency: 'aud',
+        destination: stripeAccountId,
+        transfer_group: booking.id,
+        metadata: {
+          bookingId: booking.id,
+          providerId: booking.providerId,
+        },
       },
-    })
+      { idempotencyKey: `stripe_transfer_${bookingId}` }
+    )
 
-    // Update provider's total earnings
-    await prisma.providerProfile.update({
-      where: { userId: booking.providerId },
-      data: {
-        totalEarnings: { increment: transferAmount },
-      },
-    })
+    // NOTE: totalEarnings is updated by the cron/process-payouts route to avoid
+    // double-incrementing. Do NOT update it here.
 
     return transfer
   } catch (error) {

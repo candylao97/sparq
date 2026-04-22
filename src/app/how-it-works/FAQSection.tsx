@@ -69,7 +69,7 @@ export default function FAQSection() {
   const [openItem, setOpenItem] = useState<string | null>(null)
 
   return (
-    <section id="faq" className="py-20 md:py-28 bg-[#FDFBF7]">
+    <section id="faq" className="py-20 md:py-28 bg-white">
       <div className="mx-auto max-w-3xl px-6">
         <div className="text-center mb-14">
           <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#E96B56] mb-3">
