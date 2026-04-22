@@ -5,13 +5,18 @@ import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { sendVerificationEmail } from '@/lib/email'
 import { rateLimit } from '@/lib/rate-limit'
+import { CURRENT_TOS_VERSION } from '@/lib/tos'
 
 const schema = z.object({
-  name:     z.string().min(2).optional(),
-  email:    z.string().email(),
-  password: z.string().min(8),
-  role:     z.enum(['CUSTOMER', 'PROVIDER', 'BOTH']).default('CUSTOMER'),
-  ref:      z.string().optional(),
+  name:           z.string().min(2).optional(),
+  email:          z.string().email(),
+  password:       z.string().min(8),
+  role:           z.enum(['CUSTOMER', 'PROVIDER', 'BOTH']).default('CUSTOMER'),
+  ref:            z.string().optional(),
+  // Accept either `true` or anything else — we check explicitly below so the
+  // message is the same whether the field is missing, false, or a non-boolean.
+  acceptedTerms:  z.unknown().optional(),
+  termsVersion:   z.string().min(1).optional(),
 })
 
 export async function POST(req: NextRequest) {
@@ -31,8 +36,18 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { name, email, password, role, ref } = schema.parse(body)
+    const parsed = schema.parse(body)
+    const { name, email, password, role, ref, acceptedTerms, termsVersion } = parsed
+    // FIND-4: hard-require ToS acceptance at the DB-write boundary, regardless
+    // of whether the client sent `true`, `false`, or omitted the field.
+    if (acceptedTerms !== true) {
+      return NextResponse.json(
+        { error: 'You must accept the Terms of Service to create an account.' },
+        { status: 400 },
+      )
+    }
     const normalizedEmail = email.trim().toLowerCase()
+    const acceptedVersion = termsVersion ?? CURRENT_TOS_VERSION
     const resolvedName = name || normalizedEmail.split('@')[0]
 
     // T&S-R8: registrationIp already extracted above for rate limiting; reused here for duplicate account detection
@@ -51,6 +66,10 @@ export async function POST(req: NextRequest) {
         email: normalizedEmail,
         password: hashed,
         role,
+        // FIND-4: consent captured at the same DB write as user creation so
+        // there's no window where an account exists without recorded consent.
+        termsAcceptedAt: new Date(),
+        termsVersion: acceptedVersion,
         customerProfile: (role === 'CUSTOMER' || role === 'BOTH') ? { create: {} } : undefined,
         providerProfile: (role === 'PROVIDER' || role === 'BOTH') ? {
           create: {
@@ -117,6 +136,15 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, userId: user.id, requiresVerification: true })
   } catch (error) {
+    // Surface validation errors (including the FIND-4 "must accept ToS" case)
+    // as 400 with the specific message rather than a generic 500.
+    if (error instanceof z.ZodError) {
+      const first = error.issues[0]
+      return NextResponse.json(
+        { error: first?.message ?? 'Invalid input' },
+        { status: 400 },
+      )
+    }
     console.error('Register error:', error)
     return NextResponse.json({ error: 'Registration failed' }, { status: 500 })
   }

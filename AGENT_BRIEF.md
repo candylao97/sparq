@@ -308,13 +308,33 @@ original ids (10-13). READINESS definitions renumbered to 14-17.*
   anti-pattern.
 
 ### FIND-4 — No ToS consent capture (compliance blocker)
-- Status: ESCALATED
-- Branch: none
-- Evidence: READINESS_OUTPUT.md line 36
-- Notes: `User` model has no `termsAcceptedAt` / `termsVersion`
-  fields; register schema does not accept consent. Needs legal
-  decision on policy version, notice period, existing-user
-  soft-gate strategy. Owner: Legal + Product.
+- Status: IN_REVIEW (code landed on `fix/find-4-tos-consent`;
+  depends on `fix/find-1-2-3-provider-id-unification` being merged
+  first for the migration chain to apply cleanly)
+- Branch: `fix/find-4-tos-consent`
+- Evidence: migration
+  `prisma/migrations/20260424_add_tos_consent_fields`; schema adds
+  `User.termsAcceptedAt` + `User.termsVersion`; register endpoint
+  hard-requires `acceptedTerms: true`; /login signup + /register/provider
+  listing step both gate the submit button on a required checkbox.
+- Notes:
+  - **Placeholder ToS version string** `v1-placeholder` lives in
+    `src/lib/tos.ts` as `CURRENT_TOS_VERSION`. Legal must replace
+    this with the published version string before launch.
+  - **Existing users carry `termsAcceptedAt = null`** until a future
+    re-prompt flow backfills them on next login. That backfill is
+    out of scope for this commit.
+  - **ConsentRecord audit table deliberately skipped** for MVP.
+    User-level fields satisfy APP 1.3 "collection notice"; a
+    separate ConsentRecord table (tos_version, ip, user_agent,
+    consent_type) should be added if we later need to support
+    multiple consent types (marketing, terms updates, etc.) or
+    need full audit-trail evidence for disputes. Adding it now
+    would be single-purpose and premature.
+- Still escalated: legal must publish the actual ToS text and
+  replace the placeholder version string. Product must decide the
+  existing-user re-prompt strategy.
+- Owner: Legal + Product (for text + policy); Engineering done.
 
 ### FIND-5 — No user-initiated account deletion (compliance blocker)
 - Status: ESCALATED — blocked on AUDIT-036

@@ -53,6 +53,8 @@ const validCustomerBody = {
   phone: '0412345678',
   password: 'password123',
   role: 'CUSTOMER',
+  // FIND-4: register now hard-requires this at the API boundary.
+  acceptedTerms: true,
 }
 
 const validProviderBody = {
@@ -61,6 +63,7 @@ const validProviderBody = {
   phone: '0412345679',
   password: 'provider123',
   role: 'PROVIDER',
+  acceptedTerms: true,
 }
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
@@ -135,6 +138,7 @@ describe('POST /api/auth/register', () => {
       phone: '0412345680',
       password: 'password123',
       role: 'CUSTOMER',
+      acceptedTerms: true,
       // No name field
     })
     await registerPOST(req)
@@ -250,6 +254,7 @@ describe('POST /api/auth/register', () => {
       email: 'default@example.com',
       phone: '0412345683',
       password: 'password123',
+      acceptedTerms: true,
       // No role field — should default to CUSTOMER per zod schema
     })
     await registerPOST(req)
