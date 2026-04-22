@@ -30,7 +30,7 @@ function getSpecialistLabel(label: string) {
 
 export default function ProviderRegisterPage() {
   const router = useRouter()
-  const { data: session } = useSession()
+  const { data: session, update: updateSession } = useSession()
   const [step, setStep] = useState<Step>('service')
   const [selectedService, setSelectedService] = useState<typeof SERVICES[0] | null>(null)
   const [city, setCity] = useState('')
@@ -92,6 +92,10 @@ export default function ProviderRegisterPage() {
           toast.error(data.error || 'Something went wrong')
           return
         }
+        // QA-002: Force the NextAuth JWT to re-read role from DB before we
+        // navigate to /dashboard/provider — without this the cached
+        // CUSTOMER token would gate the page back to the wrong dashboard.
+        await updateSession()
         toast.success('Welcome! Your artist profile is live.')
         router.refresh()
         router.push('/dashboard/provider')
