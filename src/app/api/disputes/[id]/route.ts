@@ -96,7 +96,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       // Notify provider
       await prisma.notification.create({
         data: {
-          userId: booking.providerId,
+          userId: booking.providerUserId,
           type: 'BOOKING_CANCELLED',
           title: 'Dispute Resolved — Refund Issued',
           message: 'A dispute on one of your bookings was resolved in favour of the customer. The payout has been cancelled.',
@@ -113,7 +113,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
           where: { bookingId: booking.id },
           create: {
             bookingId: booking.id,
-            providerId: providerProfile.id,
+            providerUserId: providerProfile.id,
             amount: Math.max(0, providerPayout),
             platformFee: booking.platformFee,
             status: 'SCHEDULED',
@@ -146,7 +146,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       // Notify provider
       await prisma.notification.create({
         data: {
-          userId: booking.providerId,
+          userId: booking.providerUserId,
           type: 'PAYOUT_SENT',
           title: 'Dispute Resolved — Payout Scheduled',
           message: 'A dispute on one of your bookings was resolved in your favour. Your payout will be processed shortly.',

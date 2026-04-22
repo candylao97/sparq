@@ -23,7 +23,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       include: {
         booking: {
           select: {
-            providerId: true,
+            providerUserId: true,
             service: { select: { title: true } },
             provider: { select: { name: true } },
           },
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'Review not found' }, { status: 404 })
     }
 
-    if (review.booking.providerId !== session.user.id) {
+    if (review.booking.providerUserId !== session.user.id) {
       return NextResponse.json({ error: 'Not authorized to respond to this review' }, { status: 403 })
     }
 
@@ -70,7 +70,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     // Notify customer their review received a response
     const artistName = review.booking?.provider?.name ?? 'Your artist'
     const serviceName = review.booking?.service?.title ?? null
-    const providerId = review.booking.providerId
+    const providerId = review.booking.providerUserId
 
     await prisma.notification.create({
       data: {

@@ -57,12 +57,12 @@ async function getFeaturedProviders() {
     const providerIds = providers.map(p => p.id)
     const ratingRows = providerIds.length > 0
       ? await prisma.$queryRaw<{ providerId: string; avg: number; count: bigint }[]>`
-          SELECT b."providerId", AVG(r.rating)::float AS avg, COUNT(r.rating) AS count
+          SELECT b."providerUserId", AVG(r.rating)::float AS avg, COUNT(r.rating) AS count
           FROM "Review" r
           JOIN "Booking" b ON b.id = r."bookingId"
-          WHERE b."providerId" = ANY(${providerIds})
+          WHERE b."providerUserId" = ANY(${providerIds})
             AND r."isVisible" = true
-          GROUP BY b."providerId"
+          GROUP BY b."providerUserId"
         `
       : []
     const ratingMap = new Map(ratingRows.map(r => [r.providerId, { avg: r.avg || 0, count: Number(r.count) }]))

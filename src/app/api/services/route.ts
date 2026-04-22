@@ -16,7 +16,7 @@ export async function GET() {
     if (!profile) return NextResponse.json({ error: 'Provider profile not found' }, { status: 404 })
 
     const services = await prisma.service.findMany({
-      where: { providerId: profile.id, isDeleted: false },
+      where: { providerProfileId: profile.id, isDeleted: false },
       orderBy: { createdAt: 'desc' },
     })
 
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
     // P2-3: Enforce max services limit per provider (50)
     const SERVICE_LIMIT = 50
     const serviceCount = await prisma.service.count({
-      where: { providerId: profile.id, isDeleted: false },
+      where: { providerProfileId: profile.id, isDeleted: false },
     })
     if (serviceCount >= SERVICE_LIMIT) {
       return NextResponse.json(
@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
 
     // T&S-R3: Warn if a service with a very similar title already exists for this provider
     const existingServices = await prisma.service.findMany({
-      where: { providerId: profile.id, isDeleted: false },
+      where: { providerProfileId: profile.id, isDeleted: false },
       select: { title: true },
     })
     const titleLower = sanitizedTitle.toLowerCase().replace(/\s+/g, ' ').trim()
@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
 
     const service = await prisma.service.create({
       data: {
-        providerId: profile.id,
+        providerProfileId: profile.id,
         title: sanitizedTitle,
         category,
         description: sanitizedDescription,

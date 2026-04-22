@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
         const resolvedId = resolvedProfile?.id ?? providerId
 
         await prisma.verification.update({
-          where: { providerId: resolvedId },
+          where: { providerProfileId: resolvedId },
           data: { status: 'APPROVED', reviewedAt: new Date() },
         }).catch(e => console.warn(`Verification update failed for ${resolvedId}:`, e))
         // T&S-R7: Store verificationSessionId + verifiedAt locally for audit trail
@@ -85,9 +85,9 @@ export async function POST(req: NextRequest) {
           `Stripe session: ${session.id}`,
         ].filter(Boolean).join(' | ')
         await prisma.kYCRecord.upsert({
-          where: { providerId: resolvedId },
+          where: { providerProfileId: resolvedId },
           create: {
-            providerId: resolvedId,
+            providerProfileId: resolvedId,
             stripeStatus: 'verified',
             reviewedAt: new Date(),
             adminNotes: adminNotesValue,
@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
         const resolvedId = resolvedProfile?.id ?? providerId
 
         await prisma.verification.update({
-          where: { providerId: resolvedId },
+          where: { providerProfileId: resolvedId },
           data: { status: 'REJECTED', reviewedAt: new Date() },
         }).catch(e => console.warn(`Verification rejected update failed for ${resolvedId}:`, e))
       }
@@ -237,7 +237,7 @@ export async function POST(req: NextRequest) {
             // Also notify provider so they can follow up if needed
             await prisma.notification.create({
               data: {
-                userId: booking.providerId,
+                userId: booking.providerUserId,
                 type: 'BOOKING_CANCELLED',
                 title: 'Payment failed for a booking',
                 message: 'A payment capture failed for one of your confirmed bookings. We have notified the client to update their payment method.',
@@ -502,7 +502,7 @@ export async function POST(req: NextRequest) {
       // Notify provider
       await prisma.notification.create({
         data: {
-          userId: booking.providerId,
+          userId: booking.providerUserId,
           type: 'BOOKING_DISPUTED',
           title: 'Chargeback case updated',
           message: `Your chargeback case has been updated. Status: ${stripeStatus.replace(/_/g, ' ')}. Check your email from Stripe for next steps.`,
@@ -534,7 +534,7 @@ export async function POST(req: NextRequest) {
             }),
             // Also keep KYCRecord in sync if one exists
             prisma.kYCRecord.updateMany({
-              where: { providerId: profile.id },
+              where: { providerProfileId: profile.id },
               data: {
                 chargesEnabled: account.charges_enabled ?? false,
                 payoutsEnabled: account.payouts_enabled ?? false,

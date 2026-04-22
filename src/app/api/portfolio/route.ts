@@ -21,7 +21,7 @@ export async function GET() {
     if (!profile) return NextResponse.json({ error: 'Provider profile not found' }, { status: 404 })
 
     const photos = await prisma.portfolioPhoto.findMany({
-      where: { providerId: profile.id },
+      where: { providerProfileId: profile.id },
       orderBy: { order: 'asc' },
     })
 
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
 
     // Check photo limit
     const existingCount = await prisma.portfolioPhoto.count({
-      where: { providerId: profile.id },
+      where: { providerProfileId: profile.id },
     })
     if (existingCount >= 20) {
       return NextResponse.json({ error: 'Maximum 20 photos allowed' }, { status: 400 })
@@ -67,14 +67,14 @@ export async function POST(req: NextRequest) {
 
     // Get the next order value
     const maxOrder = await prisma.portfolioPhoto.findFirst({
-      where: { providerId: profile.id },
+      where: { providerProfileId: profile.id },
       orderBy: { order: 'desc' },
       select: { order: true },
     })
 
     const photo = await prisma.portfolioPhoto.create({
       data: {
-        providerId: profile.id,
+        providerProfileId: profile.id,
         url: uploadResult.secure_url,
         publicId: uploadResult.public_id,
         caption: caption || null,

@@ -25,7 +25,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       const confirmedBooking = await prisma.booking.findFirst({
         where: {
           customerId: session.user.id,
-          providerId: profile.userId,
+          providerUserId: profile.userId,
           status: { in: ['CONFIRMED', 'COMPLETED'] },
         },
       })
@@ -44,7 +44,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
     const reviews = await prisma.review.findMany({
       where: {
-        booking: { providerId: profile.userId },
+        booking: { providerUserId: profile.userId },
         isVisible: true,
       },
       include: { customer: true },
@@ -70,7 +70,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     // (either weekly defaults or date-specific overrides). Single efficient query.
     const availabilityRecord = await prisma.availability.findFirst({
       where: {
-        providerId: profile.id,
+        providerProfileId: profile.id,
         isBlocked: false,
         timeSlots: { isEmpty: false },
       },
@@ -88,7 +88,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       // Load weekly defaults (sentinel dates)
       const weeklyDefaults = await prisma.availability.findMany({
         where: {
-          providerId: profile.id,
+          providerProfileId: profile.id,
           date: { gte: new Date(Date.UTC(2000, 0, 2)), lte: new Date(Date.UTC(2000, 0, 10)) },
         },
       })
@@ -100,7 +100,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       // Load date overrides in range
       const overrides = await prisma.availability.findMany({
         where: {
-          providerId: profile.id,
+          providerProfileId: profile.id,
           date: { gte: today, lte: thirtyDaysOut },
         },
         select: { date: true, isBlocked: true, timeSlots: true },
@@ -114,7 +114,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       // Load already-booked slots in range
       const bookedSlots = await prisma.booking.findMany({
         where: {
-          providerId: profile.userId,
+          providerUserId: profile.userId,
           date: { gte: today, lte: thirtyDaysOut },
           status: { in: ['PENDING', 'CONFIRMED'] },
         },

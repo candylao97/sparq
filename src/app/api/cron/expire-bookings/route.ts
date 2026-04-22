@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
             link: `/dashboard/customer`,
           },
           {
-            userId: booking.providerId,
+            userId: booking.providerUserId,
             type: 'BOOKING_EXPIRED',
             title: 'Booking Request Expired',
             message: 'A booking request expired because you did not respond in time. Responding promptly helps your ranking.',
@@ -141,7 +141,7 @@ export async function GET(req: NextRequest) {
       // Check if we already sent a completion nudge notification to the provider
       const alreadyNudged = await prisma.notification.findFirst({
         where: {
-          userId: booking.providerId,
+          userId: booking.providerUserId,
           type: 'BOOKING_COMPLETED',
           link: `/bookings/${booking.id}`,
         },
@@ -158,7 +158,7 @@ export async function GET(req: NextRequest) {
         try {
           new Intl.DateTimeFormat('en-AU', { timeZone: tz }).format(new Date())
         } catch {
-          console.warn(`[EXPIRE_BOOKINGS] Invalid timezone "${tz}" for provider ${booking.providerId} — falling back to Australia/Sydney`)
+          console.warn(`[EXPIRE_BOOKINGS] Invalid timezone "${tz}" for provider ${booking.providerUserId} — falling back to Australia/Sydney`)
           tz = 'Australia/Sydney'
         }
         const tzParts = new Intl.DateTimeFormat('en-AU', {
@@ -180,7 +180,7 @@ export async function GET(req: NextRequest) {
         await prisma.notification.createMany({
           data: [
             {
-              userId: booking.providerId,
+              userId: booking.providerUserId,
               type: 'BOOKING_COMPLETED',
               title: 'Appointment completed?',
               message: 'Please mark this appointment as complete so your client can leave a review.',
@@ -221,7 +221,7 @@ export async function GET(req: NextRequest) {
           where: { bookingId: booking.id },
           create: {
             bookingId: booking.id,
-            providerId: providerProfile.id,
+            providerUserId: providerProfile.id,
             amount: providerPayout,
             platformFee: booking.platformFee,
             status: 'SCHEDULED',
@@ -236,17 +236,17 @@ export async function GET(req: NextRequest) {
 
       // Recalculate completion rate
       const [totalCompleted, totalTerminal] = await Promise.all([
-        prisma.booking.count({ where: { providerId: booking.providerId, status: 'COMPLETED' } }),
+        prisma.booking.count({ where: { providerUserId: booking.providerUserId, status: 'COMPLETED' } }),
         prisma.booking.count({
           where: {
-            providerId: booking.providerId,
+            providerUserId: booking.providerUserId,
             status: { in: ['COMPLETED', 'CANCELLED_BY_PROVIDER', 'CANCELLED_BY_CUSTOMER', 'DECLINED', 'EXPIRED'] },
           },
         }),
       ])
       if (totalTerminal > 0) {
         await prisma.providerProfile.update({
-          where: { userId: booking.providerId },
+          where: { userId: booking.providerUserId },
           data: { completionRate: Math.round((totalCompleted / totalTerminal) * 100) },
         }).catch(() => {})
       }
@@ -273,7 +273,7 @@ export async function GET(req: NextRequest) {
             link: '/bookings',
           },
           {
-            userId: booking.providerId,
+            userId: booking.providerUserId,
             type: 'BOOKING_COMPLETED',
             title: 'Appointment Auto-Completed',
             message: `Your appointment for ${booking.service?.title ?? 'a service'} was automatically completed. Payout is scheduled in 48 hours.`,
@@ -290,7 +290,7 @@ export async function GET(req: NextRequest) {
           type: 'BOOKING_COMPLETED',
           title: 'How was your appointment?',
           message: `Your appointment with ${providerName} is complete. Loved it? Book again or leave a review!`,
-          link: `/providers/${booking.providerId}`,
+          link: `/providers/${booking.providerUserId}`,
         },
       }).catch(() => {})
 

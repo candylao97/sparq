@@ -28,7 +28,7 @@ export async function GET(
 
   const bookings = await prisma.booking.findMany({
     where: {
-      providerId: params.id,
+      providerUserId: params.id,
       status: { in: ['CONFIRMED', 'COMPLETED'] },
       date: { gte: new Date(Date.now() - 30 * 24 * 3600 * 1000) }, // 30 days back
     },

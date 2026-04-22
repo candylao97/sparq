@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     }
 
     // T&S-3: Block self-reviews — providers cannot review their own services
-    if (booking.providerId === session.user.id) {
+    if (booking.providerUserId === session.user.id) {
       return NextResponse.json({ error: 'You cannot review your own service' }, { status: 403 })
     }
 
@@ -96,12 +96,12 @@ export async function POST(req: NextRequest) {
     }
 
     const allReviews = await prisma.review.findMany({
-      where: { booking: { providerId: booking.providerId }, isVisible: true },
+      where: { booking: { providerUserId: booking.providerUserId }, isVisible: true },
     })
 
     // Only generate/regenerate AI summary if threshold met and not recently updated
     const reviewCount = await prisma.review.count({
-      where: { booking: { providerId: booking.providerId }, isVisible: true },
+      where: { booking: { providerUserId: booking.providerUserId }, isVisible: true },
     })
 
     if (reviewCount >= 10) {
@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
       // Uses aiSummaryUpdatedAt (a dedicated timestamp field) rather than updatedAt, so
       // unrelated profile saves don't reset the cooldown. Falls back to updatedAt if null.
       const providerProfile = await prisma.providerProfile.findFirst({
-        where: { userId: booking.providerId },
+        where: { userId: booking.providerUserId },
         select: { id: true, aiSummary: true, aiSummaryUpdatedAt: true, updatedAt: true },
       })
       const lastUpdated = providerProfile?.aiSummaryUpdatedAt ?? providerProfile?.updatedAt ?? null
@@ -121,7 +121,7 @@ export async function POST(req: NextRequest) {
       // Uses the existing Redis rateLimit as a 30-second mutex (1 call per 30s per provider).
       // This prevents two concurrent reviews from both triggering AI summary generation
       // and the second write silently overwriting the first.
-      const lockKey = `ai-summary-lock:${providerProfile?.id ?? booking.providerId}`
+      const lockKey = `ai-summary-lock:${providerProfile?.id ?? booking.providerUserId}`
       const lockAcquired = await rateLimit(lockKey, 1, 30)
 
       if (!providerProfile?.aiSummary || hoursSince > 24) {
@@ -176,7 +176,7 @@ Return only the 2-sentence summary, no preamble.`,
 
     await prisma.notification.create({
       data: {
-        userId: booking.providerId,
+        userId: booking.providerUserId,
         type: 'NEW_REVIEW',
         title: 'New Review Received',
         message: `You received a ${rating}-star review for ${booking.service.title}`,

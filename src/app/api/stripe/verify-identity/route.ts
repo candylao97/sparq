@@ -43,7 +43,7 @@ export async function POST() {
 
   // Upsert the Verification record — store only the session ID, never raw docs
   await prisma.verification.upsert({
-    where: { providerId: provider.id },
+    where: { providerProfileId: provider.id },
     update: {
       stripeVerificationSessionId: verificationSession.id,
       status: 'PENDING',
@@ -51,7 +51,7 @@ export async function POST() {
       reviewedAt: null,
     },
     create: {
-      providerId: provider.id,
+      providerProfileId: provider.id,
       stripeVerificationSessionId: verificationSession.id,
       status: 'PENDING',
     },

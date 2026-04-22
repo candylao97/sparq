@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
   if (needsRecord.length > 0) {
     await Promise.all(
       needsRecord.map(p =>
-        prisma.kYCRecord.create({ data: { providerId: p.id } }).catch(() => null)
+        prisma.kYCRecord.create({ data: { providerProfileId: p.id } }).catch(() => null)
       )
     )
   }
@@ -80,9 +80,9 @@ export async function POST() {
   for (const p of providers) {
     const { signals, level } = await computeRiskSignals(p.id)
     await prisma.kYCRecord.upsert({
-      where: { providerId: p.id },
+      where: { providerProfileId: p.id },
       create: {
-        providerId: p.id,
+        providerProfileId: p.id,
         riskLevel: level,
         riskSignals: JSON.parse(JSON.stringify(signals)),
       },

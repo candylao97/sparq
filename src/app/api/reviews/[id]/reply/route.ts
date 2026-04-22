@@ -22,14 +22,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     // Verify this review belongs to a booking where the current user is the provider
     const review = await prisma.review.findUnique({
       where: { id },
-      include: { booking: { select: { providerId: true, customerId: true } } },
+      include: { booking: { select: { providerUserId: true, customerId: true } } },
     })
 
     if (!review) {
       return NextResponse.json({ error: 'Review not found' }, { status: 404 })
     }
 
-    if (review.booking.providerId !== session.user.id) {
+    if (review.booking.providerUserId !== session.user.id) {
       return NextResponse.json({ error: 'Not authorized to reply to this review' }, { status: 403 })
     }
 

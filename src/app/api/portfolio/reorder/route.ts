@@ -27,7 +27,7 @@ export async function POST(req: Request) {
 
   // Verify all photos belong to this provider
   const photos = await prisma.portfolioPhoto.findMany({
-    where: { id: { in: orderedIds }, providerId: providerProfile.id },
+    where: { id: { in: orderedIds }, providerProfileId: providerProfile.id },
     select: { id: true },
   })
   if (photos.length !== orderedIds.length) {

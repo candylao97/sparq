@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
     const disputesAgainstThisProvider = await prisma.dispute.count({
       where: {
         customerId: session.user.id,
-        booking: { providerId: booking.providerId },
+        booking: { providerUserId: booking.providerUserId },
         createdAt: { gte: ninetyDaysAgo },
       },
     })
@@ -164,7 +164,7 @@ export async function POST(req: NextRequest) {
     // Notify provider
     await prisma.notification.create({
       data: {
-        userId: booking.providerId,
+        userId: booking.providerUserId,
         type: 'BOOKING_DISPUTED',
         title: 'Booking Disputed',
         message: 'A customer has opened a dispute for a completed booking.',
@@ -174,7 +174,7 @@ export async function POST(req: NextRequest) {
 
     // Email the provider about the dispute
     const providerUser = await prisma.user.findUnique({
-      where: { id: booking.providerId },
+      where: { id: booking.providerUserId },
       select: { email: true, name: true },
     })
     if (providerUser?.email) {
@@ -313,7 +313,7 @@ export async function GET(req: NextRequest) {
 
   const booking = await prisma.booking.findUnique({ where: { id: bookingId } })
   if (!booking) return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
-  if (booking.customerId !== session.user.id && booking.providerId !== session.user.id && session.user.role !== 'ADMIN') {
+  if (booking.customerId !== session.user.id && booking.providerUserId !== session.user.id && session.user.role !== 'ADMIN') {
     return NextResponse.json({ error: 'Not authorized' }, { status: 403 })
   }
 

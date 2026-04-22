@@ -27,7 +27,7 @@ export async function GET() {
         COUNT(*)::bigint as count,
         COALESCE(SUM(b."totalPrice"), 0)::float as revenue
       FROM "Booking" b
-      WHERE b."providerId" = ${providerId}
+      WHERE b."providerUserId" = ${providerId}
         AND b.status = 'COMPLETED'
         AND b.date >= NOW() - INTERVAL '8 weeks'
       GROUP BY week
@@ -41,7 +41,7 @@ export async function GET() {
         COUNT(b.id)::bigint as "bookingCount"
       FROM "Booking" b
       JOIN "Service" s ON s.id = b."serviceId"
-      WHERE b."providerId" = ${providerId}
+      WHERE b."providerUserId" = ${providerId}
         AND b.status = 'COMPLETED'
         AND b.date >= ${thirtyDaysAgo}
       GROUP BY s.id, s.title
@@ -56,14 +56,14 @@ export async function GET() {
       FROM (
         SELECT "customerId" as customer_id, COUNT(*) as cnt
         FROM "Booking"
-        WHERE "providerId" = ${providerId} AND status = 'COMPLETED'
+        WHERE "providerUserId" = ${providerId} AND status = 'COMPLETED'
         GROUP BY "customerId"
       ) t
     `,
     // Current month revenue
     prisma.booking.aggregate({
       where: {
-        providerId,
+        providerUserId: providerId,
         status: 'COMPLETED',
         date: { gte: new Date(now.getFullYear(), now.getMonth(), 1) },
       },
@@ -72,7 +72,7 @@ export async function GET() {
     // Last month revenue
     prisma.booking.aggregate({
       where: {
-        providerId,
+        providerUserId: providerId,
         status: 'COMPLETED',
         date: {
           gte: new Date(now.getFullYear(), now.getMonth() - 1, 1),

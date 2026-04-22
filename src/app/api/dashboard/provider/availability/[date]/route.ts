@@ -20,7 +20,7 @@ export async function DELETE(
     const date = new Date(Date.UTC(y, m - 1, d, 12, 0, 0))
 
     await prisma.availability.delete({
-      where: { providerId_date: { providerId: profile.id, date } },
+      where: { providerProfileId_date: { providerProfileId: profile.id, date } },
     }).catch(() => {
       // Record may not exist — that's fine
     })

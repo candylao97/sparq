@@ -119,58 +119,58 @@ export async function GET(req: NextRequest) {
 
     // Batch fetch completed booking counts
     const completedCounts = await prisma.booking.groupBy({
-      by: ['providerId'],
+      by: ['providerUserId'],
       where: { status: 'COMPLETED' },
       _count: { id: true },
     })
-    const countMap = new Map(completedCounts.map(c => [c.providerId, c._count.id]))
+    const countMap = new Map(completedCounts.map(c => [c.providerUserId, c._count?.id ?? 0]))
 
     // ── Compute ScoreFactors from real data (M08) ─────────────────────────────
 
     // Batch fetch all data needed to compute ScoreFactors
     const [ratingData, completionData, responseData, consistencyData] = await Promise.all([
       // reviewScore: average rating (0-5 scale, normalised to 0-5)
-      prisma.$queryRaw<{ providerId: string; avg: number }[]>`
-        SELECT b."providerId", AVG(r.rating)::float AS avg
+      prisma.$queryRaw<{ providerUserId: string; avg: number }[]>`
+        SELECT b."providerUserId", AVG(r.rating)::float AS avg
         FROM "Review" r
         JOIN "Booking" b ON b.id = r."bookingId"
         WHERE r."isVisible" = true
-        GROUP BY b."providerId"
+        GROUP BY b."providerUserId"
       `,
       // completionScore: completion rate over last 90 days
-      prisma.$queryRaw<{ providerId: string; total: bigint; completed: bigint }[]>`
-        SELECT "providerId",
+      prisma.$queryRaw<{ providerUserId: string; total: bigint; completed: bigint }[]>`
+        SELECT "providerUserId",
                COUNT(*) AS total,
                COUNT(*) FILTER (WHERE status = 'COMPLETED') AS completed
         FROM "Booking"
         WHERE "createdAt" >= NOW() - INTERVAL '90 days'
           AND status NOT IN ('PENDING', 'EXPIRED', 'DECLINED')
-        GROUP BY "providerId"
+        GROUP BY "providerUserId"
       `,
       // responseScore: average accept-to-booking time (lower is better, normalised 0-5)
-      prisma.$queryRaw<{ providerId: string; avg_hours: number }[]>`
-        SELECT "providerId",
+      prisma.$queryRaw<{ providerUserId: string; avg_hours: number }[]>`
+        SELECT "providerUserId",
                EXTRACT(EPOCH FROM AVG("updatedAt" - "createdAt")) / 3600 AS avg_hours
         FROM "Booking"
         WHERE status = 'CONFIRMED'
           AND "createdAt" >= NOW() - INTERVAL '30 days'
-        GROUP BY "providerId"
+        GROUP BY "providerUserId"
       `,
       // consistencyScore: cancellation rate (lower is better)
-      prisma.$queryRaw<{ providerId: string; total: bigint; cancelled: bigint }[]>`
-        SELECT "providerId",
+      prisma.$queryRaw<{ providerUserId: string; total: bigint; cancelled: bigint }[]>`
+        SELECT "providerUserId",
                COUNT(*) AS total,
                COUNT(*) FILTER (WHERE status IN ('CANCELLED_BY_PROVIDER', 'NO_SHOW')) AS cancelled
         FROM "Booking"
         WHERE "createdAt" >= NOW() - INTERVAL '90 days'
-        GROUP BY "providerId"
+        GROUP BY "providerUserId"
       `,
     ])
 
-    const ratingMap = new Map(ratingData.map(r => [r.providerId, r.avg]))
-    const completionMap = new Map(completionData.map(r => [r.providerId, { total: Number(r.total), completed: Number(r.completed) }]))
-    const responseMap = new Map(responseData.map(r => [r.providerId, r.avg_hours]))
-    const consistencyMap = new Map(consistencyData.map(r => [r.providerId, { total: Number(r.total), cancelled: Number(r.cancelled) }]))
+    const ratingMap = new Map(ratingData.map(r => [r.providerUserId, r.avg]))
+    const completionMap = new Map(completionData.map(r => [r.providerUserId, { total: Number(r.total), completed: Number(r.completed) }]))
+    const responseMap = new Map(responseData.map(r => [r.providerUserId, r.avg_hours]))
+    const consistencyMap = new Map(consistencyData.map(r => [r.providerUserId, { total: Number(r.total), cancelled: Number(r.cancelled) }]))
 
     // Batch upsert ScoreFactors for all providers
     const scoreUpserts: Promise<unknown>[] = []
@@ -196,14 +196,14 @@ export async function GET(req: NextRequest) {
       if (provider.scoreFactors) {
         scoreUpserts.push(
           prisma.scoreFactors.update({
-            where: { providerId: provider.id },
+            where: { providerProfileId: provider.id },
             data: { reviewScore, completionScore, responseScore, consistencyScore, verificationScore },
           })
         )
       } else {
         scoreUpserts.push(
           prisma.scoreFactors.create({
-            data: { providerId: provider.id, reviewScore, completionScore, responseScore, consistencyScore, verificationScore },
+            data: { providerProfileId: provider.id, reviewScore, completionScore, responseScore, consistencyScore, verificationScore },
           })
         )
       }
@@ -246,7 +246,7 @@ export async function GET(req: NextRequest) {
 
     // ── Tier calculation using fresh ScoreFactors ─────────────────────────────
     let updated = 0
-    const updates: { providerId: string; userId: string; previousTier: string; newTier: string; compositeScore: number }[] = []
+    const updates: { providerProfileId: string; userId: string; previousTier: string; newTier: string; compositeScore: number }[] = []
 
     for (const provider of providers) {
       const sf = freshScoreMap.get(provider.id) ?? provider.scoreFactors
@@ -266,7 +266,7 @@ export async function GET(req: NextRequest) {
         const previousTier = provider.tier
 
         updates.push({
-          providerId: provider.id,
+          providerProfileId: provider.id,
           userId: provider.userId,
           previousTier,
           newTier,
@@ -281,7 +281,7 @@ export async function GET(req: NextRequest) {
     await Promise.all(
       updates.map(u =>
         prisma.providerProfile.update({
-          where: { id: u.providerId },
+          where: { id: u.providerProfileId },
           data: { tier: u.newTier as 'NEWCOMER' | 'RISING' | 'TRUSTED' | 'PRO' | 'ELITE' },
         })
       )
@@ -296,12 +296,12 @@ export async function GET(req: NextRequest) {
             actorId: u.userId,
             action: 'TIER_CHANGE',
             targetType: 'ProviderProfile',
-            targetId: u.providerId,
+            targetId: u.providerProfileId,
             details: {
               previousTier: u.previousTier,
               newTier: u.newTier,
               compositeScore: u.compositeScore,
-              scoreFactors: freshScoreMap.get(u.providerId) ?? null,
+              scoreFactors: freshScoreMap.get(u.providerProfileId) ?? null,
               changedAt: new Date().toISOString(),
             },
           },
@@ -318,7 +318,7 @@ export async function GET(req: NextRequest) {
           ELITE: 'Sparq Elite',
         }
         if (isUpgrade && ['RISING', 'TRUSTED', 'PRO', 'ELITE'].includes(u.newTier)) {
-          const factors = freshScoreMap.get(u.providerId)
+          const factors = freshScoreMap.get(u.providerProfileId)
           const contextParts: string[] = []
           if (factors?.reviewScore) {
             contextParts.push(`${(factors.reviewScore).toFixed(1)}★ ratings`)

@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
       metadata: {
         bookingId,
         customerId: session.user.id,
-        providerId: booking.providerId,
+        providerUserId: booking.providerUserId,
         serviceTitle: booking.service.title,
       },
     })

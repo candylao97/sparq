@@ -28,7 +28,7 @@ export async function GET() {
 
   try {
     const payouts = await prisma.payout.findMany({
-      where: { providerId: session.user.id },
+      where: { providerUserId: session.user.id },
       orderBy: { scheduledAt: 'desc' },
       take: 50,
       include: {

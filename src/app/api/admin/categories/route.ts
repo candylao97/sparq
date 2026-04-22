@@ -21,8 +21,8 @@ export async function GET() {
         _count: { id: true },
       }),
       prisma.service.findMany({
-        select: { category: true, providerId: true },
-        distinct: ['providerId', 'category'],
+        select: { category: true, providerProfileId: true },
+        distinct: ['providerProfileId', 'category'],
       }),
     ])
 

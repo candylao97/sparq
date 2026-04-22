@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
   // Verify the user is a participant in this booking
   const booking = await prisma.booking.findUnique({ where: { id: bookingId } })
   if (!booking) return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
-  if (booking.customerId !== session.user.id && booking.providerId !== session.user.id) {
+  if (booking.customerId !== session.user.id && booking.providerUserId !== session.user.id) {
     return NextResponse.json({ error: 'Not authorized' }, { status: 403 })
   }
 
@@ -71,13 +71,13 @@ export async function POST(req: NextRequest) {
     // Verify booking exists and user is a participant BEFORE creating the message
     const booking = await prisma.booking.findUnique({ where: { id: bookingId } })
     if (!booking) return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
-    if (booking.customerId !== session.user.id && booking.providerId !== session.user.id) {
+    if (booking.customerId !== session.user.id && booking.providerUserId !== session.user.id) {
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 })
     }
 
     // P1-4: Per-recipient throttle — max 3 messages per minute per (sender, recipient) pair.
     // Prevents a provider or customer from flooding a single conversation partner.
-    const recipientId = session.user.id === booking.customerId ? booking.providerId : booking.customerId
+    const recipientId = session.user.id === booking.customerId ? booking.providerUserId : booking.customerId
     const perRecipientAllowed = await rateLimit(`msg-pair:${session.user.id}:${recipientId}`, 3, 60)
     if (!perRecipientAllowed) {
       return NextResponse.json({ error: 'Sending too fast. Please wait a moment.' }, { status: 429 })

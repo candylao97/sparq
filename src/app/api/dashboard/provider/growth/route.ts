@@ -29,7 +29,7 @@ export async function GET(_req: NextRequest) {
   // ── New Clients: customers whose first booking with this provider is this/last month ──
   // Get all bookings grouped by customer, ordered by createdAt
   const allBookingsForProvider = await prisma.booking.findMany({
-    where: { providerId },
+    where: { providerUserId: providerId },
     select: { customerId: true, createdAt: true },
     orderBy: { createdAt: 'asc' },
   })
@@ -53,7 +53,7 @@ export async function GET(_req: NextRequest) {
   const [completedThis, completedLast] = await Promise.all([
     prisma.booking.findMany({
       where: {
-        providerId,
+        providerUserId: providerId,
         status: 'COMPLETED',
         completedAt: { gte: thisMonthStart },
       },
@@ -61,7 +61,7 @@ export async function GET(_req: NextRequest) {
     }),
     prisma.booking.findMany({
       where: {
-        providerId,
+        providerUserId: providerId,
         status: 'COMPLETED',
         completedAt: { gte: lastMonthStart, lt: lastMonthEnd },
       },
@@ -90,7 +90,7 @@ export async function GET(_req: NextRequest) {
   // This month's cohort: clients with ≥1 completed booking up to now
   const completedAllTime = await prisma.booking.findMany({
     where: {
-      providerId,
+      providerUserId: providerId,
       status: 'COMPLETED',
     },
     select: { customerId: true, completedAt: true },
@@ -121,7 +121,7 @@ export async function GET(_req: NextRequest) {
   // ── Recent Bookings: last 30 days by date ──────────────────────────────────
   const recentCompleted = await prisma.booking.findMany({
     where: {
-      providerId,
+      providerUserId: providerId,
       status: 'COMPLETED',
       completedAt: { gte: thirtyDaysAgo },
     },

@@ -26,7 +26,7 @@ export async function GET() {
 
     const completedBookings = await prisma.booking.findMany({
       where: {
-        providerId: session.user.id,
+        providerUserId: session.user.id,
         status: 'COMPLETED',
         completedAt: { gte: twelveMonthsAgo },
       },

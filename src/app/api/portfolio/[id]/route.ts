@@ -27,7 +27,7 @@ export async function PATCH(
     const photo = await prisma.portfolioPhoto.findUnique({
       where: { id: params.id },
     })
-    if (!photo || photo.providerId !== profile.id) {
+    if (!photo || photo.providerProfileId !== profile.id) {
       return NextResponse.json({ error: 'Photo not found' }, { status: 404 })
     }
 
@@ -70,7 +70,7 @@ export async function DELETE(
     const photo = await prisma.portfolioPhoto.findUnique({
       where: { id: params.id },
     })
-    if (!photo || photo.providerId !== profile.id) {
+    if (!photo || photo.providerProfileId !== profile.id) {
       return NextResponse.json({ error: 'Photo not found' }, { status: 404 })
     }
 
