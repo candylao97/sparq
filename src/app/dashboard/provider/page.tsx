@@ -5,6 +5,7 @@ import { useDashboardData } from '@/hooks/useDashboardData'
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader'
 import { ActionRequired } from '@/components/dashboard/ActionRequired'
 import { EarningsSnapshot } from '@/components/dashboard/EarningsSnapshot'
+import { NextPayoutCard } from '@/components/dashboard/NextPayoutCard'
 import { TodaySchedule } from '@/components/dashboard/TodaySchedule'
 import { RecentReviews } from '@/components/dashboard/RecentReviews'
 import { ServicesPortfolio } from '@/components/dashboard/ServicesPortfolio'
@@ -72,6 +73,9 @@ export default function ProviderDashboardPage() {
           aiLoading={aiLoading}
           stripeAccountId={data.profile.stripeAccountId}
         />
+
+        {/* Zone 4 — Next Payout (AUDIT-011) */}
+        <NextPayoutCard nextPayout={data.nextPayout} />
 
         {/* Zone 5 — Today's Schedule */}
         <TodaySchedule bookings={data.todayBookings} />

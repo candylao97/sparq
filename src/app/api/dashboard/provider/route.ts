@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { computeNextPayoutSummary } from '@/lib/next-payout'
 
 export async function GET() {
   const session = await getServerSession(authOptions)
@@ -19,7 +20,7 @@ export async function GET() {
     const prevMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999)
     const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1)
 
-    const [profile, bookings, reviews, unrespondedReviews, customerBookingCounts, aiSummaryReview] = await Promise.all([
+    const [profile, bookings, reviews, unrespondedReviews, customerBookingCounts, aiSummaryReview, queuedPayouts] = await Promise.all([
       prisma.providerProfile.findUnique({
         where: { userId: session.user.id },
         include: {
@@ -66,6 +67,22 @@ export async function GET() {
         },
         orderBy: { createdAt: 'desc' },
         select: { aiSummary: true },
+      }),
+      // AUDIT-011: non-terminal payouts for this talent. The helper totals them
+      // and picks the soonest; fetching all (rather than just findFirst) lets
+      // the UI show "+N more queued" without a second round-trip.
+      prisma.payout.findMany({
+        where: {
+          providerId: session.user.id,
+          status: { in: ['SCHEDULED', 'PROCESSING'] },
+        },
+        select: {
+          id: true,
+          amount: true,
+          status: true,
+          scheduledAt: true,
+        },
+        orderBy: { scheduledAt: 'asc' },
       }),
     ])
 
@@ -153,6 +170,20 @@ export async function GET() {
       : 0
     const completedThisMonth = completed.filter(b => b.date >= monthStart).length
 
+    const nextPayout = computeNextPayoutSummary(queuedPayouts, now)
+
+    const completedWithTip = completed.filter(b => (b.tipAmount ?? 0) > 0)
+    const totalTips = completedWithTip.reduce((s, b) => s + (b.tipAmount ?? 0), 0)
+    const tipStats = {
+      totalTips: Math.round(totalTips * 100) / 100,
+      tipRate: completed.length > 0
+        ? Math.round((completedWithTip.length / completed.length) * 100)
+        : 0,
+      avgTip: completedWithTip.length > 0
+        ? Math.round((totalTips / completedWithTip.length) * 100) / 100
+        : 0,
+    }
+
     return NextResponse.json({
       profile: {
         id: profile.id,
@@ -201,6 +232,8 @@ export async function GET() {
         booking: r.booking ? { service: { title: r.booking.service.title } } : undefined,
       })),
       aiReviewSummary: aiSummaryReview?.aiSummary || null,
+      nextPayout,
+      tipStats,
       stats: {
         totalBookings: bookings.length,
         pendingBookings: pendingBookings.length,

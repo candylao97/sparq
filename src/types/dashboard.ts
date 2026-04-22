@@ -102,6 +102,31 @@ export interface DashboardStats {
   avgResponseTimeHours: number
 }
 
+// AUDIT-011: Soonest queued payout + totals. Null when no positive
+// SCHEDULED/PROCESSING payouts exist. See src/lib/next-payout.ts for the
+// pure computation.
+export interface DashboardNextPayout {
+  next: {
+    id: string
+    amount: number
+    scheduledAt: string
+    isOverdue: boolean
+    status: string
+  }
+  totalScheduled: number
+  queuedCount: number
+}
+
+// AUDIT-011 (bundle): tip analytics for the provider payments surface.
+// totalTips is lifetime across COMPLETED bookings; tipRate is the percent of
+// completed bookings that received any tip; avgTip is the mean across tipped
+// bookings only (undefined-denominator-proof via the API-side guard).
+export interface DashboardTipStats {
+  totalTips: number
+  tipRate: number
+  avgTip: number
+}
+
 export interface DashboardData {
   profile: DashboardProfile
   earnings: DashboardEarnings
@@ -111,6 +136,8 @@ export interface DashboardData {
   unrespondedReviews: DashboardReview[]
   aiReviewSummary: string | null
   stats: DashboardStats
+  nextPayout: DashboardNextPayout | null
+  tipStats: DashboardTipStats
 }
 
 export interface AiInsights {
