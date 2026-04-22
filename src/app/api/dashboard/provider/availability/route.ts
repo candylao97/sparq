@@ -34,7 +34,7 @@ export async function GET() {
     // Fetch weekly defaults (sentinel dates in year 2000)
     const defaults = await prisma.availability.findMany({
       where: {
-        providerId: profile.id,
+        providerProfileId: profile.id,
         date: { gte: new Date(Date.UTC(2000, 0, 2)), lte: new Date(Date.UTC(2000, 0, 10)) },
       },
     })
@@ -47,7 +47,7 @@ export async function GET() {
 
     const overrides = await prisma.availability.findMany({
       where: {
-        providerId: profile.id,
+        providerProfileId: profile.id,
         date: { gte: today, lte: futureEnd },
       },
       orderBy: { date: 'asc' },
@@ -56,7 +56,7 @@ export async function GET() {
     // Fetch booked slots for visual indicators
     const bookings = await prisma.booking.findMany({
       where: {
-        providerId: session.user.id,
+        providerUserId: session.user.id,
         date: { gte: today, lte: futureEnd },
         status: { in: ['PENDING', 'CONFIRMED'] },
       },
@@ -108,9 +108,9 @@ export async function POST(req: NextRequest) {
         const date = parseDateSafe(sentinel)
 
         return prisma.availability.upsert({
-          where: { providerId_date: { providerId: profile.id, date } },
+          where: { providerProfileId_date: { providerProfileId: profile.id, date } },
           update: { timeSlots: entry.timeSlots, isBlocked: entry.isBlocked },
-          create: { providerId: profile.id, date, timeSlots: entry.timeSlots, isBlocked: entry.isBlocked },
+          create: { providerProfileId: profile.id, date, timeSlots: entry.timeSlots, isBlocked: entry.isBlocked },
         })
       })
 
@@ -137,9 +137,9 @@ export async function POST(req: NextRequest) {
 
         ops.push(
           prisma.availability.upsert({
-            where: { providerId_date: { providerId: profile.id, date } },
+            where: { providerProfileId_date: { providerProfileId: profile.id, date } },
             update: { isBlocked: true, timeSlots: [] },
-            create: { providerId: profile.id, date, isBlocked: true, timeSlots: [] },
+            create: { providerProfileId: profile.id, date, isBlocked: true, timeSlots: [] },
           })
         )
       }
@@ -162,9 +162,9 @@ export async function POST(req: NextRequest) {
 
         ops.push(
           prisma.availability.upsert({
-            where: { providerId_date: { providerId: profile.id, date } },
+            where: { providerProfileId_date: { providerProfileId: profile.id, date } },
             update: { isBlocked: false },
-            create: { providerId: profile.id, date, isBlocked: false, timeSlots: [] },
+            create: { providerProfileId: profile.id, date, isBlocked: false, timeSlots: [] },
           })
         )
       }
@@ -189,7 +189,7 @@ export async function POST(req: NextRequest) {
     const clientUpdatedAt: string | undefined = body.clientUpdatedAt
     if (clientUpdatedAt) {
       const existing = await prisma.availability.findUnique({
-        where: { providerId_date: { providerId: profile.id, date } },
+        where: { providerProfileId_date: { providerProfileId: profile.id, date } },
         select: { updatedAt: true },
       })
       if (existing && existing.updatedAt.toISOString() !== new Date(clientUpdatedAt).toISOString()) {
@@ -201,9 +201,9 @@ export async function POST(req: NextRequest) {
     }
 
     const record = await prisma.availability.upsert({
-      where: { providerId_date: { providerId: profile.id, date } },
+      where: { providerProfileId_date: { providerProfileId: profile.id, date } },
       update: { timeSlots, isBlocked },
-      create: { providerId: profile.id, date, timeSlots, isBlocked },
+      create: { providerProfileId: profile.id, date, timeSlots, isBlocked },
     })
 
     return NextResponse.json({

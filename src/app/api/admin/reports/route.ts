@@ -85,13 +85,13 @@ export async function GET() {
 
     // Top providers (array format)
     const providerBookingCounts = await prisma.booking.groupBy({
-      by: ['providerId'],
+      by: ['providerUserId'],
       _count: { id: true },
       where: { status: 'COMPLETED' },
     })
     const bookingCountMap: Record<string, number> = {}
     for (const p of providerBookingCounts) {
-      bookingCountMap[p.providerId] = p._count.id
+      bookingCountMap[p.providerUserId] = p._count?.id ?? 0
     }
 
     const topProviders = topProviderProfiles

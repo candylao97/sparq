@@ -26,7 +26,7 @@ export async function GET(
     if (!profile) return NextResponse.json({ error: 'Provider profile not found' }, { status: 404 })
 
     const service = await prisma.service.findFirst({
-      where: { id: params.id, providerId: profile.id, isDeleted: false },
+      where: { id: params.id, providerProfileId: profile.id, isDeleted: false },
       include: { addons: true },
     })
     if (!service) return NextResponse.json({ error: 'Service not found' }, { status: 404 })
@@ -49,7 +49,7 @@ export async function PATCH(
     const profile = await prisma.providerProfile.findUnique({ where: { userId: session.user.id } })
     if (!profile) return NextResponse.json({ error: 'Provider profile not found' }, { status: 404 })
 
-    const service = await prisma.service.findFirst({ where: { id: params.id, providerId: profile.id } })
+    const service = await prisma.service.findFirst({ where: { id: params.id, providerProfileId: profile.id } })
     if (!service) return NextResponse.json({ error: 'Service not found' }, { status: 404 })
 
     const body = await req.json() as {
@@ -176,7 +176,7 @@ export async function DELETE(
     const profile = await prisma.providerProfile.findUnique({ where: { userId: session.user.id } })
     if (!profile) return NextResponse.json({ error: 'Provider profile not found' }, { status: 404 })
 
-    const service = await prisma.service.findFirst({ where: { id: params.id, providerId: profile.id } })
+    const service = await prisma.service.findFirst({ where: { id: params.id, providerProfileId: profile.id } })
     if (!service) return NextResponse.json({ error: 'Service not found' }, { status: 404 })
 
     // Check for any active (non-terminal) bookings before soft-deleting

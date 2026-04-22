@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
       } else {
         // No specific service — validate that the provider profile still exists
         const providerProfile = await prisma.providerProfile.findUnique({
-          where: { userId: entry.providerId },
+          where: { userId: entry.providerUserId },
           select: { id: true, accountStatus: true },
         })
         if (!providerProfile || providerProfile.accountStatus !== 'ACTIVE') {
@@ -86,16 +86,18 @@ export async function POST(req: NextRequest) {
       // Count confirmed bookings for this provider on the date
       const confirmedCount = await prisma.booking.count({
         where: {
-          providerId: entry.providerId,
+          providerUserId: entry.providerUserId,
           date: { gte: dayStart, lte: dayEnd },
           status: { in: ['PENDING', 'CONFIRMED'] },
         },
       })
 
-      // Check provider has availability set for the day
+      // FIND-1 fix: Availability is keyed by ProviderProfile.id; WaitlistEntry
+      // carries providerUserId (User.id). Traverse the relation to query by
+      // User.id without a separate lookup.
       const availability = await prisma.availability.findFirst({
         where: {
-          providerId: entry.providerId,
+          provider: { userId: entry.providerUserId },
           isBlocked: false,
           date: { gte: dayStart, lte: dayEnd },
         },
@@ -111,9 +113,15 @@ export async function POST(req: NextRequest) {
       // Send notification email
       if (entry.customer.email) {
         const providerFirstName = (entry.provider.name ?? 'your artist').split(' ')[0]
+        // URL slugs use ProviderProfile.id — resolve from the User.id on entry.
+        const bookProfile = await prisma.providerProfile.findUnique({
+          where: { userId: entry.providerUserId },
+          select: { id: true },
+        })
+        if (!bookProfile) continue
         const bookUrl = entry.serviceId
-          ? `${APP_URL}/book/${entry.providerId}?service=${entry.serviceId}`
-          : `${APP_URL}/providers/${entry.providerId}`
+          ? `${APP_URL}/book/${bookProfile.id}?service=${entry.serviceId}`
+          : `${APP_URL}/providers/${bookProfile.id}`
 
         try {
           await sendWaitlistNotificationEmail(entry.customer.email, {
@@ -143,8 +151,8 @@ export async function POST(req: NextRequest) {
           title: 'A spot opened up!',
           message: `A slot with ${entry.provider.name ?? 'your artist'} on ${bookingDateStr} may be available. Book now before it goes.`,
           link: entry.serviceId
-            ? `/book/${entry.providerId}?service=${entry.serviceId}`
-            : `/providers/${entry.providerId}`,
+            ? `/book/${entry.providerUserId}?service=${entry.serviceId}`
+            : `/providers/${entry.providerUserId}`,
         },
       }).catch(() => {}) // non-blocking
     }

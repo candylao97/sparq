@@ -256,7 +256,7 @@ describe('GET /api/bookings', () => {
 
     expect(mockPrisma.booking.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { providerId: 'user-provider-1' },
+        where: { providerUserId: 'user-provider-1' },
       }),
     )
   })
@@ -334,7 +334,7 @@ describe('POST /api/bookings', () => {
     // availability.findUnique – provider is available with the requested time slot
     ;(mockPrisma.availability.findUnique as jest.Mock).mockResolvedValue({
       id: 'avail-1',
-      providerId: 'provider-profile-1',
+      providerUserId: 'provider-profile-1',
       date: new Date('2026-05-01T12:00:00Z'),
       isBlocked: false,
       timeSlots: ['09:00', '09:30', '10:00', '10:30', '11:00'],
@@ -362,7 +362,7 @@ describe('POST /api/bookings', () => {
     ;(mockPrisma.booking.create as jest.Mock).mockResolvedValueOnce({
       id: 'new-booking-1',
       customerId: 'user-customer-1',
-      providerId: 'user-provider-1',
+      providerUserId: 'user-provider-1',
       serviceId: 'service-1',
       status: 'PENDING',
       totalPrice: 210,
@@ -534,7 +534,7 @@ describe('PATCH /api/bookings/[id]', () => {
   const fakeBooking = {
     id: 'booking-1',
     customerId: 'user-customer-1',
-    providerId: 'user-provider-1',
+    providerUserId: 'user-provider-1',
     serviceId: 'service-1',
     status: 'PENDING',
     totalPrice: 210,

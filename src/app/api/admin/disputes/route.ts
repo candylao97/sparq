@@ -57,7 +57,7 @@ export async function PATCH(req: NextRequest) {
         booking: {
           select: {
             customerId: true,
-            providerId: true,
+            providerUserId: true,
             stripePaymentId: true,
             totalPrice: true,
             status: true,
@@ -333,7 +333,7 @@ export async function PATCH(req: NextRequest) {
     // Notify provider of dispute outcome
     await prisma.notification.create({
       data: {
-        userId: dispute.booking.providerId,
+        userId: dispute.booking.providerUserId,
         type: 'DISPUTE_RESOLVED',
         title: status === 'RESOLVED_NO_REFUND' ? 'Dispute Resolved — No Refund' : 'Dispute Resolved',
         message: status === 'RESOLVED_NO_REFUND'

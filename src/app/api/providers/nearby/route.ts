@@ -74,11 +74,11 @@ export async function GET(req: NextRequest) {
 
     // Batch fetch avg ratings
     const ratingsRaw = await prisma.$queryRaw<{ providerId: string; avg: number | null }[]>`
-      SELECT b."providerId", AVG(r.rating) as avg
+      SELECT b."providerUserId", AVG(r.rating) as avg
       FROM "Review" r
       JOIN "Booking" b ON r."bookingId" = b.id
-      WHERE b."providerId" = ANY(${providerIds})
-      GROUP BY b."providerId"
+      WHERE b."providerUserId" = ANY(${providerIds})
+      GROUP BY b."providerUserId"
     `
 
     const ratingsMap = new Map<string, number>()

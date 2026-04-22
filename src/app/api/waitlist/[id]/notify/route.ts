@@ -14,7 +14,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   if (!entry) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   // Ensure the provider owns this entry
-  if (entry.providerId !== session.user.id) {
+  if (entry.providerUserId !== session.user.id) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 

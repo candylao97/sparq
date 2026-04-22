@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
   // Fetch all penalty payout records for this provider
   const penalties = await prisma.payout.findMany({
     where: {
-      providerId: providerProfile.id,
+      providerUserId: providerProfile.id,
       amount: { lt: 0 },
     },
     orderBy: { createdAt: 'desc' },

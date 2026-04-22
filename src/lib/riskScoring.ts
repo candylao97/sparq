@@ -33,7 +33,7 @@ export async function computeRiskSignals(providerId: string): Promise<{
   if (!provider) return { signals: [], level: 'LOW' }
 
   const bookings = await prisma.booking.findMany({
-    where: { providerId: provider.userId },
+    where: { providerUserId: provider.userId },
     select: { status: true },
     take: 50,
     orderBy: { createdAt: 'desc' },

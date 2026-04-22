@@ -103,7 +103,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     // UX-M5: Validate proposed date/time against provider availability
     // 1. Check for a date-specific block
     const exactAvailability = await prisma.availability.findUnique({
-      where: { providerId_date: { providerId: providerProfile.id, date: proposedDateNoon } },
+      where: { providerProfileId_date: { providerProfileId: providerProfile.id, date: proposedDateNoon } },
     })
 
     if (exactAvailability?.isBlocked) {
@@ -121,7 +121,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       if (sentinelStr) {
         const sentinelDate = parseDateNoonUTC(sentinelStr)
         effectiveAvailability = await prisma.availability.findUnique({
-          where: { providerId_date: { providerId: providerProfile.id, date: sentinelDate } },
+          where: { providerProfileId_date: { providerProfileId: providerProfile.id, date: sentinelDate } },
         })
       }
     }
@@ -142,7 +142,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const conflict = await prisma.booking.findFirst({
       where: {
         id: { not: params.id },
-        providerId: booking.providerId,
+        providerUserId: booking.providerUserId,
         date: { gte: dayStart, lte: dayEnd },
         time,
         status: { in: ['PENDING', 'CONFIRMED'] },
@@ -181,7 +181,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     // Notify provider
     await prisma.notification.create({
       data: {
-        userId: booking.providerId,
+        userId: booking.providerUserId,
         type: 'RESCHEDULE_REQUESTED',
         title: 'Reschedule requested',
         message: `A client wants to reschedule to ${date} at ${time}. Review and accept or decline.`,
@@ -219,7 +219,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
   const proposedDate = parseDateNoonUTC(dateStr)
   const exactAv = await prisma.availability.findUnique({
-    where: { providerId_date: { providerId, date: proposedDate } },
+    where: { providerProfileId_date: { providerProfileId: providerId, date: proposedDate } },
   })
 
   if (exactAv?.isBlocked) return NextResponse.json({ availableSlots: [], isBlocked: true })
@@ -230,7 +230,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     const sentinel = DAY_TO_SENTINEL[dow]
     if (sentinel) {
       availability = await prisma.availability.findUnique({
-        where: { providerId_date: { providerId, date: parseDateNoonUTC(sentinel) } },
+        where: { providerProfileId_date: { providerProfileId: providerId, date: parseDateNoonUTC(sentinel) } },
       })
     }
   }
@@ -245,7 +245,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   const existing = await prisma.booking.findMany({
     where: {
       id: { not: params.id },
-      providerId: booking.providerId,
+      providerUserId: booking.providerUserId,
       date: { gte: dayStart, lte: dayEnd },
       status: { in: ['PENDING', 'CONFIRMED'] },
     },
@@ -270,7 +270,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
     const booking = await prisma.booking.findUnique({ where: { id: params.id } })
     if (!booking) return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
-    if (booking.providerId !== session.user.id) {
+    if (booking.providerUserId !== session.user.id) {
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 })
     }
     if (booking.status !== 'RESCHEDULE_REQUESTED') {

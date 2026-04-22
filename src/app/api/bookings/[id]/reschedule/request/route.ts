@@ -56,7 +56,7 @@ export async function POST(
   const dayEnd   = new Date(Date.UTC(y, m - 1, d, 23, 59, 59, 999))
   const existingBookings = await prisma.booking.findMany({
     where: {
-      providerId: booking.providerId,
+      providerUserId: booking.providerUserId,
       date: { gte: dayStart, lte: dayEnd },
       status: { in: ['PENDING', 'CONFIRMED'] },
       NOT: { id: params.id },
@@ -95,9 +95,12 @@ export async function POST(
   const sentinelDateStr = getSentinelDateString(proposedDayOfWeek)
   const sentinelDate = new Date(`${sentinelDateStr}T12:00:00.000Z`)
 
+  // FIND-1 fix: Availability is keyed by ProviderProfile.id; Booking carries
+  // providerUserId (User.id). Traverse the relation to avoid a separate
+  // lookup — cleaner than resolving provider.id first.
   const blockedAvailability = await prisma.availability.findMany({
     where: {
-      providerId: booking.providerId,
+      provider: { userId: booking.providerUserId },
       isBlocked: true,
       date: { in: [proposedDateNoon, sentinelDate] },
     },
@@ -112,7 +115,7 @@ export async function POST(
   // P1-1: Check that proposedTime is within the provider's available time slots
   const availabilityRecord = await prisma.availability.findFirst({
     where: {
-      providerId: booking.providerId,
+      provider: { userId: booking.providerUserId },
       isBlocked: false,
       OR: [
         { date: { equals: proposedDateNoon } },
@@ -145,7 +148,7 @@ export async function POST(
   // Notify provider
   await prisma.notification.create({
     data: {
-      userId: booking.providerId,
+      userId: booking.providerUserId,
       type: 'RESCHEDULE_REQUESTED',
       title: 'Reschedule request',
       message: `Your client wants to reschedule to ${new Date(proposedDate).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })} at ${proposedTime}.${reason ? ` Reason: ${reason}` : ''}`,

@@ -12,7 +12,7 @@ export async function GET() {
   // Get all bookings where user is a participant and that have messages
   const bookings = await prisma.booking.findMany({
     where: {
-      OR: [{ customerId: userId }, { providerId: userId }],
+      OR: [{ customerId: userId }, { providerUserId: userId }],
       messages: { some: {} },
     },
     include: {

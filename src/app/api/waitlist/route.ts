@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     }
 
     const entries = await prisma.waitlistEntry.findMany({
-      where: { providerId: session.user.id },
+      where: { providerUserId: session.user.id },
       include: {
         customer: { select: { name: true, image: true } },
       },
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
   const existing = await prisma.waitlistEntry.findFirst({
     where: {
       customerId: session.user.id,
-      providerId,
+      providerUserId: providerId,
       notified: false,
     },
   })
@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
   const entry = await prisma.waitlistEntry.create({
     data: {
       customerId: session.user.id,
-      providerId,
+      providerUserId: providerId,
       serviceId: serviceId || null,
       date: entryDate,
     },
@@ -86,7 +86,7 @@ export async function DELETE(req: NextRequest) {
 
   const { providerId } = await req.json()
   await prisma.waitlistEntry.deleteMany({
-    where: { customerId: session.user.id, providerId },
+    where: { customerId: session.user.id, providerUserId: providerId },
   })
 
   return NextResponse.json({ ok: true })

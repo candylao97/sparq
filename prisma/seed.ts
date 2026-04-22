@@ -409,7 +409,7 @@ async function main() {
         const booking = await prisma.booking.create({
           data: {
             customerId: customer.id,
-            providerId: user.id,
+            providerUserId: user.id,
             serviceId: service.id,
             date: bookingDate,
             time: `${Math.floor(Math.random() * 8) + 9}:00`,

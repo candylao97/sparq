@@ -26,10 +26,10 @@ export async function PATCH(
         // Require actual KYC completion unless explicitly overridden by superadmin
         if (!body.overrideKYC) {
           const kycRecord = await prisma.kYCRecord.findUnique({
-            where: { providerId: params.id },
+            where: { providerProfileId: params.id },
           })
           const verification = await prisma.verification.findUnique({
-            where: { providerId: params.id },
+            where: { providerProfileId: params.id },
           })
           const kycVerified = kycRecord?.status === 'VERIFIED'
           const verificationApproved = verification?.status === 'APPROVED'
@@ -73,7 +73,7 @@ export async function PATCH(
     if (accountStatus === 'SUSPENDED' || accountStatus === 'BANNED') {
       const activeBookings = await prisma.booking.findMany({
         where: {
-          providerId: provider.userId,
+          providerUserId: provider.userId,
           status: { in: ['PENDING', 'CONFIRMED'] },
         },
         include: {
@@ -152,10 +152,10 @@ export async function PATCH(
       }
 
       await prisma.verification.upsert({
-        where: { providerId: params.id },
+        where: { providerProfileId: params.id },
         update: verificationUpdate,
         create: {
-          providerId: params.id,
+          providerProfileId: params.id,
           status: verificationStatus || 'PENDING',
           backgroundCheckStatus: backgroundCheckStatus || 'PENDING',
           adminNotes: adminNotes || null,

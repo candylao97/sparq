@@ -103,7 +103,7 @@ export async function GET(req: NextRequest) {
         // so they understand the penalty lifecycle and can see it expired without deduction.
         const expiredPenalties = await prisma.payout.findMany({
           where: {
-            providerId: payout.providerId,
+            providerUserId: payout.providerUserId,
             amount: { lt: 0 },
             status: 'SCHEDULED',
             OR: [
@@ -123,7 +123,7 @@ export async function GET(req: NextRequest) {
           // Notify provider their penalty has expired
           await prisma.notification.create({
             data: {
-              userId: payout.booking.providerId,
+              userId: payout.booking.providerUserId,
               type: 'PAYOUT_SENT',
               title: 'Cancellation penalty expired',
               message: `A $${Math.abs(penalty.amount).toFixed(2)} cancellation penalty from ${formatShortDate(penalty.createdAt)} has expired and will no longer be deducted from your payouts.`,
@@ -141,7 +141,7 @@ export async function GET(req: NextRequest) {
         const penaltyResult = await prisma.$transaction(async (tx) => {
           const penalties = await tx.payout.findMany({
             where: {
-              providerId: payout.providerId,
+              providerUserId: payout.providerUserId,
               amount: { lt: 0 },
               status: 'SCHEDULED',
               OR: [
@@ -232,7 +232,7 @@ export async function GET(req: NextRequest) {
         // Notify provider their payout is on hold so they can take action
         await prisma.notification.create({
           data: {
-            userId: payout.providerId,
+            userId: payout.providerUserId,
             type: 'PAYOUT_SENT',  // reuse existing type — no new enum value needed
             title: 'Action required: payout on hold',
             message: `Your payout of $${payout.amount.toFixed(2)} is on hold because your Stripe account needs attention. Please check your payment settings to receive your earnings.`,
@@ -284,7 +284,7 @@ export async function GET(req: NextRequest) {
         // Notify provider
         await prisma.notification.create({
           data: {
-            userId: payout.booking.providerId,
+            userId: payout.booking.providerUserId,
             type: 'PAYOUT_SENT',
             title: 'Payout Sent',
             message: `$${payout.amount.toFixed(2)} has been transferred to your account.`,
@@ -294,7 +294,7 @@ export async function GET(req: NextRequest) {
 
         // Send payout email (non-blocking)
         const providerUser = await prisma.user.findUnique({
-          where: { id: payout.booking.providerId },
+          where: { id: payout.booking.providerUserId },
           select: { email: true, name: true },
         })
         if (providerUser?.email) {
@@ -319,7 +319,7 @@ export async function GET(req: NextRequest) {
 
         // Notify provider of failed payout
         const providerUser = await prisma.user.findUnique({
-          where: { id: payout.booking.providerId },
+          where: { id: payout.booking.providerUserId },
           select: { email: true, name: true },
         })
         if (providerUser?.email) {
@@ -340,7 +340,7 @@ export async function GET(req: NextRequest) {
         }
         await prisma.notification.create({
           data: {
-            userId: payout.booking.providerId,
+            userId: payout.booking.providerUserId,
             type: 'PAYOUT_SENT',
             title: 'Payout Failed',
             message: `Your payout of $${payout.amount.toFixed(2)} could not be processed. Please check your payment settings.`,

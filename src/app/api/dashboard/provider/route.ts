@@ -31,19 +31,19 @@ export async function GET() {
         },
       }),
       prisma.booking.findMany({
-        where: { providerId: session.user.id },
+        where: { providerUserId: session.user.id },
         include: { service: true, customer: true },
         orderBy: { createdAt: 'desc' },
       }),
       prisma.review.findMany({
-        where: { booking: { providerId: session.user.id }, isVisible: true },
+        where: { booking: { providerUserId: session.user.id }, isVisible: true },
         orderBy: { createdAt: 'desc' },
         take: 5,
         include: { customer: true, booking: { select: { service: { select: { title: true } } } } },
       }),
       prisma.review.findMany({
         where: {
-          booking: { providerId: session.user.id },
+          booking: { providerUserId: session.user.id },
           isVisible: true,
           providerResponse: null,
         },
@@ -54,14 +54,14 @@ export async function GET() {
       prisma.booking.groupBy({
         by: ['customerId'],
         where: {
-          providerId: session.user.id,
+          providerUserId: session.user.id,
           status: { in: ['COMPLETED', 'CONFIRMED'] },
         },
         _count: { id: true },
       }),
       prisma.review.findFirst({
         where: {
-          booking: { providerId: session.user.id },
+          booking: { providerUserId: session.user.id },
           isVisible: true,
           aiSummary: { not: null },
         },
@@ -73,7 +73,7 @@ export async function GET() {
       // the UI show "+N more queued" without a second round-trip.
       prisma.payout.findMany({
         where: {
-          providerId: session.user.id,
+          providerUserId: session.user.id,
           status: { in: ['SCHEDULED', 'PROCESSING'] },
         },
         select: {
@@ -91,7 +91,7 @@ export async function GET() {
     }
 
     // Portfolio count (needs profile.id)
-    const actualPortfolioCount = await prisma.portfolioPhoto.count({ where: { providerId: profile.id } }).catch(() => 0)
+    const actualPortfolioCount = await prisma.portfolioPhoto.count({ where: { providerProfileId: profile.id } }).catch(() => 0)
 
     // Build repeat fan lookup: customerId -> bookingCount
     const repeatFanMap = new Map<string, number>()
@@ -163,7 +163,7 @@ export async function GET() {
 
     // Stats
     const allReviews = await prisma.review.count({
-      where: { booking: { providerId: session.user.id }, isVisible: true },
+      where: { booking: { providerUserId: session.user.id }, isVisible: true },
     })
     const avgRating = reviews.length > 0
       ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length

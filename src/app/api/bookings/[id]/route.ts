@@ -58,7 +58,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (!booking) return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
 
     // Authorization check — must run before any other logic to prevent IDOR leakage
-    const isProvider = session.user.id === booking.providerId
+    const isProvider = session.user.id === booking.providerUserId
     const isCustomer = session.user.id === booking.customerId
     const isAdmin = session.user.role === 'ADMIN'
     if (!isProvider && !isCustomer && !isAdmin) {
@@ -94,7 +94,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
       // Check for a blocking override on the exact date
       const exactAvailability = await prisma.availability.findUnique({
-        where: { providerId_date: { providerId: booking.provider.id, date: bookingDateNoon } },
+        where: { providerProfileId_date: { providerProfileId: booking.provider.id, date: bookingDateNoon } },
       })
       if (exactAvailability?.isBlocked) {
         return NextResponse.json(
@@ -104,7 +104,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       }
       // Check the slot is still in the available list
       const availabilityEntry = exactAvailability ?? await prisma.availability.findUnique({
-        where: { providerId_date: { providerId: booking.provider.id, date: sentinelDate } },
+        where: { providerProfileId_date: { providerProfileId: booking.provider.id, date: sentinelDate } },
       })
       if (availabilityEntry && !availabilityEntry.isBlocked && availabilityEntry.timeSlots.length > 0) {
         if (!availabilityEntry.timeSlots.includes(booking.time)) {
@@ -131,7 +131,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       const conflict = await prisma.booking.findFirst({
         where: {
           id: { not: params.id },
-          providerId: booking.providerId,
+          providerUserId: booking.providerUserId,
           date: bookingDateNoon,
           time: booking.time,
           status: { in: ['CONFIRMED', 'PENDING'] },
@@ -220,7 +220,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       const recentCancels = await prisma.booking.count({
         where: {
           customerId: session.user.id,
-          providerId: booking.providerId,
+          providerUserId: booking.providerUserId,
           status: 'CANCELLED_BY_CUSTOMER',
           updatedAt: { gte: sevenDaysAgo },
         },
@@ -240,7 +240,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       const conflict = await prisma.booking.findFirst({
         where: {
           id: { not: params.id },
-          providerId: booking.providerId,
+          providerUserId: booking.providerUserId,
           date: {
             gte: new Date(Date.UTC(newDateNoon.getUTCFullYear(), newDateNoon.getUTCMonth(), newDateNoon.getUTCDate(), 0, 0, 0)),
             lte: new Date(Date.UTC(newDateNoon.getUTCFullYear(), newDateNoon.getUTCMonth(), newDateNoon.getUTCDate(), 23, 59, 59)),
@@ -322,7 +322,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
               const hoursLeft = hoursUntilBooking(dateStr, booking.time)
               const policyType = booking.provider.providerProfile?.cancellationPolicyType ?? 'MODERATE'
               if (!booking.provider.providerProfile?.cancellationPolicyType) {
-                console.warn(`[CANCELLATION_POLICY] Provider ${booking.providerId} has no policy set — defaulting to MODERATE`)
+                console.warn(`[CANCELLATION_POLICY] Provider ${booking.providerUserId} has no policy set — defaulting to MODERATE`)
               }
 
               // Determine refund percentage based on policy and time remaining
@@ -375,7 +375,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
                     where: { bookingId: booking.id },
                     create: {
                       bookingId: booking.id,
-                      providerId: providerProfile.id,
+                      providerUserId: providerProfile.id,
                       amount: Math.max(0, artistKeep),
                       platformFee: booking.platformFee,
                       status: 'SCHEDULED',
@@ -436,7 +436,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
                     where: { bookingId: booking.id },
                     create: {
                       bookingId: booking.id,
-                      providerId: providerProfile.id,
+                      providerUserId: providerProfile.id,
                       amount: artistKeep,
                       platformFee: booking.platformFee,
                       status: 'SCHEDULED',
@@ -505,7 +505,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
                     where: { bookingId: booking.id },
                     create: {
                       bookingId: booking.id,
-                      providerId: providerProfile.id,
+                      providerUserId: providerProfile.id,
                       amount: providerPayout,
                       platformFee: booking.platformFee,
                       status: 'SCHEDULED',
@@ -554,7 +554,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
                   where: { bookingId: booking.id },
                   create: {
                     bookingId: booking.id,
-                    providerId: providerProfile.id,
+                    providerUserId: providerProfile.id,
                     amount: providerPayout,
                     platformFee: booking.platformFee,
                     status: 'SCHEDULED',
@@ -627,7 +627,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
               where: { bookingId: booking.id },
               create: {
                 bookingId: booking.id,
-                providerId: providerProfile.id,
+                providerUserId: providerProfile.id,
                 amount: providerPayout,
                 platformFee: booking.platformFee,
                 status: 'SCHEDULED',
@@ -684,7 +684,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
           await tx.payout.create({
             data: {
               bookingId: booking.id,
-              providerId: providerProfile.id,
+              providerUserId: providerProfile.id,
               amount: penaltyAmount,
               platformFee: 0,
               status: 'SCHEDULED',
@@ -742,7 +742,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (status === 'CANCELLED_BY_PROVIDER') {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const providerProfile = await (prisma.providerProfile.update as any)({
-        where: { userId: booking.providerId },
+        where: { userId: booking.providerUserId },
         data: { cancellationCount: { increment: 1 } },
       }).catch(() => null)
 
@@ -753,7 +753,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         if (cancellationCount === 3) {
           await prisma.notification.create({
             data: {
-              userId: booking.providerId,
+              userId: booking.providerUserId,
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               type: 'GENERAL' as any,
               title: 'Cancellation warning',
@@ -764,12 +764,12 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         } else if (cancellationCount >= 6) {
           // Flag for admin review
           await prisma.providerProfile.update({
-            where: { userId: booking.providerId },
+            where: { userId: booking.providerUserId },
             data: { accountStatus: 'UNDER_REVIEW' },
           }).catch(() => {})
           await prisma.notification.create({
             data: {
-              userId: booking.providerId,
+              userId: booking.providerUserId,
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               type: 'GENERAL' as any,
               title: 'Account under review',
@@ -801,11 +801,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (['COMPLETED', 'CANCELLED_BY_PROVIDER', 'CANCELLED_BY_CUSTOMER', 'DECLINED', 'EXPIRED'].includes(status)) {
       const [totalCompleted, totalTerminal] = await Promise.all([
         prisma.booking.count({
-          where: { providerId: booking.providerId, status: 'COMPLETED' },
+          where: { providerUserId: booking.providerUserId, status: 'COMPLETED' },
         }),
         prisma.booking.count({
           where: {
-            providerId: booking.providerId,
+            providerUserId: booking.providerUserId,
             status: { in: ['COMPLETED', 'CANCELLED_BY_PROVIDER', 'CANCELLED_BY_CUSTOMER', 'DECLINED', 'EXPIRED'] },
           },
         }),
@@ -813,7 +813,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       if (totalTerminal > 0) {
         const rate = Math.round((totalCompleted / totalTerminal) * 100)
         await prisma.providerProfile.update({
-          where: { userId: booking.providerId },
+          where: { userId: booking.providerUserId },
           data: { completionRate: rate },
         }).catch(() => {}) // Non-blocking
       }
@@ -882,7 +882,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const notif = NOTIF_MAP[status]
     if (notif) {
       // Notify the other party (customer for provider actions, provider for customer actions)
-      const notifyUserId = isCustomer ? booking.providerId : booking.customerId
+      const notifyUserId = isCustomer ? booking.providerUserId : booking.customerId
       await prisma.notification.create({
         data: {
           userId: notifyUserId,
@@ -925,13 +925,13 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
           type: 'BOOKING_COMPLETED',
           title: 'How was your appointment? 💅',
           message: `Your appointment with ${providerName} is complete. Loved it? Book again or leave a review!`,
-          link: `/providers/${booking.providerId}`,
+          link: `/providers/${booking.providerUserId}`,
         },
       }).catch(() => {})
 
       // P2: Featured listing upsell after first completed booking
       const completedCount = await prisma.booking.count({
-        where: { providerId: session.user.id, status: 'COMPLETED' },
+        where: { providerUserId: session.user.id, status: 'COMPLETED' },
       })
       if (completedCount === 1) {
         // First ever completion — send featured listing nudge
@@ -1005,7 +1005,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
 
   // Only allow the customer, provider, or an admin to view this booking (IDOR guard)
   const isGetAdmin = session.user.role === 'ADMIN'
-  if (booking.customerId !== session.user.id && booking.providerId !== session.user.id && !isGetAdmin) {
+  if (booking.customerId !== session.user.id && booking.providerUserId !== session.user.id && !isGetAdmin) {
     return NextResponse.json({ error: 'Not authorized' }, { status: 403 })
   }
 

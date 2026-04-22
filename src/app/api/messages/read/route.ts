@@ -14,7 +14,7 @@ export async function PATCH(req: NextRequest) {
   const booking = await prisma.booking.findFirst({
     where: {
       id: bookingId,
-      OR: [{ customerId: session.user.id }, { providerId: session.user.id }],
+      OR: [{ customerId: session.user.id }, { providerUserId: session.user.id }],
     },
   })
   if (!booking) return NextResponse.json({ error: 'Not found' }, { status: 404 })

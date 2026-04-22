@@ -85,7 +85,7 @@ export async function GET() {
         notes: b.notes,
         service: { id: b.serviceId, title: b.service.title, duration: b.service.duration, category: b.service.category },
         provider: {
-          id: b.providerId,
+          id: b.providerUserId,
           name: b.provider.name || 'Artist',
           image: b.provider.image,
           tier: b.provider.providerProfile?.tier || 'NEWCOMER',
@@ -140,7 +140,7 @@ export async function GET() {
     }>()
 
     for (const b of completed) {
-      const existing = talentMap.get(b.providerId)
+      const existing = talentMap.get(b.providerUserId)
       if (existing) {
         existing.bookingCount++
         if (b.date > existing.lastBookingDate) existing.lastBookingDate = b.date
@@ -149,8 +149,8 @@ export async function GET() {
       } else {
         const services = new Map<string, number>()
         services.set(b.service.title, 1)
-        talentMap.set(b.providerId, {
-          id: b.providerId,
+        talentMap.set(b.providerUserId, {
+          id: b.providerUserId,
           name: b.provider.name || 'Artist',
           image: b.provider.image,
           tier: b.provider.providerProfile?.tier || 'NEWCOMER',
@@ -169,14 +169,14 @@ export async function GET() {
     const talentProviderIds = Array.from(talentMap.keys())
     const talentServices = talentProviderIds.length > 0
       ? await prisma.service.findMany({
-          where: { providerId: { in: talentProviderIds }, isActive: true },
-          select: { providerId: true, price: true },
+          where: { providerProfileId: { in: talentProviderIds }, isActive: true },
+          select: { providerProfileId: true, price: true },
         })
       : []
     const minPriceMap = new Map<string, number>()
     for (const svc of talentServices) {
-      const current = minPriceMap.get(svc.providerId)
-      if (current === undefined || svc.price < current) minPriceMap.set(svc.providerId, svc.price)
+      const current = minPriceMap.get(svc.providerProfileId)
+      if (current === undefined || svc.price < current) minPriceMap.set(svc.providerProfileId, svc.price)
     }
 
     const favouriteTalents = Array.from(talentMap.values())

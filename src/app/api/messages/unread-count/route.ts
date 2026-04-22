@@ -17,7 +17,7 @@ export async function GET() {
   // Find all booking IDs where the current user is a participant
   const participantBookings = await prisma.booking.findMany({
     where: {
-      OR: [{ customerId: userId }, { providerId: userId }],
+      OR: [{ customerId: userId }, { providerUserId: userId }],
     },
     select: { id: true },
   })

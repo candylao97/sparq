@@ -215,6 +215,7 @@ model User {
   auditLogs          AuditLog[] @relation("AdminAuditLogs")
   waitlistAsCustomer WaitlistEntry[] @relation("CustomerWaitlist")
   waitlistAsProvider WaitlistEntry[] @relation("ProviderWaitlist")
+  providerPayouts    Payout[]        @relation("ProviderPayouts")
   promoCodes         PromoCode[]
   promoCodeUsages    PromoCodeUsage[]
   referralsSent      Referral[] @relation("ReferrerReferrals")
@@ -295,7 +296,7 @@ model ProviderProfile {
 
 model ScoreFactors {
   id               String          @id @default(cuid())
-  providerId       String          @unique
+  providerProfileId String         @unique
   reviewScore      Float           @default(0)
   completionScore  Float           @default(0)
   responseScore    Float           @default(0)
@@ -303,12 +304,12 @@ model ScoreFactors {
   verificationScore Float          @default(0)
   updatedAt        DateTime        @updatedAt
 
-  provider ProviderProfile @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  provider ProviderProfile @relation(fields: [providerProfileId], references: [id], onDelete: Cascade)
 }
 
 model Service {
   id            String          @id @default(cuid())
-  providerId    String
+  providerProfileId String
   title         String
   category      ServiceCategory
   description   String?         @db.Text
@@ -322,18 +323,18 @@ model Service {
 
   instantBook   Boolean   @default(false)
 
-  provider  ProviderProfile @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  provider  ProviderProfile @relation(fields: [providerProfileId], references: [id], onDelete: Cascade)
   bookings  Booking[]
   addons    ServiceAddon[]
   isDeleted Boolean         @default(false)
 
-  @@index([providerId])
+  @@index([providerProfileId])
   @@index([isDeleted])
 }
 
 model Availability {
   id         String   @id @default(cuid())
-  providerId String
+  providerProfileId String
   date       DateTime @db.Date
   timeSlots  String[]
   isBlocked  Boolean  @default(false)
@@ -341,15 +342,15 @@ model Availability {
   // P1-7: Optimistic lock field — used by availability update endpoint to detect concurrent writes
   updatedAt  DateTime @updatedAt
 
-  provider ProviderProfile @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  provider ProviderProfile @relation(fields: [providerProfileId], references: [id], onDelete: Cascade)
 
-  @@unique([providerId, date])
+  @@unique([providerProfileId, date])
 }
 
 model Booking {
   id              String          @id @default(cuid())
   customerId      String
-  providerId      String
+  providerUserId  String
   serviceId       String
   date            DateTime
   time            String
@@ -382,7 +383,7 @@ model Booking {
   updatedAt            DateTime     @updatedAt
 
   customer User      @relation("CustomerBookings", fields: [customerId], references: [id])
-  provider User      @relation("ProviderBookings", fields: [providerId], references: [id])
+  provider User      @relation("ProviderBookings", fields: [providerUserId], references: [id])
   service  Service   @relation(fields: [serviceId], references: [id])
   review          Review?
   messages        Message[]
@@ -392,7 +393,7 @@ model Booking {
   promoCodeUsage  PromoCodeUsage?
 
   @@index([customerId])
-  @@index([providerId])
+  @@index([providerUserId])
   @@index([status])
 }
 
@@ -419,14 +420,14 @@ model Review {
 
 model PortfolioPhoto {
   id         String   @id @default(cuid())
-  providerId String
+  providerProfileId String
   url        String
   publicId   String?
   caption    String?
   order      Int      @default(0)
   createdAt  DateTime @default(now())
 
-  provider ProviderProfile @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  provider ProviderProfile @relation(fields: [providerProfileId], references: [id], onDelete: Cascade)
 }
 
 model Message {
@@ -460,7 +461,7 @@ model Notification {
 
 model Verification {
   id                          String             @id @default(cuid())
-  providerId                  String             @unique
+  providerProfileId           String             @unique
   stripeVerificationSessionId String?
   status                      VerificationStatus @default(PENDING)
   backgroundCheckStatus       VerificationStatus @default(PENDING)
@@ -468,7 +469,7 @@ model Verification {
   submittedAt                 DateTime           @default(now())
   reviewedAt                  DateTime?
 
-  provider ProviderProfile @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  provider ProviderProfile @relation(fields: [providerProfileId], references: [id], onDelete: Cascade)
 }
 
 model AdminNote {
@@ -545,7 +546,12 @@ model ContactLeakageFlag {
 model Payout {
   id               String       @id @default(cuid())
   bookingId        String       @unique
-  providerId       String
+  // FIND-12: FK to User — previously `providerId: String` with no @relation,
+  // which is what made FIND-2 (payout history empty) and FIND-3 (notification
+  // FK violation on cron) possible undetected. Renamed + FK'd to User so the
+  // `Notification.userId: payout.providerUserId` write in the cron is correct
+  // by construction.
+  providerUserId   String
   amount           Float
   platformFee      Float
   stripeTransferId String?
@@ -560,9 +566,11 @@ model Payout {
   createdAt        DateTime     @default(now())
 
   booking Booking @relation(fields: [bookingId], references: [id])
+  providerUser User @relation("ProviderPayouts", fields: [providerUserId], references: [id], onDelete: Restrict)
 
   @@index([status])
   @@index([scheduledAt])
+  @@index([providerUserId])
 }
 
 model BookingStatusHistory {
@@ -598,7 +606,7 @@ model Dispute {
 model WaitlistEntry {
   id         String   @id @default(cuid())
   customerId String
-  providerId String
+  providerUserId String
   serviceId  String?
   date       DateTime
   notified   Boolean  @default(false)
@@ -606,9 +614,9 @@ model WaitlistEntry {
   createdAt  DateTime @default(now())
 
   customer User @relation("CustomerWaitlist", fields: [customerId], references: [id], onDelete: Cascade)
-  provider User @relation("ProviderWaitlist", fields: [providerId], references: [id], onDelete: Cascade)
+  provider User @relation("ProviderWaitlist", fields: [providerUserId], references: [id], onDelete: Cascade)
 
-  @@index([providerId, date])
+  @@index([providerUserId, date])
   @@index([customerId])
 }
 
@@ -628,7 +636,7 @@ model ServiceAddon {
 
 model KYCRecord {
   id              String    @id @default(cuid())
-  providerId      String    @unique
+  providerProfileId String  @unique
   status          KYCStatus @default(PENDING)
   riskLevel       RiskLevel @default(LOW)
   riskSignals     Json?
@@ -643,7 +651,7 @@ model KYCRecord {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  provider ProviderProfile @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  provider ProviderProfile @relation(fields: [providerProfileId], references: [id], onDelete: Cascade)
 
   @@index([status])
   @@index([riskLevel])

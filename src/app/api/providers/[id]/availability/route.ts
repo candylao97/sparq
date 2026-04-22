@@ -9,7 +9,7 @@ function parseDateNoonUTC(dateStr: string): Date {
 
 // P0-D/UX-H1: Batch availability — returns available dates for a date range (up to 60 days)
 // Used by the booking calendar to grey out unavailable days.
-async function getBatchAvailability(providerId: string, fromStr: string, toStr: string) {
+async function getBatchAvailability(providerProfileId: string, fromStr: string, toStr: string) {
   const from = parseDateNoonUTC(fromStr)
   const to = parseDateNoonUTC(toStr)
 
@@ -22,7 +22,7 @@ async function getBatchAvailability(providerId: string, fromStr: string, toStr: 
   // Fetch all sentinel (weekly default) availability records for this provider
   const sentinelDates = [0, 1, 2, 3, 4, 5, 6].map(dow => getSentinelDate(dow))
   const sentinels = await prisma.availability.findMany({
-    where: { providerId, date: { in: sentinelDates } },
+    where: { providerProfileId, date: { in: sentinelDates } },
   })
   // Sentinel dates are in year 2000; map by DOW
   const sentinelByDow = new Map<number, typeof sentinels[0]>()
@@ -34,7 +34,7 @@ async function getBatchAvailability(providerId: string, fromStr: string, toStr: 
   // Fetch date-specific overrides in the requested range
   const overrides = await prisma.availability.findMany({
     where: {
-      providerId,
+      providerProfileId,
       date: { gte: from, lte: actualTo },
     },
   })
@@ -74,8 +74,12 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     const fromStr = searchParams.get('from')
     const toStr = searchParams.get('to')
     if (fromStr && toStr) {
-      const provider = await prisma.providerProfile.findFirst({
-        where: { userId: params.id },
+      // FIND-1 fix: URL param is ProviderProfile.id (consistent with
+      // /api/providers/[id]). Previously this endpoint matched by userId,
+      // so every call from the booking page (which passed ProviderProfile.id)
+      // 404'd silently.
+      const provider = await prisma.providerProfile.findUnique({
+        where: { id: params.id },
         select: { id: true },
       })
       if (!provider) return NextResponse.json({ error: 'Provider not found' }, { status: 404 })
@@ -95,10 +99,10 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     const date = parseDateNoonUTC(dateStr)
     if (isNaN(date.getTime())) return NextResponse.json({ error: 'Invalid date' }, { status: 400 })
 
-    // Find the provider profile
-    const provider = await prisma.providerProfile.findFirst({
-      where: { userId: params.id },
-      select: { id: true },
+    // Find the provider profile. URL param is ProviderProfile.id (FIND-1).
+    const provider = await prisma.providerProfile.findUnique({
+      where: { id: params.id },
+      select: { id: true, userId: true },
     })
     if (!provider) return NextResponse.json({ error: 'Provider not found' }, { status: 404 })
 
@@ -106,8 +110,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     // Use the same noon-UTC date for lookup since schema uses @db.Date
     let availability = await prisma.availability.findUnique({
       where: {
-        providerId_date: {
-          providerId: provider.id,
+        providerProfileId_date: {
+          providerProfileId: provider.id,
           date,
         },
       },
@@ -122,8 +126,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       const sentinelDate = getSentinelDate(dayOfWeek)
       availability = await prisma.availability.findUnique({
         where: {
-          providerId_date: {
-            providerId: provider.id,
+          providerProfileId_date: {
+            providerProfileId: provider.id,
             date: sentinelDate,
           },
         },
@@ -141,7 +145,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
     const existingBookings = await prisma.booking.findMany({
       where: {
-        providerId: params.id,
+        providerUserId: provider.userId,
         date: { gte: dayStart, lte: dayEnd },
         status: { in: ['PENDING', 'CONFIRMED'] },
       },

@@ -27,12 +27,12 @@ export async function GET(req: Request) {
 
   // Batch-fetch the most recent booking per provider (avoids N individual queries)
   const recentBookings = await prisma.booking.findMany({
-    where: { providerId: { in: providerUserIds } },
+    where: { providerUserId: { in: providerUserIds } },
     orderBy: { createdAt: 'desc' },
-    distinct: ['providerId'],
-    select: { providerId: true, createdAt: true },
+    distinct: ['providerUserId'],
+    select: { providerUserId: true, createdAt: true },
   })
-  const lastBookingMap = new Map(recentBookings.map(b => [b.providerId, b.createdAt]))
+  const lastBookingMap = new Map(recentBookings.map(b => [b.providerUserId, b.createdAt]))
 
   // Batch-fetch dedup notifications — one query for all providers (avoids N individual queries)
   // P2-B: Dedup by type + recency rather than title text — avoids brittle string matching.

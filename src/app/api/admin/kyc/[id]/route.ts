@@ -28,7 +28,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   if (!provider) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   const recentBookings = await prisma.booking.findMany({
-    where: { providerId: provider.userId },
+    where: { providerUserId: provider.userId },
     select: { id: true, status: true, totalPrice: true, createdAt: true },
     orderBy: { createdAt: 'desc' },
     take: 5,
@@ -40,7 +40,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   // Update risk in DB if changed
   if (provider.kycRecord && (provider.kycRecord.riskLevel !== level)) {
     await prisma.kYCRecord.update({
-      where: { providerId: params.id },
+      where: { providerProfileId: params.id },
       data: { riskLevel: level, riskSignals: JSON.parse(JSON.stringify(signals)) },
     })
   }
@@ -122,8 +122,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
   // Upsert KYC record
   const updated = await prisma.kYCRecord.upsert({
-    where: { providerId: params.id },
-    create: { providerId: params.id, ...kycData },
+    where: { providerProfileId: params.id },
+    create: { providerProfileId: params.id, ...kycData },
     update: kycData,
   })
 

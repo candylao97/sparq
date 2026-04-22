@@ -17,7 +17,7 @@ export async function GET(_req: NextRequest) {
 
   const bookings = await prisma.booking.findMany({
     where: {
-      providerId: session.user.id,
+      providerUserId: session.user.id,
       status: 'COMPLETED',
     },
     include: {

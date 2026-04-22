@@ -273,8 +273,8 @@ export async function POST(req: NextRequest) {
     // Look up date-specific override first
     let providerAvailability = await prisma.availability.findUnique({
       where: {
-        providerId_date: {
-          providerId: service.provider.id,
+        providerProfileId_date: {
+          providerProfileId: service.provider.id,
           date: bookingDateNoon,
         },
       },
@@ -287,8 +287,8 @@ export async function POST(req: NextRequest) {
       const sentinelStr = getSentinelDateString(dow)
       providerAvailability = await prisma.availability.findUnique({
         where: {
-          providerId_date: {
-            providerId: service.provider.id,
+          providerProfileId_date: {
+            providerProfileId: service.provider.id,
             date: parseDateNoonUTC(sentinelStr),
           },
         },
@@ -310,7 +310,7 @@ export async function POST(req: NextRequest) {
 
     const existingBookings = await prisma.booking.findMany({
       where: {
-        providerId: service.provider.userId,
+        providerUserId: service.provider.userId,
         date: { gte: dayStart, lte: dayEnd },
         status: { in: ['PENDING', 'CONFIRMED'] },
       },
@@ -580,7 +580,7 @@ export async function POST(req: NextRequest) {
       const dayEnd2   = new Date(Date.UTC(bookingDateNoon.getUTCFullYear(), bookingDateNoon.getUTCMonth(), bookingDateNoon.getUTCDate(), 23, 59, 59, 999))
       const existingInTx = await tx.booking.findMany({
         where: {
-          providerId: service.provider.userId,
+          providerUserId: service.provider.userId,
           date: { gte: dayStart2, lte: dayEnd2 },
           status: { in: ['PENDING', 'CONFIRMED'] },
         },
@@ -658,7 +658,7 @@ export async function POST(req: NextRequest) {
       const newBooking = await tx.booking.create({
         data: {
           customerId: session.user.id,
-          providerId: service.provider.userId,
+          providerUserId: service.provider.userId,
           serviceId,
           date: new Date(date),
           time,
@@ -729,7 +729,7 @@ export async function POST(req: NextRequest) {
               metadata: {
                 bookingId: booking.id,
                 customerId: session.user.id,
-                providerId: service.provider.userId,
+                providerUserId: service.provider.userId,
                 serviceTitle: service.title,
               },
             },
@@ -877,7 +877,7 @@ export async function POST(req: NextRequest) {
     const publicBooking = {
       id: booking.id,
       customerId: booking.customerId,
-      providerId: booking.providerId,
+      providerUserId: booking.providerUserId,
       serviceId: booking.serviceId,
       date: booking.date,
       time: booking.time,
@@ -950,13 +950,13 @@ export async function GET(req: NextRequest) {
       ? {}
       : role === 'customer'
         ? { customerId: session.user.id }
-        : { providerId: session.user.id }
+        : { providerUserId: session.user.id }
 
     const where = {
       ...ownershipFilter,
       ...(filterStatus && { status: filterStatus as import('@prisma/client').BookingStatus }),
       // Only allow providerId filter for admins — customers/providers are already scoped above
-      ...(filterProviderId && isAdmin && { providerId: filterProviderId }),
+      ...(filterProviderId && isAdmin && { providerUserId: filterProviderId }),
     }
 
     const bookings = await prisma.booking.findMany({

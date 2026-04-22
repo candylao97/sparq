@@ -16,7 +16,7 @@ export async function createProviderPayout(bookingId: string) {
 
   const stripeAccountId = booking.provider.providerProfile?.stripeAccountId
   if (!stripeAccountId) {
-    console.log(`Provider ${booking.providerId} has no Stripe Connect account — skipping payout`)
+    console.log(`Provider ${booking.providerUserId} has no Stripe Connect account — skipping payout`)
     return null
   }
 
@@ -33,7 +33,7 @@ export async function createProviderPayout(bookingId: string) {
         transfer_group: booking.id,
         metadata: {
           bookingId: booking.id,
-          providerId: booking.providerId,
+          providerUserId: booking.providerUserId,
         },
       },
       { idempotencyKey: `stripe_transfer_${bookingId}` }

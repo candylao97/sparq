@@ -62,7 +62,7 @@ export async function GET() {
     const providerIds = providers.map((p) => p.id)
     const bookingsWithReviews = await prisma.booking.findMany({
       where: {
-        providerId: { in: providerIds },
+        providerUserId: { in: providerIds },
         review: { isNot: null },
       },
       include: { review: true },
@@ -71,9 +71,9 @@ export async function GET() {
     const ratingMap: Record<string, { sum: number; count: number }> = {}
     for (const b of bookingsWithReviews) {
       if (b.review) {
-        if (!ratingMap[b.providerId]) ratingMap[b.providerId] = { sum: 0, count: 0 }
-        ratingMap[b.providerId].sum += b.review.rating
-        ratingMap[b.providerId].count += 1
+        if (!ratingMap[b.providerUserId]) ratingMap[b.providerUserId] = { sum: 0, count: 0 }
+        ratingMap[b.providerUserId].sum += b.review.rating
+        ratingMap[b.providerUserId].count += 1
       }
     }
 

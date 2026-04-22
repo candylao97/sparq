@@ -11,7 +11,7 @@ export async function POST(
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const service = await prisma.service.findUnique({ where: { id: params.id } })
-  if (!service || service.providerId !== session.user.id) {
+  if (!service || service.providerProfileId !== session.user.id) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 

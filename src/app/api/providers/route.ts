@@ -174,22 +174,22 @@ export async function GET(req: NextRequest) {
     const [ratingRows, monthlyBookingRows] = await Promise.all([
       providerUserIds.length > 0
         ? prisma.$queryRaw<{ providerId: string; avg: number; count: bigint }[]>`
-            SELECT b."providerId", AVG(r.rating)::float AS avg, COUNT(r.rating) AS count
+            SELECT b."providerUserId", AVG(r.rating)::float AS avg, COUNT(r.rating) AS count
             FROM "Review" r
             JOIN "Booking" b ON b.id = r."bookingId"
-            WHERE b."providerId" = ANY(${providerUserIds})
+            WHERE b."providerUserId" = ANY(${providerUserIds})
               AND r."isVisible" = true
-            GROUP BY b."providerId"
+            GROUP BY b."providerUserId"
           `
         : Promise.resolve([]),
       providerUserIds.length > 0
         ? prisma.$queryRaw<{ providerId: string; count: bigint }[]>`
-            SELECT "providerId", COUNT(*) AS count
+            SELECT "providerUserId", COUNT(*) AS count
             FROM "Booking"
-            WHERE "providerId" = ANY(${providerUserIds})
+            WHERE "providerUserId" = ANY(${providerUserIds})
               AND status = 'COMPLETED'
               AND "createdAt" >= ${thirtyDaysAgo}
-            GROUP BY "providerId"
+            GROUP BY "providerUserId"
           `
         : Promise.resolve([]),
     ])
@@ -201,12 +201,12 @@ export async function GET(req: NextRequest) {
     const providerProfileIds = providers.map(p => p.id)
     const nextAvailRows = providerProfileIds.length > 0
       ? await prisma.$queryRaw<{ providerId: string; date: Date }[]>`
-          SELECT DISTINCT ON ("providerId") "providerId", date
+          SELECT DISTINCT ON ("providerUserId") "providerUserId", date
           FROM "Availability"
-          WHERE "providerId" = ANY(${providerProfileIds})
+          WHERE "providerUserId" = ANY(${providerProfileIds})
             AND "isBlocked" = false
             AND date >= ${new Date()}
-          ORDER BY "providerId", date ASC
+          ORDER BY "providerUserId", date ASC
         `
       : []
     const nextAvailMap = new Map(nextAvailRows.map(r => [r.providerId, r.date]))
