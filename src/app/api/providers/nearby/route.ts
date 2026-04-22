@@ -70,27 +70,31 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ providers: [] })
     }
 
-    const providerIds = profiles.map(p => p.id)
+    // Booking.providerUserId FKs to User.id, not ProviderProfile.id, so
+    // key the ratings query on the User.ids. `profiles.map(p => p.id)` would
+    // match zero rows — that was the latent FIND-1-class bug this audit
+    // surfaced during the post-FIND-1/2/3 follow-up pass.
+    const providerUserIds = profiles.map(p => p.userId)
 
     // Batch fetch avg ratings
-    const ratingsRaw = await prisma.$queryRaw<{ providerId: string; avg: number | null }[]>`
+    const ratingsRaw = await prisma.$queryRaw<{ providerUserId: string; avg: number | null }[]>`
       SELECT b."providerUserId", AVG(r.rating) as avg
       FROM "Review" r
       JOIN "Booking" b ON r."bookingId" = b.id
-      WHERE b."providerUserId" = ANY(${providerIds})
+      WHERE b."providerUserId" = ANY(${providerUserIds})
       GROUP BY b."providerUserId"
     `
 
     const ratingsMap = new Map<string, number>()
     for (const row of ratingsRaw) {
-      ratingsMap.set(row.providerId, row.avg ? Number(row.avg) : 0)
+      ratingsMap.set(row.providerUserId, row.avg ? Number(row.avg) : 0)
     }
 
     const providers = profiles
       .map(p => {
         if (p.services.length === 0) return null
 
-        const avgRating = ratingsMap.get(p.id) ?? 0
+        const avgRating = ratingsMap.get(p.userId) ?? 0
         if (minRating != null && avgRating < minRating) return null
 
         const minSvcPrice = p.services.reduce((min, s) => Math.min(min, s.price), Infinity)
