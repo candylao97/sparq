@@ -49,10 +49,16 @@ export function parseBookingUrlState(params: ParamsLike): BookingUrlState {
   const addonsRaw = params.get('addons')
   const selectedAddons = addonsRaw ? addonsRaw.split(',').filter(Boolean) : []
 
+  // Normalise time to 24h here so a deep-link with "?time=3:30+PM" hydrates
+  // wizard state in the canonical format the slot grid + API both expect.
+  // Avoids a circular dep on @/lib/booking-time by inlining the same logic.
+  const rawTime = params.get('time') ?? ''
+  const time = canonicalize24h(rawTime)
+
   return {
     serviceId:      params.get('service'),
     date:           params.get('date') ?? '',
-    time:           params.get('time') ?? '',
+    time,
     locationType,
     tip:            Math.max(0, Number(params.get('tip'))    || 0),
     guestCount:     Math.max(1, Number(params.get('guests')) || 1),
@@ -61,6 +67,26 @@ export function parseBookingUrlState(params: ParamsLike): BookingUrlState {
     promoCode:      params.get('promo')   ?? '',
     step,
   }
+}
+
+function canonicalize24h(raw: string): string {
+  if (!raw) return ''
+  const trimmed = raw.trim()
+  const h24 = trimmed.match(/^(\d{1,2}):(\d{2})$/)
+  if (h24) {
+    const h = Number(h24[1]); const m = Number(h24[2])
+    if (h < 0 || h > 23 || m < 0 || m > 59) return ''
+    return `${String(h).padStart(2, '0')}:${h24[2]}`
+  }
+  const h12 = trimmed.match(/^(\d{1,2}):(\d{2})\s*([AaPp])\.?[Mm]\.?$/)
+  if (h12) {
+    const rawH = Number(h12[1]); const m = Number(h12[2])
+    if (rawH < 1 || rawH > 12 || m < 0 || m > 59) return ''
+    let h = rawH % 12
+    if (h12[3].toLowerCase() === 'p') h += 12
+    return `${String(h).padStart(2, '0')}:${h12[2]}`
+  }
+  return ''
 }
 
 export interface BookingUrlInputs {

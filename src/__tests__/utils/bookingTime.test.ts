@@ -18,7 +18,9 @@ import {
   hoursUntilBooking,
   utcToSydneyDateStr,
   bookingDateFieldToUtc,
+  to24Hour,
 } from '@/lib/booking-time'
+import { parseBookingUrlState } from '@/lib/booking-url-state'
 
 describe('booking-time — DST handling (AUDIT-037)', () => {
   describe('bookingToUtc', () => {
@@ -121,5 +123,94 @@ describe('booking-time — DST handling (AUDIT-037)', () => {
       const utc = bookingDateFieldToUtc(dbDate, '09:00')
       expect(utc.toISOString()).toBe('2025-12-14T22:00:00.000Z')
     })
+  })
+})
+
+/**
+ * Manual-QA P0 (Apr 2026): POST /api/bookings was returning 400
+ * "time must be in HH:MM format" because the wizard state had
+ * "3:30 PM" (12-hour display) instead of "15:30". Lock in the canonical-
+ * 24h conversion so the bug can't reappear via URL deep-links or
+ * future setter call-sites.
+ */
+describe('to24Hour — booking time normalisation', () => {
+  it('passes through canonical 24-hour HH:MM unchanged', () => {
+    expect(to24Hour('09:00')).toBe('09:00')
+    expect(to24Hour('15:30')).toBe('15:30')
+    expect(to24Hour('23:59')).toBe('23:59')
+    expect(to24Hour('00:00')).toBe('00:00')
+  })
+
+  it('zero-pads single-digit hour in 24h shape', () => {
+    expect(to24Hour('9:00')).toBe('09:00')
+    expect(to24Hour('1:30')).toBe('01:30')
+  })
+
+  it('converts 12-hour PM display strings to 24-hour', () => {
+    expect(to24Hour('3:30 PM')).toBe('15:30')
+    expect(to24Hour('1:00 PM')).toBe('13:00')
+    expect(to24Hour('11:45 PM')).toBe('23:45')
+  })
+
+  it('converts 12-hour AM display strings to 24-hour', () => {
+    expect(to24Hour('9:30 AM')).toBe('09:30')
+    expect(to24Hour('1:00 AM')).toBe('01:00')
+    expect(to24Hour('11:59 AM')).toBe('11:59')
+  })
+
+  it('handles the 12 AM / 12 PM edge cases', () => {
+    expect(to24Hour('12:00 AM')).toBe('00:00') // midnight
+    expect(to24Hour('12:00 PM')).toBe('12:00') // noon
+    expect(to24Hour('12:30 AM')).toBe('00:30')
+    expect(to24Hour('12:30 PM')).toBe('12:30')
+  })
+
+  it('is case-insensitive on the AM/PM marker', () => {
+    expect(to24Hour('3:30 pm')).toBe('15:30')
+    expect(to24Hour('3:30 Pm')).toBe('15:30')
+    expect(to24Hour('9:00 am')).toBe('09:00')
+  })
+
+  it('returns null for invalid or missing input', () => {
+    expect(to24Hour('')).toBeNull()
+    expect(to24Hour(null)).toBeNull()
+    expect(to24Hour(undefined)).toBeNull()
+    expect(to24Hour('25:00')).toBeNull()      // 25h doesn't exist
+    expect(to24Hour('13:30 PM')).toBeNull()   // 13 is invalid 12h
+    expect(to24Hour('00:30 AM')).toBeNull()   // 0 is invalid 12h
+    expect(to24Hour('foo')).toBeNull()
+    expect(to24Hour('3:30 XM')).toBeNull()
+  })
+})
+
+/**
+ * Companion check: the URL-state hydrator must also normalise time. A
+ * deep-link like `/book/123?time=3:30+PM` was the most likely vector
+ * for the QA bug — `parseBookingUrlState` previously just took the URL
+ * value verbatim.
+ */
+describe('parseBookingUrlState — time normalisation', () => {
+  function paramsFrom(record: Record<string, string>) {
+    return new URLSearchParams(record)
+  }
+
+  it('hydrates a 12h URL time as 24h state', () => {
+    const state = parseBookingUrlState(paramsFrom({ time: '3:30 PM' }))
+    expect(state.time).toBe('15:30')
+  })
+
+  it('passes through a 24h URL time unchanged', () => {
+    const state = parseBookingUrlState(paramsFrom({ time: '15:30' }))
+    expect(state.time).toBe('15:30')
+  })
+
+  it('falls back to empty string for an unparseable URL time', () => {
+    const state = parseBookingUrlState(paramsFrom({ time: 'foo' }))
+    expect(state.time).toBe('')
+  })
+
+  it('falls back to empty string when no time param is present', () => {
+    const state = parseBookingUrlState(paramsFrom({}))
+    expect(state.time).toBe('')
   })
 })
