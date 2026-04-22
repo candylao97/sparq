@@ -25,6 +25,7 @@ import { ServiceSelector }     from '@/components/providers/ServiceSelector'
 import { TrustBadges }         from '@/components/providers/TrustBadges'
 import { HeroCTA }             from '@/components/providers/HeroCTA'
 import { AvailabilityCalendar } from '@/components/providers/AvailabilityCalendar'
+import { CancellationPolicyCard } from '@/components/providers/CancellationPolicyCard'
 import { getCategoryLabel, formatCurrency, getTierColor, getTierLabel } from '@/lib/utils'
 import { ProfileViewTracker } from '@/components/providers/ProfileViewTracker'
 
@@ -418,6 +419,13 @@ export default async function ProviderProfilePage({ params }: { params: { id: st
                 </div>
               </div>
             </div>
+
+            {/* ── 4b. CANCELLATION POLICY — AUDIT-009 ── */}
+            <CancellationPolicyCard
+              policyType={profile.cancellationPolicyType}
+              customText={profile.cancellationPolicy}
+              artistFirstName={firstName}
+            />
 
             {/* ── 5. Portfolio overflow ── */}
             {extraPhotos.length > 0 && (
