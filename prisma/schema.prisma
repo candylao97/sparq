@@ -198,6 +198,12 @@ model User {
   accountStatus     AccountStatus    @default(ACTIVE)
   // P0-1: Persisted notification preference map (email, SMS, push channels)
   notificationPreferences Json?
+  // FIND-4: ToS consent capture. Populated by POST /api/auth/register and the
+  // /register/provider path. Null for users created before the field existed
+  // — a future re-prompt flow will backfill on next login. Version string
+  // follows legal's scheme (currently the placeholder `v1-placeholder`).
+  termsAcceptedAt   DateTime?
+  termsVersion      String?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 

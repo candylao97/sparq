@@ -43,6 +43,9 @@ export default function ProviderRegisterPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPw, setShowPw] = useState(false)
+  // FIND-4: consent state (only needed on the unauthenticated signup path;
+  // authenticated upgrades don't create a new account).
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
 
   // Qualifications
   const [experienceText, setExperienceText] = useState('')
@@ -75,7 +78,13 @@ export default function ProviderRegisterPage() {
     switch (step) {
       case 'service': return !!selectedService
       case 'location': return city.trim().length >= 2
-      case 'listing': return name.trim().length >= 2 && phone.trim().length >= 8 && password.length >= 8
+      // FIND-4: the ToS checkbox is required for the unauthenticated flow
+      // where we're about to create a new account. Authenticated upgrades
+      // already have consent recorded from their original signup.
+      case 'listing': return name.trim().length >= 2
+        && phone.trim().length >= 8
+        && password.length >= 8
+        && (session || acceptedTerms)
       case 'experience': return years >= 1
       case 'qualifications': return true
     }
@@ -101,10 +110,21 @@ export default function ProviderRegisterPage() {
         router.push('/dashboard/provider')
       } else {
         // Unauthenticated user: create a new account
+        if (!acceptedTerms) {
+          toast.error('Please accept the Terms of Service to continue.')
+          return
+        }
         const res = await fetch('/api/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, phone, email, password, role: 'PROVIDER' }),
+          body: JSON.stringify({
+            name,
+            phone,
+            email,
+            password,
+            role: 'PROVIDER',
+            acceptedTerms: true,
+          }),
         })
         const data = await res.json()
         if (!res.ok) {
@@ -270,6 +290,28 @@ export default function ProviderRegisterPage() {
                     {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
+                {/* FIND-4: required ToS consent on artist signup. Authenticated
+                    upgrades skip this step entirely (session branch in canProceed). */}
+                <label className="flex items-start gap-2.5 pt-1 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={acceptedTerms}
+                    onChange={e => setAcceptedTerms(e.target.checked)}
+                    required
+                    className="mt-0.5 h-4 w-4 rounded border-[#e8e1de] text-[#E96B56] focus:ring-[#E96B56]"
+                    data-testid="tos-consent-checkbox"
+                  />
+                  <span className="text-[12px] text-[#717171] leading-relaxed">
+                    I agree to Sparq&apos;s{' '}
+                    <Link href="/terms" className="underline underline-offset-2 text-[#1A1A1A] hover:text-[#E96B56] transition-colors">
+                      Terms of Service
+                    </Link>
+                    {' '}&amp;{' '}
+                    <Link href="/privacy" className="underline underline-offset-2 text-[#1A1A1A] hover:text-[#E96B56] transition-colors">
+                      Privacy Policy
+                    </Link>.
+                  </span>
+                </label>
               </div>
             </div>
             <div className="hidden lg:block">

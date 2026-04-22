@@ -58,6 +58,8 @@ function LoginPageInner() {
   const [googleLoading, setGoogleLoading] = useState(false)
   const [devLoading,    setDevLoading]    = useState<string | null>(null)
   const [resendLoading, setResendLoading] = useState(false)
+  // FIND-4: consent checkbox state (signup step only).
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
 
   const isEmailNotVerified = errorParam === 'EMAIL_NOT_VERIFIED'
 
@@ -154,12 +156,23 @@ function LoginPageInner() {
   // ── Step 2b: new user ────────────────────────────────────────────────────
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
+    // FIND-4: hard-gate the client side as well as the server — friendlier UX
+    // than round-tripping for the error.
+    if (!acceptedTerms) {
+      toast.error('Please accept the Terms of Service to continue.')
+      return
+    }
     setLoading(true)
     try {
       const res  = await fetch('/api/auth/register', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ email: email.trim(), password, role: 'CUSTOMER' }),
+        body:    JSON.stringify({
+          email: email.trim(),
+          password,
+          role: 'CUSTOMER',
+          acceptedTerms: true,
+        }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -389,28 +402,40 @@ function LoginPageInner() {
                     </div>
                   )}
 
+                  {/* FIND-4: explicit ToS consent checkbox — signup only.
+                      Replaces the passive "by continuing" footer with an
+                      interactive, auditable consent capture. */}
+                  {step === 'signup' && (
+                    <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={acceptedTerms}
+                        onChange={e => setAcceptedTerms(e.target.checked)}
+                        required
+                        className="mt-0.5 h-4 w-4 rounded border-[#e8e1de] text-[#E96B56] focus:ring-[#E96B56]"
+                        data-testid="tos-consent-checkbox"
+                      />
+                      <span className="text-[12px] text-[#717171] leading-relaxed">
+                        I agree to Sparq&apos;s{' '}
+                        <Link href="/terms" className="underline underline-offset-2 text-[#1A1A1A] hover:text-[#E96B56] transition-colors">
+                          Terms of Service
+                        </Link>
+                        {' '}&amp;{' '}
+                        <Link href="/privacy" className="underline underline-offset-2 text-[#1A1A1A] hover:text-[#E96B56] transition-colors">
+                          Privacy Policy
+                        </Link>.
+                      </span>
+                    </label>
+                  )}
+
                   <button
                     type="submit"
-                    disabled={loading}
+                    disabled={loading || (step === 'signup' && !acceptedTerms)}
                     className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#E96B56] to-[#C95444] py-3.5 text-[15px] font-semibold text-white transition-all hover:opacity-90 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {loading && <Spinner light />}
                     {step === 'login' ? 'Log in' : 'Create account'}
                   </button>
-
-                  {/* ToS — signup only */}
-                  {step === 'signup' && (
-                    <p className="text-center text-[11px] text-[#ADADAD] leading-relaxed">
-                      By creating an account you agree to our{' '}
-                      <Link href="/terms" className="underline underline-offset-2 hover:text-[#717171] transition-colors">
-                        Terms
-                      </Link>
-                      {' '}&amp;{' '}
-                      <Link href="/privacy" className="underline underline-offset-2 hover:text-[#717171] transition-colors">
-                        Privacy Policy
-                      </Link>
-                    </p>
-                  )}
                 </form>
               </div>
             )}
