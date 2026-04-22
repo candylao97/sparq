@@ -173,7 +173,7 @@ export async function GET(req: NextRequest) {
 
     const [ratingRows, monthlyBookingRows] = await Promise.all([
       providerUserIds.length > 0
-        ? prisma.$queryRaw<{ providerId: string; avg: number; count: bigint }[]>`
+        ? prisma.$queryRaw<{ providerUserId: string; avg: number; count: bigint }[]>`
             SELECT b."providerUserId", AVG(r.rating)::float AS avg, COUNT(r.rating) AS count
             FROM "Review" r
             JOIN "Booking" b ON b.id = r."bookingId"
@@ -183,7 +183,7 @@ export async function GET(req: NextRequest) {
           `
         : Promise.resolve([]),
       providerUserIds.length > 0
-        ? prisma.$queryRaw<{ providerId: string; count: bigint }[]>`
+        ? prisma.$queryRaw<{ providerUserId: string; count: bigint }[]>`
             SELECT "providerUserId", COUNT(*) AS count
             FROM "Booking"
             WHERE "providerUserId" = ANY(${providerUserIds})
@@ -194,22 +194,24 @@ export async function GET(req: NextRequest) {
         : Promise.resolve([]),
     ])
 
-    const ratingMap = new Map(ratingRows.map(r => [r.providerId, { avg: r.avg || 0, count: Number(r.count) }]))
-    const monthlyMap = new Map(monthlyBookingRows.map(r => [r.providerId, Number(r.count)]))
+    const ratingMap = new Map(ratingRows.map(r => [r.providerUserId, { avg: r.avg || 0, count: Number(r.count) }]))
+    const monthlyMap = new Map(monthlyBookingRows.map(r => [r.providerUserId, Number(r.count)]))
 
-    // UX-7: Batch-fetch the first future non-blocked availability date for each provider
+    // UX-7: Batch-fetch the first future non-blocked availability date for each provider.
+    // Availability.providerProfileId FKs to ProviderProfile.id — providerProfileIds above
+    // is that set of keys, so this query matches on ProviderProfile.id, not User.id.
     const providerProfileIds = providers.map(p => p.id)
     const nextAvailRows = providerProfileIds.length > 0
-      ? await prisma.$queryRaw<{ providerId: string; date: Date }[]>`
-          SELECT DISTINCT ON ("providerUserId") "providerUserId", date
+      ? await prisma.$queryRaw<{ providerProfileId: string; date: Date }[]>`
+          SELECT DISTINCT ON ("providerProfileId") "providerProfileId", date
           FROM "Availability"
-          WHERE "providerUserId" = ANY(${providerProfileIds})
+          WHERE "providerProfileId" = ANY(${providerProfileIds})
             AND "isBlocked" = false
             AND date >= ${new Date()}
-          ORDER BY "providerUserId", date ASC
+          ORDER BY "providerProfileId", date ASC
         `
       : []
-    const nextAvailMap = new Map(nextAvailRows.map(r => [r.providerId, r.date]))
+    const nextAvailMap = new Map(nextAvailRows.map(r => [r.providerProfileId, r.date]))
 
     const now = new Date()
     const enriched = providers.map(p => {
