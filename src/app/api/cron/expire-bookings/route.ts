@@ -216,8 +216,9 @@ export async function GET(req: NextRequest) {
       const hasActiveDispute = booking.dispute &&
         ['OPEN', 'UNDER_REVIEW'].includes(booking.dispute.status)
       if (providerProfile && booking.totalPrice > 0 && !hasActiveDispute) {
-        const providerPayout = booking.totalPrice - booking.platformFee - (booking.tipAmount ?? 0)
-        await prisma.payout.upsert({
+        // FIND-18: tip included in artist payout
+        const providerPayout = booking.totalPrice - booking.platformFee
+        const payoutRow = await prisma.payout.upsert({
           where: { bookingId: booking.id },
           create: {
             bookingId: booking.id,
@@ -231,7 +232,20 @@ export async function GET(req: NextRequest) {
             status: 'SCHEDULED',
             scheduledAt: disputeDeadline,
           },
-        }).catch(e => console.error(`Auto-complete payout upsert failed for booking ${booking.id}:`, e))
+        }).catch(e => {
+          console.error(`Auto-complete payout upsert failed for booking ${booking.id}:`, e)
+          return null
+        })
+        if (payoutRow) {
+          console.log('[FIND-18] payout scheduled (AUTO_EXPIRE)', {
+            payoutId: payoutRow.id,
+            bookingId: booking.id,
+            totalPrice: booking.totalPrice,
+            platformFee: booking.platformFee,
+            tipAmount: booking.tipAmount ?? 0,
+            payoutAmount: providerPayout,
+          })
+        }
       }
 
       // Recalculate completion rate

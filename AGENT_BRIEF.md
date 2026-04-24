@@ -4,9 +4,9 @@
 conversational context, and agent working memory are NOT. When
 assigning new AUDIT or FIND ids, commit to this file in the same PR.
 
-Last updated: 2026-04-22
+Last updated: 2026-04-25
 Last AUDIT-id assigned: AUDIT-037 (gaps exist — see Notes per id)
-Last FIND-id assigned: FIND-17
+Last FIND-id assigned: FIND-18
 
 ## Status legend
 
@@ -525,6 +525,47 @@ original ids (10-13). READINESS definitions renumbered to 14-17.*
   Stripe error copy. Low severity. *(Renumbered from FIND-13 in
   Phase 2.)*
 
+### FIND-18 — Tip payout bug: tips captured but never transferred to artists
+- Status: OPEN (Phase 6a-i investigation complete on 2026-04-25;
+  implementation pending approval — see Decisions log 2026-04-25)
+- Branch: none yet
+- Evidence: five call sites subtract `tipAmount` from the artist
+  payout amount without a compensating tip-transfer anywhere in
+  the codebase. Search for "tip stays with platform until processed
+  separately" returns the four completion paths below; no match
+  for "tip transfer", "processTip", "tipPayout", "tip_payout".
+- Affected paths (each computes `providerPayout = totalPrice -
+  platformFee - tipAmount` then upserts a Payout row with that
+  tip-less amount):
+  - `src/app/api/bookings/[id]/route.ts:497` — normal COMPLETED
+  - `src/app/api/bookings/[id]/route.ts:551` — no-show COMPLETED
+  - `src/app/api/bookings/[id]/route.ts:619` — $0 booking COMPLETED
+    (voucher-covered)
+  - `src/app/api/cron/expire-bookings/route.ts:219` — auto-expire
+    after appointment-time lapse
+- Downstream consequences:
+  - Platform retains every tip captured from customers since launch;
+    artists have never been paid any tip.
+  - Dashboard `tipStats` at `src/app/api/dashboard/provider/route.ts:175`
+    is computed from `Booking.tipAmount` and shows a figure the
+    artist has not in fact received on Stripe — display/reality
+    mismatch.
+  - `ProviderProfile.totalEarnings` increment at
+    `src/app/api/cron/process-payouts/route.ts:281` uses
+    `payout.amount` (tip-less) despite the "gross inc. tip"
+    comment — also understated.
+- Refund paths are correct and MUST stay untouched: tip is fully
+  refunded to the customer on both customer-cancel
+  (`[id]/route.ts:343-350`) and provider-cancel
+  (`[id]/route.ts:411-416`) paths.
+- Partial-refund payout paths
+  (`[id]/route.ts:374, :435`) already exclude tip correctly
+  (artist keeps only a kept portion of service base, not tip).
+- Severity: launch blocker. Pre-existing, pre-dates all recent
+  work (no evidence in git log that any other path was removed).
+- Next action: Phase 6a-ii implementation, scope per Decisions
+  log 2026-04-25.
+
 ---
 
 ## Cross-references
@@ -607,3 +648,24 @@ original ids (10-13). READINESS definitions renumbered to 14-17.*
   Branches in this brief labelled `IN_REVIEW` reflect this
   workflow — they have a committed branch awaiting human local
   merge rather than an open GitHub PR.
+- **2026-04-25 — Ship Batch Item 6 split + Item 6b deferral.**
+  The "move tip collection to review page" work described in the
+  Batch B brief splits into two items during Phase 6a
+  investigation:
+  - **Item 6a (FIND-18) — ship pre-launch.** Fix the tip-payout
+    bug discovered during investigation: tips are captured from
+    customers but never transferred to artists at any of the four
+    completion paths. Launch blocker.
+  - **Item 6b — DEFERRED to post-launch.** Moving tip UI from
+    checkout to the review page requires off-session Stripe
+    infrastructure the app does not have today: a
+    `stripeCustomerId` on every customer (currently populated
+    only for members/subscribers via
+    `api/subscriptions/route.ts:63-75`), `setup_future_usage:
+    'off_session'` on the booking PaymentIntent at
+    `api/bookings/route.ts:724-737`, a new endpoint to charge the
+    tip off-session from the saved payment method, and failure
+    handling for declined off-session charges (expired cards,
+    bank declines, 3DS re-authentication). Out of scope for
+    launch prep. Keep tip UI at checkout (`book/[providerId]/
+    page.tsx:1123-1180`) for now. Revisit post-launch.
