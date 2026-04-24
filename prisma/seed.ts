@@ -441,6 +441,33 @@ async function main() {
     console.log(`✅ Created provider: ${pData.name} (${pData.category} - ${pData.tier})`)
   }
 
+  // Batch B Item 3/4: seed weekly availability defaults so `hasUpcomingAvailability`
+  // is true on every profile and the booking wizard shows clickable dates.
+  // Seven sentinel rows per provider (Mon-Sun), all with a default slot list
+  // of 09:00-17:30 in 30-min increments. Schema convention: sentinel `date`
+  // is `2000-01-0D` at noon UTC where D=3..9 maps Mon..Sun.
+  const SENTINEL_DATES: Record<number, string> = {
+    1: '2000-01-03', 2: '2000-01-04', 3: '2000-01-05',
+    4: '2000-01-06', 5: '2000-01-07', 6: '2000-01-08', 0: '2000-01-09',
+  }
+  const DEFAULT_SLOTS: string[] = []
+  for (let h = 9; h < 18; h++) DEFAULT_SLOTS.push(`${String(h).padStart(2, '0')}:00`, `${String(h).padStart(2, '0')}:30`)
+
+  const allProviderProfiles = await prisma.providerProfile.findMany({ select: { id: true } })
+  let availRowCount = 0
+  for (const pp of allProviderProfiles) {
+    for (const dow of [1, 2, 3, 4, 5, 6, 0]) {
+      const sentinelDate = new Date(`${SENTINEL_DATES[dow]}T12:00:00.000Z`)
+      await prisma.availability.upsert({
+        where: { providerProfileId_date: { providerProfileId: pp.id, date: sentinelDate } },
+        create: { providerProfileId: pp.id, date: sentinelDate, timeSlots: DEFAULT_SLOTS, isBlocked: false },
+        update: { timeSlots: DEFAULT_SLOTS, isBlocked: false },
+      })
+      availRowCount++
+    }
+  }
+  console.log(`✅ Seeded ${availRowCount} availability sentinel rows across ${allProviderProfiles.length} providers`)
+
   // Seed suburbs
   const suburbs = [
     { name: 'Richmond', postcode: '3121', state: 'VIC', city: 'Melbourne' },

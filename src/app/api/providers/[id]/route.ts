@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { utcToSydneyDateStr } from '@/lib/booking-time'
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -77,15 +78,32 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     })
     const hasUpcomingAvailability = availabilityRecord !== null
 
-    // UX-H2: Compute next available date (next 30 days, skip blocked overrides)
+    // UX-H2: Compute next available date (next 30 days, skip blocked overrides).
+    // Batch B Item 3: the whole walk is now Sydney-local-safe. Previously
+    // this used server-local `new Date()` + `toISOString().split('T')[0]`,
+    // which on a Sydney-zone server produced UTC-shifted date strings one
+    // day behind the artist's actual calendar day. The booking-flow
+    // availability endpoint computes in Sydney time; this now matches.
     let nextAvailableDate: string | null = null
     try {
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-      const thirtyDaysOut = new Date(today)
-      thirtyDaysOut.setDate(thirtyDaysOut.getDate() + 30)
+      // "today" expressed as Sydney date; date keys are Sydney-local calendar days.
+      const todaySydney = utcToSydneyDateStr(new Date())
+      // parseSydneyDateAsNoonUtc: produces the noon-UTC Date we use as the
+      // DB range bound. Noon ensures a single unambiguous UTC instant per
+      // Sydney calendar day (avoids DST midnight corner cases).
+      const parseNoonUtc = (s: string) => {
+        const [y, m, d] = s.split('-').map(Number)
+        return new Date(Date.UTC(y, m - 1, d, 12, 0, 0))
+      }
+      const addDaysSydney = (s: string, i: number) => {
+        const [y, m, d] = s.split('-').map(Number)
+        const n = new Date(Date.UTC(y, m - 1, d + i, 12, 0, 0))
+        return utcToSydneyDateStr(n)
+      }
+      const rangeStart = parseNoonUtc(todaySydney)
+      const rangeEnd = parseNoonUtc(addDaysSydney(todaySydney, 30))
 
-      // Load weekly defaults (sentinel dates)
+      // Load weekly defaults (sentinel dates).
       const weeklyDefaults = await prisma.availability.findMany({
         where: {
           providerProfileId: profile.id,
@@ -94,53 +112,46 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       })
       const defaultByDow: Record<number, boolean> = {}
       for (const d of weeklyDefaults) {
-        defaultByDow[d.date.getDay()] = !d.isBlocked && d.timeSlots.length > 0
+        // Sentinels are stored at noon UTC so getUTCDay gives the intended DOW.
+        defaultByDow[d.date.getUTCDay()] = !d.isBlocked && d.timeSlots.length > 0
       }
 
       // Load date overrides in range
       const overrides = await prisma.availability.findMany({
         where: {
           providerProfileId: profile.id,
-          date: { gte: today, lte: thirtyDaysOut },
+          date: { gte: rangeStart, lte: rangeEnd },
         },
         select: { date: true, isBlocked: true, timeSlots: true },
       })
       const overrideMap: Record<string, { isBlocked: boolean; slots: number }> = {}
       for (const o of overrides) {
-        const key = o.date.toISOString().split('T')[0]
+        // Key by the Sydney calendar day to match the walk below.
+        const key = utcToSydneyDateStr(o.date)
         overrideMap[key] = { isBlocked: o.isBlocked, slots: o.timeSlots.length }
       }
 
-      // Load already-booked slots in range
-      const bookedSlots = await prisma.booking.findMany({
+      // Load already-booked slots in range (currently unused by this walk
+      // but kept for future slot-count-aware availability decisions).
+      await prisma.booking.findMany({
         where: {
           providerUserId: profile.userId,
-          date: { gte: today, lte: thirtyDaysOut },
+          date: { gte: rangeStart, lte: rangeEnd },
           status: { in: ['PENDING', 'CONFIRMED'] },
         },
         select: { date: true, time: true },
       })
-      const bookedByDate: Record<string, Set<string>> = {}
-      for (const b of bookedSlots) {
-        const key = b.date.toISOString().split('T')[0]
-        if (!bookedByDate[key]) bookedByDate[key] = new Set()
-        bookedByDate[key].add(b.time)
-      }
 
-      // Walk next 30 days and find first available
+      // Walk next 30 calendar days in Sydney and find first available.
       for (let i = 0; i <= 30; i++) {
-        const d = new Date(today)
-        d.setDate(today.getDate() + i)
-        const key = d.toISOString().split('T')[0]
-        const dow = d.getDay()
+        const key = addDaysSydney(todaySydney, i)
+        // DOW via noon-UTC of this Sydney date: unambiguous, DST-safe.
+        const dow = parseNoonUtc(key).getUTCDay()
         const override = overrideMap[key]
 
-        let isAvailable: boolean
-        if (override) {
-          isAvailable = !override.isBlocked && override.slots > 0
-        } else {
-          isAvailable = defaultByDow[dow] === true
-        }
+        const isAvailable = override
+          ? !override.isBlocked && override.slots > 0
+          : defaultByDow[dow] === true
 
         if (isAvailable) {
           nextAvailableDate = key
