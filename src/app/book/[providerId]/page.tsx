@@ -32,6 +32,7 @@ import {
 } from '@/lib/utils'
 import { parseBookingUrlState, buildBookingUrl } from '@/lib/booking-url-state'
 import { to24Hour } from '@/lib/booking-time'
+import { isValidBookingAddress } from '@/lib/address-validation'
 import toast from 'react-hot-toast'
 
 function getDaysInMonth(year: number, month: number) {
@@ -310,9 +311,11 @@ export default function BookingPage({ params }: { params: { providerId: string }
       toast.error('Bookings can only be made up to 180 days in advance.')
       return
     }
-    // BL-2: Validate AT_HOME address has content before submitting
-    if (bookingData.locationType === 'AT_HOME' && bookingData.address.trim().length < 10) {
-      toast.error('Please enter your full street address for the at-home visit.')
+    // Batch B Item 5: mirror the server-side AU street-address check
+    // client-side so bare suburb names like "Point Cook" are rejected at
+    // the submit boundary, not after a round-trip.
+    if (bookingData.locationType === 'AT_HOME' && !isValidBookingAddress(bookingData.address)) {
+      toast.error('Please enter your full street address, e.g. "42 Collins St, Melbourne VIC 3000".')
       return
     }
     // Defend against 12-hour display strings ("3:30 PM") leaking into wizard

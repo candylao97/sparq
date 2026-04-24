@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { stripe } from '@/lib/stripe'
 import { getCommissionRateAsync, calculatePlatformFeeAsync, getBookingNoticeHours, getMaxBookingDays, getTipCap } from '@/lib/utils.server'
 import { getEffectiveProviderTier } from '@/lib/provider-tier'
+import { isValidBookingAddress } from '@/lib/address-validation'
 import { getSettingFloat } from '@/lib/settings'
 import { filterContactInfo, filterContactInfoLax } from '@/lib/content-filter'
 import { sendBookingRequestEmail, sendBookingConfirmationToCustomer } from '@/lib/email'
@@ -100,13 +101,12 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // BL-2: AT_HOME bookings must have a non-empty address
+    // BL-2: AT_HOME bookings must have a valid AU street address.
+    // Batch B Item 5: shared regex via `isValidBookingAddress` so client
+    // + server enforce identical structural rules.
     if (locationType === 'AT_HOME') {
       const trimmedAddress = (address ?? '').trim()
-      // BL-2: Allow optional leading prefix (Unit, Level, Shop, Flat, Apt, etc.) before the
-      // street number so addresses like "Unit 4, 42 George Street" are accepted.
-      const AU_ADDRESS_REGEX = /^(?:(?:unit|level|shop|flat|apt|apartment|suite|lot)\s+[\w/-]+[,\s]+)?\d+[a-z]?(?:[/-]\d+)?\s+\S.{2,}/i
-      if (!AU_ADDRESS_REGEX.test(trimmedAddress) || trimmedAddress.length < 10) {
+      if (!isValidBookingAddress(trimmedAddress)) {
         return NextResponse.json(
           { error: 'Please provide your full street address (e.g., 42 George St, Bondi NSW 2026)' },
           { status: 400 }
