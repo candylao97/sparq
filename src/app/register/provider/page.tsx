@@ -10,6 +10,7 @@ import {
 import { Button } from '@/components/ui/Button'
 import { Avatar } from '@/components/ui/Avatar'
 import toast from 'react-hot-toast'
+import { isValidServiceArea } from '@/lib/address-validation'
 
 const SERVICES = [
   { id: 'NAILS', label: 'Nails', icon: Sparkles },
@@ -77,7 +78,10 @@ export default function ProviderRegisterPage() {
   const canProceed = () => {
     switch (step) {
       case 'service': return !!selectedService
-      case 'location': return city.trim().length >= 2
+      // Batch B Item 5: service area must be "Suburb, STATE postcode", e.g.
+      // "Point Cook, VIC 3030". Bare suburb names like "Point Cook" are
+      // rejected — previously any string of length >= 2 was accepted.
+      case 'location': return isValidServiceArea(city)
       // FIND-4: the ToS checkbox is required for the unauthenticated flow
       // where we're about to create a new account. Authenticated upgrades
       // already have consent recorded from their original signup.
@@ -213,16 +217,21 @@ export default function ProviderRegisterPage() {
               <h1 className="font-headline mb-8 text-3xl font-bold text-[#1A1A1A] sm:text-4xl">
                 Where will you<br />offer your service?
               </h1>
-              <div className="relative max-w-md">
-                <MapPin className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#717171]" />
-                <input
-                  type="text"
-                  value={city}
-                  onChange={e => setCity(e.target.value)}
-                  placeholder="Enter a city"
-                  className="w-full rounded-xl border border-[#1A1A1A]/15 py-4 pl-12 pr-4 text-sm text-[#1A1A1A] placeholder-[#717171] outline-none focus:border-[#E96B56] focus:ring-1 focus:ring-[#E96B56]"
-                  autoFocus
-                />
+              <div className="max-w-md">
+                <div className="relative">
+                  <MapPin className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#717171]" />
+                  <input
+                    type="text"
+                    value={city}
+                    onChange={e => setCity(e.target.value)}
+                    placeholder="Point Cook, VIC 3030"
+                    className="w-full rounded-xl border border-[#1A1A1A]/15 py-4 pl-12 pr-4 text-sm text-[#1A1A1A] placeholder-[#717171] outline-none focus:border-[#E96B56] focus:ring-1 focus:ring-[#E96B56]"
+                    autoFocus
+                  />
+                </div>
+                <p className="mt-2 text-xs text-[#717171]">
+                  Format: suburb, state, and 4-digit postcode — e.g. <span className="font-medium text-[#1A1A1A]">Bondi, NSW 2026</span>.
+                </p>
               </div>
             </div>
             <div className="hidden lg:block">
