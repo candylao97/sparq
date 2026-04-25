@@ -1,0 +1,133 @@
+name: CI
+
+# First CI setup. Scope: catch new regressions on typecheck, build, and
+# tests. Lint is non-blocking — 65 pre-existing errors documented in
+# STATE_OF_REPO.md. No deploy automation, no branch protection.
+
+on:
+  push:
+    branches:
+      - main
+      - 'fix/**'
+      - 'feat/**'
+      - 'chore/**'
+      - 'docs/**'
+      - 'test/**'
+  pull_request:
+    branches:
+      - main
+
+# Cancel in-flight runs for the same branch/PR when a new push lands.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Placeholder env for every job. None of these hit a real service:
+# - DATABASE_URL is load-bearing for `prisma generate` in the postinstall
+#   script; Prisma parses it but does not connect. Any valid URL works.
+# - The remaining placeholders avoid `process.env.FOO!` non-null crashes
+#   on the chance Next.js evaluates a module that reads them during
+#   `next build` page-collection. Tests mock every external integration,
+#   so they are never touched in jest.
+# To run against real integrations (e.g. a Stripe webhook contract test
+# or a Prisma migration smoke test), replace the relevant placeholders
+# with GitHub Actions secrets.
+env:
+  DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+  NEXTAUTH_SECRET: ci-placeholder-secret
+  NEXTAUTH_URL: http://localhost:3000
+  STRIPE_SECRET_KEY: sk_test_ci_placeholder
+  STRIPE_PUBLISHABLE_KEY: pk_test_ci_placeholder
+  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: pk_test_ci_placeholder
+  STRIPE_WEBHOOK_SECRET: whsec_ci_placeholder
+  GOOGLE_CLIENT_ID: ci-placeholder
+  GOOGLE_CLIENT_SECRET: ci-placeholder
+  NEXT_PUBLIC_APP_URL: http://localhost:3000
+  CRON_SECRET: ci-placeholder
+  ANTHROPIC_API_KEY: ci-placeholder
+
+jobs:
+  typecheck:
+    name: Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: tsc --noEmit
+        run: npx tsc --noEmit
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Cache Next.js build
+        uses: actions/cache@v4
+        with:
+          path: .next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-${{ hashFiles('src/**/*.{ts,tsx,js,jsx}', '**/*.{json,mjs,ts}') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: next build
+        run: npm run build
+
+  test:
+    name: Tests (jest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Prisma tests are fully mocked (`jest.mock('@/lib/prisma', …)` in
+      # every API test). No Postgres service needed.
+      - name: jest --ci
+        run: npx jest --ci --silent
+
+  lint:
+    name: Lint (non-blocking)
+    runs-on: ubuntu-latest
+    # Pre-existing 65 errors, 14 warnings (STATE_OF_REPO.md). Report-only
+    # until a dedicated cleanup session tightens this.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: next lint
+        run: npm run lint
