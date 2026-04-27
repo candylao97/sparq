@@ -49,14 +49,7 @@ enum ServiceLocation {
 enum ServiceCategory {
   NAILS
   LASHES
-  HAIR
   MAKEUP
-  BROWS
-  WAXING
-  MASSAGE
-  FACIALS
-  TUTORING
-  OTHER
 }
 
 enum AccountStatus {

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   MapPin, Minus, Plus, ChevronRight, ArrowLeft, Eye, EyeOff,
-  Briefcase, GraduationCap, Award, Sparkles,
+  Briefcase, GraduationCap, Award, Sparkles, Brush,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Avatar } from '@/components/ui/Avatar'
@@ -15,6 +15,7 @@ import { isValidServiceArea } from '@/lib/address-validation'
 const SERVICES = [
   { id: 'NAILS', label: 'Nails', icon: Sparkles },
   { id: 'LASHES', label: 'Lashes', icon: Eye },
+  { id: 'MAKEUP', label: 'Makeup', icon: Brush },
 ]
 
 const ALL_STEPS = ['service', 'location', 'listing', 'experience', 'qualifications'] as const
@@ -25,6 +26,7 @@ function getSpecialistLabel(label: string) {
   const map: Record<string, string> = {
     'Nails': 'nail specialist',
     'Lashes': 'lash specialist',
+    'Makeup': 'makeup artist',
   }
   return map[label] || 'specialist'
 }

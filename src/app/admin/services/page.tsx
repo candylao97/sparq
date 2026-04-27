@@ -26,6 +26,7 @@ type Service = {
 const CATEGORY_BADGE: Record<string, string> = {
   NAILS: 'bg-pink-50 text-pink-700',
   LASHES: 'bg-purple-50 text-purple-700',
+  MAKEUP: 'bg-rose-50 text-rose-700',
 }
 
 export default function AdminServices() {
@@ -95,6 +96,7 @@ export default function AdminServices() {
           <option value="">All Categories</option>
           <option value="NAILS">Nails</option>
           <option value="LASHES">Lashes</option>
+          <option value="MAKEUP">Makeup</option>
         </select>
         {[
           { value: '', label: 'All' },

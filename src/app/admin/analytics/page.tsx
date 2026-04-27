@@ -124,13 +124,7 @@ export default function AdminAnalyticsPage() {
   const CATEGORY_LABELS: Record<string, string> = {
     NAILS: 'Nails',
     LASHES: 'Lashes',
-    HAIR: 'Hair',
     MAKEUP: 'Makeup',
-    BROWS: 'Brows',
-    WAXING: 'Waxing',
-    MASSAGE: 'Massage',
-    FACIALS: 'Facials',
-    OTHER: 'Other',
   }
 
   return (

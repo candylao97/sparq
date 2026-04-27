@@ -40,7 +40,7 @@ function buildCustomerAiContext(data: CustomerDashboardData) {
       topService: data.favouriteTalents[0].topService,
     } : null,
     categoriesBooked: Array.from(new Set(data.pastBookings.map(b => b.service.category))),
-    allCategories: ['NAILS', 'LASHES'],
+    allCategories: ['NAILS', 'LASHES', 'MAKEUP'],
     daysSinceLastBooking: data.pastBookings.length > 0
       ? Math.floor((Date.now() - new Date(data.pastBookings[0].date).getTime()) / 86400000)
       : null,

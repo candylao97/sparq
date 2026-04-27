@@ -100,13 +100,7 @@ const CATEGORIES = [
   { label: 'All', value: '' },
   { label: 'Nails', value: 'NAILS' },
   { label: 'Lashes', value: 'LASHES' },
-  { label: 'Hair', value: 'HAIR' },
   { label: 'Makeup', value: 'MAKEUP' },
-  { label: 'Brows', value: 'BROWS' },
-  { label: 'Waxing', value: 'WAXING' },
-  { label: 'Massage', value: 'MASSAGE' },
-  { label: 'Facials', value: 'FACIALS' },
-  { label: 'Other', value: 'OTHER' },
 ]
 
 const SORT_OPTIONS = [
@@ -201,7 +195,19 @@ function SearchPageInner() {
   const [locationInput, setLocationInput] = useState(searchParams.get('location') || '')
   const [showSuburbs, setShowSuburbs] = useState(false)
   const [date, setDate] = useState(searchParams.get('date') || '')
-  const [activeCategory, setActiveCategory] = useState(searchParams.get('category') || '')
+  // Silently strip ?category= values that aren't in the kept enum
+  // (NAILS, LASHES, MAKEUP). Prevents stale bookmarks / external links to
+  // a removed category from throwing on the API enum cast. Logs once so
+  // monitoring can surface high volumes of stale URLs.
+  const [activeCategory, setActiveCategory] = useState(() => {
+    const raw = searchParams.get('category') || ''
+    const VALID = new Set(['', 'NAILS', 'LASHES', 'MAKEUP'])
+    if (raw && !VALID.has(raw)) {
+      console.warn(`[search] invalid category param: ${raw}`)
+      return ''
+    }
+    return raw
+  })
   const [priceMin, setPriceMin] = useState('')
   const [priceMax, setPriceMax] = useState('')
   const [priceRangeError, setPriceRangeError] = useState<string | null>(null)
@@ -443,13 +449,7 @@ function SearchPageInner() {
                 <option value="">All services</option>
                 <option value="NAILS">Nails</option>
                 <option value="LASHES">Lashes</option>
-                <option value="HAIR">Hair</option>
                 <option value="MAKEUP">Makeup</option>
-                <option value="BROWS">Brows</option>
-                <option value="WAXING">Waxing</option>
-                <option value="MASSAGE">Massage</option>
-                <option value="FACIALS">Facials</option>
-                <option value="OTHER">Other</option>
               </select>
             </div>
 

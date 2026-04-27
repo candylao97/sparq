@@ -179,7 +179,7 @@ export default async function HomePage() {
       </div>
 
 
-      {/* ─── 3. Category Cards — Nails + Lashes ─── */}
+      {/* ─── 3. Category Cards — Nails + Lashes + Makeup ─── */}
       <section className="px-6 sm:px-10 lg:px-16 xl:px-24 py-20">
         <div className="mb-10">
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#E96B56] mb-3">Browse by category</p>
@@ -188,7 +188,7 @@ export default async function HomePage() {
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl">
 
           {/* Nails */}
           <Link
@@ -235,6 +235,32 @@ export default async function HomePage() {
             <div className="flex-1 min-w-0">
               <h3 className="font-headline text-xl text-[#1A1A1A] mb-1">Lashes</h3>
               <p className="text-sm text-[#717171] mb-3">Extensions, lifts, tints &amp; more</p>
+              <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#E96B56]
+                               group-hover:gap-2 transition-all duration-200">
+                Browse artists <ArrowRight className="w-3.5 h-3.5" />
+              </span>
+            </div>
+          </Link>
+
+          {/* Makeup */}
+          <Link
+            href="/search?category=MAKEUP"
+            className="group flex items-center gap-5 bg-white border border-[#e8e1de]
+                       rounded-2xl p-5 hover:shadow-md hover:border-[#E96B56]/30
+                       transition-all duration-200"
+          >
+            <div className="relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0">
+              <Image
+                src="https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=200&h=200&fit=crop&q=80"
+                alt="Makeup services"
+                fill
+                sizes="80px"
+                className="object-cover group-hover:scale-[1.08] transition-transform duration-500"
+              />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-headline text-xl text-[#1A1A1A] mb-1">Makeup</h3>
+              <p className="text-sm text-[#717171] mb-3">Bridal, editorial &amp; special occasion</p>
               <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#E96B56]
                                group-hover:gap-2 transition-all duration-200">
                 Browse artists <ArrowRight className="w-3.5 h-3.5" />
@@ -297,7 +323,7 @@ export default async function HomePage() {
                   {provider.category && (
                     <span className="bg-white/15 backdrop-blur-md border border-white/20
                                      text-white text-[11px] font-semibold px-2.5 py-1 rounded-full">
-                      {provider.category === 'NAILS' ? 'Nails' : provider.category === 'LASHES' ? 'Lashes' : provider.category}
+                      {provider.category === 'NAILS' ? 'Nails' : provider.category === 'LASHES' ? 'Lashes' : provider.category === 'MAKEUP' ? 'Makeup' : provider.category}
                     </span>
                   )}
                   {provider.reviewCount > 0 ? (

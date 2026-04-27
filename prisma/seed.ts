@@ -14,6 +14,11 @@ const PORTFOLIO_PHOTOS = {
     'https://images.unsplash.com/photo-1639629509821-c54cdd984227?w=600',
     'https://images.unsplash.com/photo-1674049406467-824ea37c7184?w=600',
   ],
+  MAKEUP: [
+    'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=600',
+    'https://images.unsplash.com/photo-1522338242992-e1a54906a8da?w=600',
+    'https://images.unsplash.com/photo-1503236823255-94609f598e71?w=600',
+  ],
 }
 
 // Melbourne suburb coordinates for map feature
@@ -149,6 +154,38 @@ const PROVIDERS = [
     ],
     offerAtHome: false, offerAtStudio: true, isVerified: false,
   },
+  // MAKEUP
+  {
+    name: 'Charlotte Reid', email: 'charlotte.reid@example.com', suburb: 'South Yarra', category: 'MAKEUP' as ServiceCategory,
+    score: 92,
+    services: [
+      { title: 'Bridal Makeup', price: 220, duration: 120 },
+      { title: 'Bridal Trial', price: 130, duration: 75 },
+      { title: 'Special Occasion Makeup', price: 140, duration: 75 },
+      { title: 'Lashes Application', price: 25, duration: 15 },
+    ],
+    offerAtHome: true, offerAtStudio: true, isVerified: true,
+  },
+  {
+    name: 'Hannah Patel', email: 'hannah.patel@example.com', suburb: 'Fitzroy', category: 'MAKEUP' as ServiceCategory,
+    score: 78,
+    services: [
+      { title: 'Editorial Glam', price: 180, duration: 90 },
+      { title: 'Special Occasion Makeup', price: 120, duration: 70 },
+      { title: 'Soft Glam', price: 130, duration: 75 },
+    ],
+    offerAtHome: true, offerAtStudio: false, isVerified: true,
+  },
+  {
+    name: 'Olivia Bennett', email: 'olivia.bennett@example.com', suburb: 'Toorak', category: 'MAKEUP' as ServiceCategory,
+    score: 84,
+    services: [
+      { title: 'Special Occasion Makeup', price: 150, duration: 75 },
+      { title: 'Bridal Makeup', price: 240, duration: 120 },
+      { title: 'Lashes Application', price: 30, duration: 15 },
+    ],
+    offerAtHome: true, offerAtStudio: true, isVerified: true,
+  },
   // SYDNEY PROVIDERS
   {
     name: 'Chloe Pham', email: 'chloe.pham@example.com', suburb: 'Surry Hills', category: 'NAILS' as ServiceCategory,
@@ -226,6 +263,16 @@ const REVIEW_TEXTS: Record<string, string[]> = {
     'I have been getting lashes for years and this is the best set I have ever had. Absolutely flawless.',
     'So careful around the eyes. The whole experience was relaxing and the results speak for themselves.',
   ],
+  MAKEUP: [
+    'Absolutely flawless bridal makeup. It lasted all day through the ceremony and reception with zero touch-ups.',
+    'The editorial glam look she created was unreal — exactly what I asked for and somehow even better.',
+    'Soft glam done right. Looked like myself but the most polished version. Would book again in a heartbeat.',
+    'My trial was so reassuring — she really listened and adjusted everything until it felt right.',
+    'Perfect special occasion makeup. Got compliments all night and my lashes stayed put.',
+    'Travelled to me on the morning of my engagement shoot, set up beautifully, and we still finished early.',
+    'She has such a calm presence and knows exactly what suits each face shape. Genuinely talented.',
+    'I am not usually a makeup person but she made me feel so confident. The finish photographed beautifully.',
+  ],
 }
 
 function getServiceDescription(title: string, providerName: string): string {
@@ -246,6 +293,12 @@ function getServiceDescription(title: string, providerName: string): string {
     'Lash Lift': 'A semi-permanent curl applied to your natural lashes — opens up the eye and eliminates the need for a lash curler.',
     'Lash Lift & Tint': 'Lash lift combined with a tint for darker, more defined lashes. Results last 6–8 weeks.',
     'Gel Mani & Pedi Combo': 'The full package — gel manicure on hands, classic pedicure on feet. Save time and arrive looking polished from tip to toe.',
+    'Bridal Makeup': 'Long-wear bridal application with skin prep, contour, and lashes. Photo-tested to look flawless on camera and last all day.',
+    'Bridal Trial': 'A pre-wedding session to nail down your final look. Plenty of time for tweaks, references, and notes for the day-of.',
+    'Special Occasion Makeup': 'Polished, photo-ready makeup for events — engagements, milestones, formals. Includes lashes if requested.',
+    'Editorial Glam': 'Bold, camera-ready editorial looks for shoots, content, and statement nights out. Custom to your reference brief.',
+    'Soft Glam': 'Subtle, glowing makeup that enhances your natural features without feeling heavy. Daytime or evening.',
+    'Lashes Application': 'Strip or cluster lash application added to any makeup booking. Quick, secure, and removable at the end of the night.',
   }
   return map[title] ?? `${title} with ${firstName} — professional service at your convenience.`
 }

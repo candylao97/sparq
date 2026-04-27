@@ -45,6 +45,14 @@ export function Footer() {
                   Lash artists
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/search?category=MAKEUP"
+                  className="text-sm font-medium text-[#717171] hover:text-[#1A1A1A] hover:underline underline-offset-4 transition-colors duration-200"
+                >
+                  Makeup artists
+                </Link>
+              </li>
             </ul>
           </div>
 

@@ -7,6 +7,7 @@ import toast from 'react-hot-toast'
 import {
   Sparkles,
   Eye,
+  Brush,
   ArrowLeft,
   ChevronDown,
   ChevronUp,
@@ -20,7 +21,7 @@ import { getCommissionRate } from '@/lib/utils'
 
 interface FormData {
   title: string
-  category: 'NAILS' | 'LASHES'
+  category: 'NAILS' | 'LASHES' | 'MAKEUP'
   price: string
   duration: string
   maxGuests: string
@@ -284,7 +285,7 @@ export default function CreateServicePage() {
           <label className="block font-jakarta text-sm font-semibold text-[#1A1A1A] mb-3">
             Category
           </label>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             {/* NAILS */}
             <button
               type="button"
@@ -301,7 +302,7 @@ export default function CreateServicePage() {
                 className={formData.category === 'NAILS' ? 'text-[#E96B56]' : 'text-[#717171]'}
               />
               <span className="font-jakarta text-sm font-semibold text-[#1A1A1A]">
-                Nails & Manicures
+                Nails
               </span>
             </button>
 
@@ -321,7 +322,27 @@ export default function CreateServicePage() {
                 className={formData.category === 'LASHES' ? 'text-[#E96B56]' : 'text-[#717171]'}
               />
               <span className="font-jakarta text-sm font-semibold text-[#1A1A1A]">
-                Lashes & Brow
+                Lashes
+              </span>
+            </button>
+
+            {/* MAKEUP */}
+            <button
+              type="button"
+              onClick={() => setField('category', 'MAKEUP')}
+              className={[
+                'flex flex-col items-center justify-center gap-3 rounded-2xl py-8 transition-all',
+                formData.category === 'MAKEUP'
+                  ? 'border-2 border-[#E96B56] bg-[#fdf6f4]'
+                  : 'border border-[#e8e1de] bg-white hover:border-[#E96B56]',
+              ].join(' ')}
+            >
+              <Brush
+                size={32}
+                className={formData.category === 'MAKEUP' ? 'text-[#E96B56]' : 'text-[#717171]'}
+              />
+              <span className="font-jakarta text-sm font-semibold text-[#1A1A1A]">
+                Makeup
               </span>
             </button>
           </div>
@@ -686,6 +707,8 @@ export default function CreateServicePage() {
           <div className="relative h-48 bg-gradient-to-br from-[#f9f2ef] to-[#fce9e6] flex items-center justify-center">
             {formData.category === 'NAILS' ? (
               <Sparkles size={40} className="text-[#E96B56] opacity-50" />
+            ) : formData.category === 'MAKEUP' ? (
+              <Brush size={40} className="text-[#E96B56] opacity-50" />
             ) : (
               <Eye size={40} className="text-[#E96B56] opacity-50" />
             )}
@@ -774,7 +797,7 @@ export default function CreateServicePage() {
 
     const rows: { label: string; value: string }[] = [
       { label: 'Service', value: formData.title },
-      { label: 'Category', value: formData.category === 'NAILS' ? 'Nails & Manicures' : 'Lashes & Brow' },
+      { label: 'Category', value: formData.category === 'NAILS' ? 'Nails' : formData.category === 'MAKEUP' ? 'Makeup' : 'Lashes' },
       { label: 'Price', value: `$${parseFloat(formData.price || '0').toFixed(2)} AUD` },
       { label: 'Duration', value: dur > 0 ? formatDuration(dur) : '—' },
       { label: 'Location', value: formatLocationLabel(formData.locationTypes) },

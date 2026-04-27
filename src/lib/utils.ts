@@ -58,13 +58,7 @@ export function getCategoryIcon(category: string): string {
   switch (category) {
     case 'NAILS': return 'Nails'
     case 'LASHES': return 'Lashes'
-    case 'HAIR': return 'Hair'
     case 'MAKEUP': return 'Makeup'
-    case 'BROWS': return 'Brows'
-    case 'WAXING': return 'Waxing'
-    case 'MASSAGE': return 'Massage'
-    case 'FACIALS': return 'Facials'
-    case 'OTHER': return 'Other'
     default: return 'Service'
   }
 }
@@ -73,13 +67,7 @@ export function getCategoryLabel(category: string): string {
   switch (category) {
     case 'NAILS': return 'Nails'
     case 'LASHES': return 'Lashes'
-    case 'HAIR': return 'Hair'
     case 'MAKEUP': return 'Makeup'
-    case 'BROWS': return 'Brows'
-    case 'WAXING': return 'Waxing'
-    case 'MASSAGE': return 'Massage'
-    case 'FACIALS': return 'Facials'
-    case 'OTHER': return 'Other'
     default: return category
   }
 }
