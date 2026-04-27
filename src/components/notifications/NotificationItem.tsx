@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import {
   Bell, Calendar, CheckCircle, XCircle, MessageSquare,
-  Star, DollarSign, AlertCircle, ChevronRight, Sparkles,
+  Star, DollarSign, AlertCircle, ChevronRight,
 } from 'lucide-react'
 import { relativeTime } from '@/lib/utils'
 import type { LucideIcon } from 'lucide-react'
@@ -25,8 +25,6 @@ const NOTIFICATION_ICONS: Record<string, LucideIcon> = {
   REFUND_PROCESSED: DollarSign,
   RESCHEDULE_REQUESTED: Calendar,
   DISPUTE_RESOLVED: CheckCircle,
-  // Tier change reuses BOOKING_ACCEPTED in the cron — but we also match the label here
-  TIER_CHANGE: Sparkles,
 }
 
 const NOTIFICATION_COLORS: Record<string, string> = {
@@ -46,7 +44,6 @@ const NOTIFICATION_COLORS: Record<string, string> = {
   REFUND_PROCESSED: 'bg-[#f3ece9] text-[#717171]',
   RESCHEDULE_REQUESTED: 'bg-blue-50 text-blue-600',
   DISPUTE_RESOLVED: 'bg-emerald-50 text-emerald-600',
-  TIER_CHANGE: 'bg-[#f3ece9] text-[#E96B56]',
 }
 
 export type NotificationItemData = {
@@ -74,15 +71,6 @@ export function getNotificationHref(
 
   const isProvider = role === 'PROVIDER' || role === 'BOTH'
   const { type, resourceId } = notification
-
-  // Tier change — always goes to provider dashboard (Sparq Score gauge)
-  if (
-    type === 'TIER_CHANGE' ||
-    // The cron uses BOOKING_ACCEPTED type for tier upgrades — detect by title pattern
-    (type === 'BOOKING_ACCEPTED' && notification.resourceType === 'tier')
-  ) {
-    return '/dashboard/provider'
-  }
 
   switch (type) {
     case 'NEW_BOOKING':

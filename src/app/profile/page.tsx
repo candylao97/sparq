@@ -41,13 +41,12 @@ interface ProfileData {
     city: string
     languages: string[]
     isVerified: boolean
-    tier: string
     services: { id: string; title: string }[]
     portfolio: { id: string; url: string }[]
     verification: { status: string } | null
   } | null
   customerProfile: {
-    membership: string
+    id: string
   } | null
 }
 

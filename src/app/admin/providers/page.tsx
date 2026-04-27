@@ -9,7 +9,6 @@ type Provider = {
   bio: string | null
   suburb: string | null
   city: string
-  tier: string
   isVerified: boolean
   accountStatus: string
   suspendReason: string | null

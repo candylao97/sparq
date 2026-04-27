@@ -136,12 +136,6 @@ jest.mock('@/lib/utils.server', () => ({
   getTipCap: jest.fn().mockResolvedValue(1000),
 }))
 
-// audit-001 derives the effective tier via a Stripe-subscription-aware lookup.
-// The test fixtures already set `provider.tier = 'TRUSTED'`; pass that through.
-jest.mock('@/lib/provider-tier', () => ({
-  getEffectiveProviderTier: jest.fn(({ tier }) => tier ?? 'NEWCOMER'),
-}))
-
 jest.mock('@/lib/settings', () => ({
   getSettingFloat: jest.fn().mockResolvedValue(null),
 }))
@@ -317,14 +311,12 @@ describe('POST /api/bookings', () => {
     provider: {
       id: 'provider-profile-1',
       userId: 'user-provider-1',
-      tier: 'TRUSTED',
       accountStatus: 'ACTIVE',
       isVerified: true,
       latitude: null,
       longitude: null,
       serviceRadius: 10,
       timezone: 'Australia/Sydney',
-      stripeSubscriptionStatus: null,
       user: { id: 'user-provider-1', name: 'Provider Jane', email: 'provider@example.com' },
     },
   }
@@ -358,7 +350,7 @@ describe('POST /api/bookings', () => {
     mockGetServerSession.mockResolvedValueOnce(makeSession() as any)
     ;(mockPrisma.service.findUnique as jest.Mock).mockResolvedValueOnce(fakeService)
     setupAvailabilityMocks()
-    ;(mockPrisma.customerProfile.findUnique as jest.Mock).mockResolvedValueOnce({ membership: 'FREE' })
+    ;(mockPrisma.customerProfile.findUnique as jest.Mock).mockResolvedValueOnce({})
     ;(mockPrisma.booking.create as jest.Mock).mockResolvedValueOnce({
       id: 'new-booking-1',
       customerId: 'user-customer-1',
@@ -404,7 +396,7 @@ describe('POST /api/bookings', () => {
     mockGetServerSession.mockResolvedValueOnce(makeSession() as any)
     ;(mockPrisma.service.findUnique as jest.Mock).mockResolvedValueOnce(fakeService)
     setupAvailabilityMocks()
-    ;(mockPrisma.customerProfile.findUnique as jest.Mock).mockResolvedValueOnce({ membership: 'FREE' })
+    ;(mockPrisma.customerProfile.findUnique as jest.Mock).mockResolvedValueOnce({})
 
     const validVoucher = {
       id: 'voucher-1',
@@ -445,7 +437,7 @@ describe('POST /api/bookings', () => {
     mockGetServerSession.mockResolvedValueOnce(makeSession() as any)
     ;(mockPrisma.service.findUnique as jest.Mock).mockResolvedValueOnce(fakeService)
     setupAvailabilityMocks()
-    ;(mockPrisma.customerProfile.findUnique as jest.Mock).mockResolvedValueOnce({ membership: 'FREE' })
+    ;(mockPrisma.customerProfile.findUnique as jest.Mock).mockResolvedValueOnce({})
     ;(mockPrisma.giftVoucher.findUnique as jest.Mock).mockResolvedValueOnce(null)
 
     const req = makeRequest('http://localhost/api/bookings', 'POST', {
@@ -463,7 +455,7 @@ describe('POST /api/bookings', () => {
     mockGetServerSession.mockResolvedValueOnce(makeSession() as any)
     ;(mockPrisma.service.findUnique as jest.Mock).mockResolvedValueOnce(fakeService)
     setupAvailabilityMocks()
-    ;(mockPrisma.customerProfile.findUnique as jest.Mock).mockResolvedValueOnce({ membership: 'FREE' })
+    ;(mockPrisma.customerProfile.findUnique as jest.Mock).mockResolvedValueOnce({})
     // BL-7: handler adds a 90-min grace buffer on expiresAt — set to 2h in the
     // past so we're definitely past the grace window.
     ;(mockPrisma.giftVoucher.findUnique as jest.Mock).mockResolvedValueOnce({
@@ -493,7 +485,7 @@ describe('POST /api/bookings', () => {
     mockGetServerSession.mockResolvedValueOnce(makeSession() as any)
     ;(mockPrisma.service.findUnique as jest.Mock).mockResolvedValueOnce(fakeService)
     setupAvailabilityMocks()
-    ;(mockPrisma.customerProfile.findUnique as jest.Mock).mockResolvedValueOnce({ membership: 'FREE' })
+    ;(mockPrisma.customerProfile.findUnique as jest.Mock).mockResolvedValueOnce({})
     ;(mockPrisma.booking.create as jest.Mock).mockResolvedValueOnce({ id: 'b-1' })
     ;(mockPrisma.booking.update as jest.Mock).mockResolvedValueOnce({}) // stripe PI update
     ;(mockPrisma.notification.create as jest.Mock).mockResolvedValueOnce({})
@@ -563,7 +555,6 @@ describe('PATCH /api/bookings/[id]', () => {
         stripeAccountId: 'acct_test_123',
         stripeChargesEnabled: true,
         stripePayoutsEnabled: true,
-        tier: 'TRUSTED',
       },
     },
     customer: { id: 'user-customer-1', name: 'Emma', email: 'emma@example.com' },

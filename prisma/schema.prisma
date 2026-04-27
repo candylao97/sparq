@@ -75,25 +75,6 @@ enum RefundStatus {
 }
 
 
-enum ProviderTier {
-  NEWCOMER
-  RISING
-  TRUSTED
-  PRO
-  ELITE
-}
-
-enum SubscriptionPlan {
-  FREE
-  PRO
-  ELITE
-}
-
-enum CustomerMembership {
-  FREE
-  PREMIUM
-}
-
 enum VerificationStatus {
   PENDING
   APPROVED
@@ -147,7 +128,6 @@ enum NotificationType {
   REVIEW_REPLY
   DISPUTE_RESOLVED
   REFUND_PROCESSED
-  TIER_CHANGE
   GENERAL
 }
 
@@ -229,14 +209,15 @@ model User {
 }
 
 model CustomerProfile {
-  id                   String             @id @default(cuid())
-  userId               String             @unique
-  membership           CustomerMembership @default(FREE)
+  id                   String   @id @default(cuid())
+  userId               String   @unique
   savedProviders       String[]
+  // Generic Stripe customer pointer. Vestigial today (premium membership
+  // removed); retained for the deferred Item 6b tip-on-review-page work
+  // which needs a saved payment method to charge tip off-session.
   stripeCustomerId     String?
-  stripeSubscriptionId String?
-  createdAt            DateTime           @default(now())
-  updatedAt            DateTime           @updatedAt
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -255,8 +236,6 @@ model ProviderProfile {
   longitude        Float?
   offerAtHome      Boolean          @default(true)
   offerAtStudio    Boolean          @default(false)
-  tier             ProviderTier     @default(NEWCOMER)
-  subscriptionPlan SubscriptionPlan @default(FREE)
   stripeAccountId        String?
   stripeChargesEnabled   Boolean @default(false)
   stripePayoutsEnabled   Boolean @default(false)
@@ -278,8 +257,6 @@ model ProviderProfile {
   cancellationPolicyType  String           @default("MODERATE")
   isFeatured              Boolean          @default(false)
   featuredUntil           DateTime?
-  stripeSubscriptionId    String?
-  stripeSubscriptionStatus String?
   icalToken               String?          @unique
   icalTokenExpiresAt      DateTime?
   timezone                String           @default("Australia/Sydney")

@@ -108,10 +108,6 @@ export default function WishlistsPage() {
           <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
             {providers.map((provider) => {
               const primaryService = provider.services[0]
-              const tierLabel =
-                provider.tier === 'TRUSTED'
-                  ? 'Top Rated'
-                  : null
 
               return (
                 <div key={provider.id} className="group relative">
@@ -130,15 +126,6 @@ export default function WishlistsPage() {
                         <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[#f9f2ef] to-[#f3ece9]">
                           <span className="text-5xl font-bold text-[#717171]">
                             {provider.name?.charAt(0) ?? 'A'}
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Tier badge */}
-                      {tierLabel && (
-                        <div className="absolute left-3 top-3">
-                          <span className="rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-[#1A1A1A] shadow-sm">
-                            {tierLabel}
                           </span>
                         </div>
                       )}

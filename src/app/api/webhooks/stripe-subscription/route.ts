@@ -29,87 +29,25 @@ export async function POST(req: NextRequest) {
   if (alreadyProcessed) {
     return NextResponse.json({ received: true, duplicate: true })
   }
-  // TS-7: Do NOT write idempotency record here for the critical event types below.
-  // For customer.subscription.updated, the idempotency record is written atomically
-  // inside the same transaction as the DB update, so both succeed or fail together.
-  // For all other event types, write the record here as a best-effort guard.
-  const TRANSACTIONAL_EVENTS = ['customer.subscription.updated']
-  if (!TRANSACTIONAL_EVENTS.includes(event.type)) {
-    try {
-      await prisma.processedWebhookEvent.create({
-        data: { eventId: event.id, source: 'stripe' },
-      })
-    } catch {
-      // Unique constraint = concurrent duplicate, safe to ignore
-      return NextResponse.json({ received: true, duplicate: true })
-    }
-  }
-
-  const planFromPriceId = (priceId: string): 'PRO' | 'ELITE' | 'FREE' => {
-    if (priceId === process.env.STRIPE_PRICE_PRO) return 'PRO'
-    if (priceId === process.env.STRIPE_PRICE_ELITE) return 'ELITE'
-    return 'FREE'
+  // Best-effort idempotency record. The TS-7 transactional path that
+  // previously bundled this with subscription.updated is gone — there's no
+  // longer a write that needs to be coupled to the idempotency record.
+  try {
+    await prisma.processedWebhookEvent.create({
+      data: { eventId: event.id, source: 'stripe' },
+    })
+  } catch {
+    // Unique constraint = concurrent duplicate, safe to ignore
+    return NextResponse.json({ received: true, duplicate: true })
   }
 
   switch (event.type) {
     case 'checkout.session.completed': {
       const session = event.data.object as Stripe.Checkout.Session
 
-      // Handle subscription checkout completions
+      // Subscription mode (was customer PREMIUM membership + artist PRO/ELITE
+      // plans) is no longer used. Tier system removed; ignore any stray events.
       if (session.mode === 'subscription') {
-        const userId = session.metadata?.userId
-        const type = session.metadata?.type
-
-        // Handle premium membership subscription
-        if (type === 'premium_membership' && userId) {
-          // Store Stripe subscription ID and customer ID for future cancellation
-          const stripeSubscriptionId = typeof session.subscription === 'string'
-            ? session.subscription
-            : (session.subscription as { id?: string } | null)?.id ?? null
-
-          const stripeCustomerId = typeof session.customer === 'string'
-            ? session.customer
-            : (session.customer as { id?: string } | null)?.id ?? null
-
-          // P0-3: Single atomic upsert — merging membership + subscription IDs avoids a
-          // partial-write window where membership is PREMIUM but IDs are not yet stored.
-          await prisma.customerProfile.upsert({
-            where: { userId },
-            create: {
-              userId,
-              membership: 'PREMIUM',
-              stripeSubscriptionId: stripeSubscriptionId ?? undefined,
-              stripeCustomerId: stripeCustomerId ?? undefined,
-            },
-            update: {
-              membership: 'PREMIUM',
-              ...(stripeSubscriptionId && { stripeSubscriptionId }),
-              ...(stripeCustomerId && { stripeCustomerId }),
-            },
-          })
-
-          await prisma.notification.create({
-            data: {
-              userId,
-              type: 'PAYMENT_RECEIVED',
-              title: 'Welcome to Sparq Premium! ⭐',
-              message: 'You now have zero booking fees on all appointments. Enjoy exclusive access to top artists!',
-            },
-          }).catch(() => {})
-          break
-        }
-
-        const plan = session.metadata?.plan as 'PRO' | 'ELITE' | undefined
-        if (!userId || !plan) break
-
-        await prisma.providerProfile.update({
-          where: { userId },
-          data: {
-            subscriptionPlan: plan,
-            stripeSubscriptionId: session.subscription as string,
-            stripeSubscriptionStatus: 'active',
-          },
-        })
         break
       }
 
@@ -211,96 +149,10 @@ export async function POST(req: NextRequest) {
       break
     }
 
-    case 'customer.subscription.updated': {
-      const sub = event.data.object as Stripe.Subscription
-      const userId = sub.metadata?.userId
-      const type = sub.metadata?.type
-
-      // Handle provider subscription plan changes
-      if (type !== 'premium_membership') {
-        const priceId = sub.items.data[0]?.price.id ?? ''
-        const plan = planFromPriceId(priceId)
-
-        // TS-7: Write idempotency record atomically WITH the profile update so both succeed or fail
-        // together. If the profile update fails and rolls back, the idempotency record is also rolled
-        // back — meaning the next retry will attempt the update again. Without this, a failed profile
-        // update after a successful idempotency write would permanently skip re-processing.
-        try {
-          await prisma.$transaction([
-            prisma.processedWebhookEvent.create({
-              data: { eventId: event.id, source: 'stripe' },
-            }),
-            prisma.providerProfile.updateMany({
-              where: { stripeSubscriptionId: sub.id },
-              data: {
-                subscriptionPlan: sub.status === 'active' ? plan : 'FREE',
-                stripeSubscriptionStatus: sub.status,
-              },
-            }),
-          ])
-        } catch (txErr: unknown) {
-          // Unique constraint on eventId = concurrent duplicate, safe to ignore
-          if ((txErr as { code?: string })?.code === 'P2002') {
-            return NextResponse.json({ received: true, duplicate: true })
-          }
-          throw txErr
-        }
-      }
-
-      // Handle premium membership status changes
-      if (type === 'premium_membership' && userId) {
-        if (sub.status === 'past_due' || sub.status === 'unpaid' || sub.status === 'canceled') {
-          await prisma.customerProfile.update({
-            where: { userId },
-            data: { membership: 'FREE', stripeSubscriptionId: null },
-          })
-          await prisma.notification.create({
-            data: {
-              userId,
-              type: 'PAYMENT_RECEIVED',
-              title: 'Premium membership issue',
-              message: sub.status === 'past_due'
-                ? 'Your Sparq Premium payment failed. Please update your payment method to keep your benefits.'
-                : 'Your Sparq Premium membership has been cancelled due to a payment issue.',
-              link: '/dashboard/customer/premium',
-            },
-          }).catch(() => {})
-        }
-      }
-      break
-    }
-
-    case 'customer.subscription.deleted': {
-      const sub = event.data.object as Stripe.Subscription
-      // MON-R2: Downgrade plan AND unset isFeatured — featured placement is a paid perk
-      await prisma.providerProfile.updateMany({
-        where: { stripeSubscriptionId: sub.id },
-        data: {
-          subscriptionPlan: 'FREE',
-          stripeSubscriptionStatus: 'cancelled',
-          stripeSubscriptionId: null,
-          isFeatured: false,
-        },
-      })
-
-      // BL-1: Downgrade premium customer membership when their subscription ends.
-      // The cancel route stores stripeCustomerId on the profile — look up by that.
-      const customerId = typeof sub.customer === 'string'
-        ? sub.customer
-        : (sub.customer as { id?: string } | null)?.id
-      if (customerId) {
-        const profile = await prisma.customerProfile.findFirst({
-          where: { stripeCustomerId: customerId },
-        })
-        if (profile) {
-          await prisma.customerProfile.update({
-            where: { id: profile.id },
-            data: { membership: 'FREE', stripeSubscriptionId: null },
-          })
-        }
-      }
-      break
-    }
+    // Subscription lifecycle events (was customer PREMIUM membership +
+    // artist PRO/ELITE plans) are no longer used. Tier system removed.
+    // Stripe-side: archive the corresponding Products/Prices and disable
+    // this webhook endpoint after deploy so retries stop arriving.
   }
 
   return NextResponse.json({ received: true })

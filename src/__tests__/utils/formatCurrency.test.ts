@@ -3,7 +3,10 @@
  *
  * These are pure functions with no external dependencies — no mocks needed.
  * We test: formatCurrency, formatTime, getCommissionRate, calculatePlatformFee,
- *          getTierColor, getCategoryLabel, getLocationLabel, truncate
+ *          getCategoryLabel, getLocationLabel, truncate
+ *
+ * (getTierColor and tier-specific getCommissionRate variants removed with the
+ * premium tier system — see feat/remove-premium-tiers.)
  */
 
 import {
@@ -11,7 +14,6 @@ import {
   formatTime,
   getCommissionRate,
   calculatePlatformFee,
-  getTierColor,
   getCategoryLabel,
   getLocationLabel,
   truncate,
@@ -102,28 +104,14 @@ describe('formatTime', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe('getCommissionRate', () => {
-  // Pre-existing failure (CI baseline). Unwrap `.failing` if this test starts passing.
-  it.failing('returns 10% for PRO tier', () => {
-    expect(getCommissionRate('PRO')).toBe(0.10)
+  it('returns 15% flat (premium tier system removed)', () => {
+    expect(getCommissionRate()).toBe(0.15)
   })
 
-  it('returns 10% for ELITE tier', () => {
-    expect(getCommissionRate('ELITE')).toBe(0.10)
-  })
-
-  it('returns 13% for TRUSTED tier', () => {
-    expect(getCommissionRate('TRUSTED')).toBe(0.13)
-  })
-
-  it('returns 15% (default) for NEWCOMER tier', () => {
+  it('ignores any tier argument', () => {
+    expect(getCommissionRate('PRO')).toBe(0.15)
+    expect(getCommissionRate('ELITE')).toBe(0.15)
     expect(getCommissionRate('NEWCOMER')).toBe(0.15)
-  })
-
-  it('returns 15% (default) for RISING tier', () => {
-    expect(getCommissionRate('RISING')).toBe(0.15)
-  })
-
-  it('returns 15% (default) for unknown tier', () => {
     expect(getCommissionRate('UNKNOWN')).toBe(0.15)
   })
 })
@@ -135,7 +123,7 @@ describe('calculatePlatformFee', () => {
     expect(calculatePlatformFee(200, false)).toBe(30)
   })
 
-  it('returns 0 for PREMIUM members (member benefit)', () => {
+  it('returns 0 when isMember=true (legacy param — no longer used in production now that premium tiers are removed)', () => {
     expect(calculatePlatformFee(200, true)).toBe(0)
   })
 
@@ -158,37 +146,8 @@ describe('calculatePlatformFee', () => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('getTierColor', () => {
-  // Pre-existing failure (CI baseline). Unwrap `.failing` if this test starts passing.
-  it.failing('returns dark ink for ELITE', () => {
-    expect(getTierColor('ELITE')).toBe('#141008')
-  })
-
-  // Pre-existing failure (CI baseline). Unwrap `.failing` if this test starts passing.
-  it.failing('returns gold hex for PRO', () => {
-    expect(getTierColor('PRO')).toBe('#D4820A')
-  })
-
-  // Pre-existing failure (CI baseline). Unwrap `.failing` if this test starts passing.
-  it.failing('returns brown/gold hex for TRUSTED', () => {
-    expect(getTierColor('TRUSTED')).toBe('#B06E08')
-  })
-
-  // Pre-existing failure (CI baseline). Unwrap `.failing` if this test starts passing.
-  it.failing('returns brand amber for RISING', () => {
-    expect(getTierColor('RISING')).toBe('#F59C22')
-  })
-
-  // Pre-existing failure (CI baseline). Unwrap `.failing` if this test starts passing.
-  it.failing('returns gray hex for NEWCOMER (default)', () => {
-    expect(getTierColor('NEWCOMER')).toBe('#6B7280')
-  })
-
-  // Pre-existing failure (CI baseline). Unwrap `.failing` if this test starts passing.
-  it.failing('returns gray hex for unknown tier', () => {
-    expect(getTierColor('UNKNOWN')).toBe('#6B7280')
-  })
-})
+// getTierColor was removed with the premium tier system. No replacement needed —
+// tier badges are no longer rendered anywhere in the UI.
 
 // ─────────────────────────────────────────────────────────────────────────────
 

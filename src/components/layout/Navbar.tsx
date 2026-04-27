@@ -7,7 +7,7 @@ import {
   Menu, LogOut, Settings, X,
   MessageSquare, UserCircle, Sparkles,
   User, ChevronDown, LayoutDashboard,
-  BookOpen, Briefcase, CalendarDays, DollarSign, CreditCard, Bell,
+  BookOpen, Briefcase, CalendarDays, DollarSign, Bell,
   Loader2,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -67,7 +67,6 @@ const STUDIO_NAV: NavItem[] = [
   { label: 'Services',    href: '/dashboard/provider/services',    icon: Briefcase       },
   { label: 'Availability',href: '/dashboard/provider/availability',icon: CalendarDays    },
   { label: 'Earnings',    href: '/dashboard/provider/payments',    icon: DollarSign      },
-  { label: 'Billing & Plan', href: '/dashboard/provider/billing', icon: CreditCard      },
 ]
 
 // ─── Navbar ───────────────────────────────────────────────────────────────────

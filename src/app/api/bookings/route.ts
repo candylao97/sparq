@@ -4,7 +4,6 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { stripe } from '@/lib/stripe'
 import { getCommissionRateAsync, calculatePlatformFeeAsync, getBookingNoticeHours, getMaxBookingDays, getTipCap } from '@/lib/utils.server'
-import { getEffectiveProviderTier } from '@/lib/provider-tier'
 import { isValidBookingAddress } from '@/lib/address-validation'
 import { getSettingFloat } from '@/lib/settings'
 import { filterContactInfo, filterContactInfoLax } from '@/lib/content-filter'
@@ -125,9 +124,6 @@ export async function POST(req: NextRequest) {
 
     const service = await prisma.service.findUnique({
       where: { id: serviceId },
-      // NOTE: `service.provider` is already the ProviderProfile row, which
-      // carries `stripeSubscriptionStatus` directly — needed by AUDIT-001's
-      // getEffectiveProviderTier. No extra nested include required.
       include: { provider: { include: { user: true } } },
     })
     if (!service) return NextResponse.json({ error: 'Service not found' }, { status: 404 })
@@ -348,21 +344,14 @@ export async function POST(req: NextRequest) {
       where: { userId: session.user.id },
     })
 
-    const isMember = customer?.membership === 'PREMIUM'
-    // AUDIT-001: resolve the tier that should actually apply right now.
-    // If the artist claims PRO/ELITE but their Stripe subscription lapsed,
-    // downgrade them to NEWCOMER for commission + accept-window purposes.
-    // The stored tier on the profile is not mutated here; the
-    // `customer.subscription.*` webhooks own that field.
-    const effectiveTier = getEffectiveProviderTier({
-      tier: service.provider.tier,
-      stripeSubscriptionStatus: service.provider.stripeSubscriptionStatus ?? null,
-    })
-    const commissionRate = await getCommissionRateAsync(effectiveTier)
+    // Premium-tier system removed — all customers pay the same booking fee
+    // and all artists are charged the same flat commission rate.
+    const isMember = false
+    const commissionRate = await getCommissionRateAsync()
     // MON-1: Commission rate sanity check — catch misconfiguration before it silently costs revenue.
     // BL-4: Allow rate of 0 for free services (effectiveServicePrice === 0)
     if (effectiveServicePrice > 0 && (commissionRate < 0 || commissionRate > 0.50)) {
-      console.error(`Invalid commission rate ${commissionRate} for tier ${effectiveTier} (stored: ${service.provider.tier})`)
+      console.error(`Invalid commission rate ${commissionRate}`)
       return NextResponse.json({ error: 'Invalid platform commission rate.' }, { status: 500 })
     }
     const tipAmount = typeof tip === 'number' && tip > 0 ? Math.round(tip * 100) / 100 : 0
@@ -672,14 +661,11 @@ export async function POST(req: NextRequest) {
           platformFee,
           commissionRate,
           // BL-R1: Start with a 2h deadline to release abandoned payment-form slots quickly.
-          // Stripe webhook (payment_intent.succeeded) extends this to the full 24h/48h window.
-          // BL-M5: PRO/ELITE artists get 48h once payment is confirmed.
-          // AUDIT-001: use the effective tier (subscription-verified) for the
-          // accept window, so a lapsed subscriber falls back to the 24h window
-          // instead of keeping their paid 48h.
+          // Stripe webhook (payment_intent.succeeded) extends this to the full 24h window.
+          // Tier system removed — flat 24h accept window for everyone.
           acceptDeadline: finalPrice > 0
             ? new Date(Date.now() + 2 * 60 * 60 * 1000) // 2h — released if payment form abandoned
-            : new Date(Date.now() + (['PRO', 'ELITE'].includes(effectiveTier) ? 48 : 24) * 60 * 60 * 1000),
+            : new Date(Date.now() + 24 * 60 * 60 * 1000),
           status: 'PENDING',
           paymentStatus: finalPrice > 0 ? 'AUTH_PENDING' : 'NONE',
         },

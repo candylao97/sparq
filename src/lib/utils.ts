@@ -45,45 +45,13 @@ export function formatTime(time: string): string {
   return `${displayH}:${minutes} ${ampm}`
 }
 
-// Must stay in sync with settings.ts DEFAULTS — use getCommissionRateAsync() for live values
-// Settings DEFAULTS: NEWCOMER=0.15, RISING=0.15, TRUSTED=0.13, PRO=0.12, ELITE=0.10
-export function getCommissionRate(tier: string): number {
-  switch (tier) {
-    case 'ELITE':
-      return 0.10
-    case 'PRO':
-      return 0.12
-    case 'TRUSTED':
-      return 0.13
-    case 'RISING':
-      return 0.15
-    case 'NEWCOMER':
-      return 0.15
-    default:
-      return 0.15
-  }
-}
-
-export function getTierColor(tier: string): string {
-  switch (tier) {
-    case 'ELITE': return '#1A1A1A'      // near black — exclusive
-    case 'PRO': return '#a63a29'        // primary dark — premium
-    case 'TRUSTED': return '#E96B56'    // coral — established
-    case 'RISING': return '#c97d5a'     // warm amber — growing
-    case 'NEWCOMER': return '#9C7E6A'   // muted warm brown — starting
-    default: return '#717171'
-  }
-}
-
-export function getTierLabel(tier: string): string {
-  switch (tier) {
-    case 'ELITE': return 'Sparq Elite'
-    case 'PRO': return 'Sparq Pro'
-    case 'TRUSTED': return 'Top Rated'
-    case 'RISING': return 'Rising Star'
-    case 'NEWCOMER': return 'New Artist'
-    default: return tier
-  }
+// Single flat commission rate — premium tier system removed.
+// Async variant in utils.server.ts reads from platform settings, allowing
+// admin override; the sync version here is the static fallback. The unused
+// `_tier` parameter is retained so existing callers (which still pass a
+// placeholder string) compile without churn — drop on next cleanup.
+export function getCommissionRate(_tier?: string): number {
+  return 0.15
 }
 
 export function getCategoryIcon(category: string): string {

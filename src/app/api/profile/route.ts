@@ -19,7 +19,7 @@ export async function GET() {
             verification: { select: { status: true } },
           },
         },
-        customerProfile: { select: { membership: true } },
+        customerProfile: { select: { id: true } },
         _count: {
           select: {
             bookingsAsCustomer: true,

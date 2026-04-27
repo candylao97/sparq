@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Sparkles, Crown, Search, Home, Building2, RotateCcw, Clock } from 'lucide-react'
+import { Sparkles, Search, Home, Building2, RotateCcw, Clock } from 'lucide-react'
 import { AiText } from '../AiText'
 import type { CustomerBooking } from '@/types/dashboard'
 
@@ -23,7 +23,6 @@ function getDateString() {
 interface Props {
   firstName: string
   userRole: string
-  membership: string
   briefing: string | null | undefined
   aiLoading: boolean
   upcomingCount: number
@@ -33,7 +32,7 @@ interface Props {
 }
 
 export function CustomerDashboardHeader({
-  firstName, userRole, membership, briefing, aiLoading,
+  firstName, userRole, briefing, aiLoading,
   upcomingCount, unreviewedCount, lastBooking, daysSinceLastBooking,
 }: Props) {
   const showPersonalisedCard = upcomingCount === 0 && lastBooking !== null
@@ -63,11 +62,6 @@ export function CustomerDashboardHeader({
           <h1 className="text-3xl font-bold leading-tight text-[#1A1A1A]">
             {getGreeting()}, <span className="text-[#E96B56]">{firstName}</span>
           </h1>
-          {membership === 'PREMIUM' && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-label font-semibold text-[#E96B56]">
-              <Crown className="h-3 w-3" /> Premium
-            </span>
-          )}
         </div>
         <p className="mt-1 text-body-compact text-[#717171]">
           {getDateString()} · {upcomingCount} upcoming{unreviewedCount > 0 ? ` · ${unreviewedCount} to review` : ''}

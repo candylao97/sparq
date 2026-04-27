@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
         image: true,
         createdAt: true,
         providerProfile: {
-          select: { accountStatus: true, tier: true, isVerified: true, suspendReason: true },
+          select: { accountStatus: true, isVerified: true, suspendReason: true },
         },
         _count: {
           select: {

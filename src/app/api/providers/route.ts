@@ -224,8 +224,6 @@ export async function GET(req: NextRequest) {
         image: p.user.image,
         suburb: p.suburb,
         city: p.city,
-        tier: p.tier,
-        subscriptionPlan: p.subscriptionPlan,
         offerAtHome: p.offerAtHome,
         offerAtStudio: p.offerAtStudio,
         isVerified: p.isVerified,

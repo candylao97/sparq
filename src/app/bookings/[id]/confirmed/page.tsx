@@ -336,20 +336,6 @@ function ConfirmedContent() {
           </div>
         )}
 
-        {/* MON-5: Premium membership upsell */}
-        <div className="mt-8 bg-gradient-to-br from-[#1A1A1A] to-[#333] rounded-2xl px-6 py-6 text-white">
-          <p className="font-jakarta text-xs font-semibold uppercase tracking-widest text-[#E96B56] mb-1">Sparq Premium</p>
-          <h3 className="font-headline text-xl mb-2">Save on every booking</h3>
-          <p className="font-jakarta text-sm text-white/70 mb-4">
-            Premium members pay reduced booking fees, get early access to new artists, and unlock priority support.
-          </p>
-          <Link
-            href="/dashboard/customer/settings?tab=membership"
-            className="inline-block bg-[#E96B56] text-white font-jakarta font-semibold text-sm px-5 py-2.5 rounded-xl hover:bg-[#a63a29] transition-colors"
-          >
-            Learn more →
-          </Link>
-        </div>
       </div>
     </div>
   )

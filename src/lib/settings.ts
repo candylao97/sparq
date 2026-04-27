@@ -3,7 +3,7 @@
  * Falls back to hardcoded defaults if DB unavailable (guarantees startup safety).
  *
  * Keys used:
- *   commission.NEWCOMER, commission.RISING, commission.TRUSTED, commission.PRO, commission.ELITE
+ *   commission.rate             (default: 0.15) — single flat rate, premium tiers removed
  *   platform.fee_rate           (default: 0.15)
  *   platform.fee_floor          (default: 1.50)
  *   platform.minimum_price      (default: 10)
@@ -22,11 +22,7 @@ let cache: SettingsCache | null = null
 const CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes
 
 const DEFAULTS: Record<string, string> = {
-  'commission.NEWCOMER': '0.15',
-  'commission.RISING': '0.15',
-  'commission.TRUSTED': '0.13',
-  'commission.PRO': '0.12',
-  'commission.ELITE': '0.10',
+  'commission.rate': '0.15',
   'platform.fee_rate': '0.15',
   'platform.fee_floor': '1.50',
   'platform.minimum_price': '10',

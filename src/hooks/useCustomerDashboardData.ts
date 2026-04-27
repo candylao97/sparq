@@ -8,13 +8,11 @@ import type { CustomerDashboardData, CustomerAiInsights } from '@/types/dashboar
 function buildCustomerAiContext(data: CustomerDashboardData) {
   return {
     firstName: '', // filled by caller
-    membership: data.profile.membership,
     memberSince: data.profile.memberSince,
     upcomingBookingCount: data.upcomingBookings.length,
     nextBooking: data.upcomingBookings[0] ? {
       serviceName: data.upcomingBookings[0].service.title,
       providerName: data.upcomingBookings[0].provider.name,
-      providerTier: data.upcomingBookings[0].provider.tier,
       date: data.upcomingBookings[0].date,
       time: data.upcomingBookings[0].time,
       status: data.upcomingBookings[0].status,

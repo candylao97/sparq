@@ -65,8 +65,6 @@ function makeProviderFixture(overrides: Partial<Record<string, any>> = {}) {
     userId: 'user-provider-1',
     suburb: 'Bondi',
     city: 'Sydney',
-    tier: 'TRUSTED',
-    subscriptionPlan: 'PRO',
     offerAtHome: true,
     offerAtStudio: false,
     isVerified: true,

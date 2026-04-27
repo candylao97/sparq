@@ -32,8 +32,7 @@ All providers are identity-verified. Services happen at home, at the provider's 
 
 ## Key details
 - Cancellation: 24h+ = full refund, under 24h = 50% refund, provider no-show = full refund + $25 credit
-- Premium membership ($9.99/mo) waives the 15% platform fee
-- Provider tiers: Newcomer → Rising → Trusted → Pro → Elite
+- Platform fee = 15% of service price (every booking)
 - Reviews are verified — only fans who completed a booking can leave one
 
 ## Support routing

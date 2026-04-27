@@ -12,7 +12,6 @@ type AdminUser = {
   createdAt: string
   providerProfile: {
     accountStatus: string
-    tier: string
     isVerified: boolean
     suspendReason: string | null
   } | null

@@ -9,14 +9,6 @@ import { Heart, Star, BadgeCheck, Calendar } from 'lucide-react'
 import { formatCurrency, formatShortDate } from '@/lib/utils'
 import type { ProviderCardData } from '@/types'
 
-const TIER_BADGE: Record<string, { label: string; bg: string; text: string; tooltip: string } | null> = {
-  ELITE:   { label: 'Sparq Elite',    bg: 'bg-[#1A1A1A]',   text: 'text-white',      tooltip: 'Top 1% of artists on Sparq — exceptional quality and reliability' },
-  PRO:     { label: 'Sparq Pro',      bg: 'bg-[#E96B56]',   text: 'text-white',      tooltip: 'Consistently high ratings, fast responses, and 90%+ completion rate' },
-  TRUSTED: { label: 'Top Rated',      bg: 'bg-[#f3ece9]',   text: 'text-[#a63a29]', tooltip: 'Verified artist with a strong track record of great service' },
-  RISING:  null,
-  NEWCOMER: null,
-}
-
 interface ProviderCardProps {
   provider: ProviderCardData
   initialSaved?: boolean
@@ -65,21 +57,6 @@ export function ProviderCard({ provider, initialSaved = false }: ProviderCardPro
             <span className="text-5xl font-light text-[#e8e1de]">{provider.name?.charAt(0) ?? 'A'}</span>
           </div>
         )}
-
-        {/* UX-L5: Tier badge — accessible with role="status" + aria-label for screen readers */}
-        {TIER_BADGE[provider.tier] && (() => {
-          const badge = TIER_BADGE[provider.tier]!
-          return (
-            <span
-              role="status"
-              aria-label={badge.tooltip}
-              title={badge.tooltip}
-              className={`absolute top-3 left-3 z-10 ${badge.bg} ${badge.text} text-[10px] font-bold px-2 py-0.5 rounded-full tracking-wide shadow-sm`}
-            >
-              {badge.label}
-            </span>
-          )
-        })()}
 
         {/* Heart — wired to wishlist API */}
         <button

@@ -114,7 +114,7 @@ function booking(overrides: Record<string, any> = {}): any {
     giftVoucherCode: null,
     createdAt: new Date(Date.now() - 20 * 60 * 1000), // 20 min old
     provider: {
-      providerProfile: { tier: 'NEWCOMER', stripeSubscriptionStatus: null },
+      providerProfile: { id: 'pp-1' },
     },
     ...overrides,
   }
@@ -167,7 +167,7 @@ describe('POST /api/cron/reconcile-payments — reconciliation', () => {
     })
   })
 
-  it('flips requires_capture PI to AUTHORISED with NEWCOMER 24h deadline', async () => {
+  it('flips requires_capture PI to AUTHORISED with flat 24h deadline', async () => {
     mockPrisma.booking.findMany.mockResolvedValueOnce([booking()])
     mockRetrieve.mockResolvedValueOnce(pi('requires_capture'))
     mockPrisma.processedWebhookEvent.create.mockResolvedValue({})
@@ -186,45 +186,9 @@ describe('POST /api/cron/reconcile-payments — reconciliation', () => {
     expect(deadline).toBeLessThanOrEqual(after + 24 * 60 * 60 * 1000)
   })
 
-  it('gives PRO + active subscription a 48h acceptDeadline', async () => {
-    mockPrisma.booking.findMany.mockResolvedValueOnce([booking({
-      provider: {
-        providerProfile: { tier: 'PRO', stripeSubscriptionStatus: 'active' },
-      },
-    })])
-    mockRetrieve.mockResolvedValueOnce(pi('requires_capture'))
-    mockPrisma.processedWebhookEvent.create.mockResolvedValue({})
-    mockPrisma.booking.update.mockResolvedValue({})
-
-    const before = Date.now()
-    await POST(makeRequest('Bearer test-cron-secret'))
-    const after = Date.now()
-
-    const updateCall = mockPrisma.booking.update.mock.calls[0][0]
-    const deadline = updateCall.data.acceptDeadline.getTime()
-    expect(deadline).toBeGreaterThanOrEqual(before + 48 * 60 * 60 * 1000)
-    expect(deadline).toBeLessThanOrEqual(after + 48 * 60 * 60 * 1000)
-  })
-
-  it('downgrades PRO + canceled subscription to 24h acceptDeadline', async () => {
-    mockPrisma.booking.findMany.mockResolvedValueOnce([booking({
-      provider: {
-        providerProfile: { tier: 'PRO', stripeSubscriptionStatus: 'canceled' },
-      },
-    })])
-    mockRetrieve.mockResolvedValueOnce(pi('requires_capture'))
-    mockPrisma.processedWebhookEvent.create.mockResolvedValue({})
-    mockPrisma.booking.update.mockResolvedValue({})
-
-    const before = Date.now()
-    await POST(makeRequest('Bearer test-cron-secret'))
-    const after = Date.now()
-
-    const updateCall = mockPrisma.booking.update.mock.calls[0][0]
-    const deadline = updateCall.data.acceptDeadline.getTime()
-    expect(deadline).toBeGreaterThanOrEqual(before + 24 * 60 * 60 * 1000)
-    expect(deadline).toBeLessThanOrEqual(after + 24 * 60 * 60 * 1000)
-  })
+  // Premium tier system removed (feat/remove-premium-tiers) — tier-aware
+  // acceptDeadline branching no longer exists; all artists get the flat 24h
+  // window already covered by the test above.
 
   it('flips canceled PI to AUTH_RELEASED and cancels PENDING booking', async () => {
     mockPrisma.booking.findMany.mockResolvedValueOnce([booking()])
