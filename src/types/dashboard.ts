@@ -1,7 +1,6 @@
 export interface DashboardProfile {
   id: string
   isVerified: boolean
-  bio: string | null
   tagline: string | null
   suburb: string | null
   city: string

@@ -33,7 +33,8 @@ async function getFeaturedProviders() {
         providerProfile: {
           is: {
             accountStatus: 'ACTIVE',
-            bio: { not: null },
+            // Bio was removed; tagline is the closest "completeness" signal.
+            tagline: { not: null },
             suburb: { not: null },
           },
         },
@@ -73,7 +74,6 @@ async function getFeaturedProviders() {
       id: p.id,
       name: p.name || 'Artist',
       image: p.providerProfile?.portfolio[0]?.url || p.image || null,
-      bio: p.providerProfile?.bio || '',
       service: p.providerProfile?.services[0]?.title || 'Beauty service',
       category: p.providerProfile?.services[0]?.category || '',
       price: p.providerProfile?.services[0]?.price || 0,

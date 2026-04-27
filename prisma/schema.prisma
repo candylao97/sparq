@@ -225,7 +225,6 @@ model CustomerProfile {
 model ProviderProfile {
   id               String           @id @default(cuid())
   userId           String           @unique
-  bio              String?          @db.Text
   tagline          String?
   serviceRadius    Int?             @default(10)
   studioAddress    String?

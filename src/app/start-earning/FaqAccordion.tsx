@@ -34,7 +34,7 @@ const FAQS = [
   },
   {
     q: 'How do I get my first client?',
-    a: 'Once your profile is live, you\u2019ll appear in search results. A strong portfolio, accurate pricing, and a completed bio significantly improve your visibility from day one.',
+    a: 'Once your profile is live, you\u2019ll appear in search results. A strong portfolio, accurate pricing, and a clear tagline significantly improve your visibility from day one.',
   },
 ]
 

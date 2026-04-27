@@ -6,7 +6,6 @@ import { Shield, ShieldCheck, ShieldX, Ban, Search, CheckCircle2, XCircle, Eye }
 type Provider = {
   id: string
   userId: string
-  bio: string | null
   suburb: string | null
   city: string
   isVerified: boolean

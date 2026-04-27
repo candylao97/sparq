@@ -44,7 +44,7 @@ function buildJsonLd(profile: any, providerId: string) {
     name,
     url: `${baseUrl}/providers/${providerId}`,
     image: profile.user?.image ?? undefined,
-    description: profile.bio ?? undefined,
+    description: profile.tagline ?? undefined,
     address: profile.suburb
       ? {
           '@type': 'PostalAddress',
@@ -103,7 +103,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   const location = profile.suburb || profile.city || 'Australia'
   return {
     title: `${name} — Artist in ${location} | Sparq`,
-    description: profile.bio?.slice(0, 155) || `Book ${name} on Sparq. Verified artist with real reviews.`,
+    description: profile.tagline?.slice(0, 155) || `Book ${name} on Sparq. Verified artist with real reviews.`,
   }
 }
 
@@ -352,12 +352,6 @@ export default async function ProviderProfilePage({ params }: { params: { id: st
                 </Link>
               </div>
 
-              {/* Punchy bio — first sentence only */}
-              {profile.bio && (
-                <p className="text-sm text-[#717171] leading-relaxed mt-3 line-clamp-2">
-                  {profile.bio}
-                </p>
-              )}
             </div>
 
             {/* Repeat booking banner */}

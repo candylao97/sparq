@@ -188,7 +188,6 @@ export async function GET() {
       profile: {
         id: profile.id,
         isVerified: profile.isVerified,
-        bio: profile.bio,
         tagline: profile.tagline,
         suburb: profile.suburb,
         city: profile.city,

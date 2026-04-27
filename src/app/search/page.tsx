@@ -297,7 +297,7 @@ function SearchPageInner() {
       if (serviceMode) params.set('serviceMode', serviceMode)
       if (date) params.set('date', date)
       if (timeOfDay) params.set('timeOfDay', timeOfDay)
-      // P4-1: Pass free-text query to API for service title / bio / name search
+      // P4-1: Pass free-text query to API for service title / tagline / name search
       if (searchQuery.trim()) params.set('q', searchQuery.trim())
       params.set('sortBy', sortBy)
       params.set('page', String(page))

@@ -41,10 +41,10 @@ export async function computeRiskSignals(providerId: string): Promise<{
 
   const signals: RiskSignal[] = []
 
-  // 1. PII in bio or tagline
-  const textFields = [provider.bio, provider.tagline].filter(Boolean).join(' ')
+  // 1. PII in tagline (bio field was removed in feat/launch-prep-batch-2)
+  const textFields = [provider.tagline].filter(Boolean).join(' ')
   if (detectPII(textFields)) {
-    signals.push({ code: 'PII_IN_PROFILE', label: 'Phone/email detected in profile bio', severity: 'high' })
+    signals.push({ code: 'PII_IN_PROFILE', label: 'Phone/email detected in profile tagline', severity: 'high' })
   }
 
   // 2. PII in service descriptions

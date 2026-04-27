@@ -99,17 +99,9 @@ export async function PUT(req: NextRequest) {
 
       if (existingProfile) {
         // Filter contact info from public-facing text fields
-        let sanitizedBio = providerData.bio
         let sanitizedTagline = providerData.tagline
         const leakageMatches: string[] = []
 
-        if (sanitizedBio !== undefined && sanitizedBio) {
-          const bioFilter = filterContactInfo(sanitizedBio)
-          if (bioFilter.flagged) {
-            sanitizedBio = bioFilter.text
-            leakageMatches.push(...bioFilter.matches)
-          }
-        }
         if (sanitizedTagline !== undefined && sanitizedTagline) {
           const taglineFilter = filterContactInfo(sanitizedTagline)
           if (taglineFilter.flagged) {
@@ -120,7 +112,6 @@ export async function PUT(req: NextRequest) {
 
         // UX09: Build update data including yearsExperience and cancellation policy fields
         const profileUpdateData: Record<string, unknown> = {
-          ...(providerData.bio !== undefined && { bio: sanitizedBio }),
           ...(providerData.tagline !== undefined && { tagline: sanitizedTagline }),
           ...(providerData.suburb !== undefined && { suburb: providerData.suburb }),
           ...(providerData.city !== undefined && { city: providerData.city }),

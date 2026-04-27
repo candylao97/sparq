@@ -45,7 +45,6 @@ const PROVIDERS = [
   // NAILS
   {
     name: 'Lily Nguyen', email: 'lily.nguyen@example.com', suburb: 'Richmond', category: 'NAILS' as ServiceCategory,
-    bio: 'Award-winning nail artist with a passion for intricate designs. From minimalist to elaborate nail art, I do it all. Gel, acrylic, BIAB, and natural nail care.',
     score: 97,
     services: [
       { title: 'Gel Manicure', price: 85, duration: 60 },
@@ -57,7 +56,6 @@ const PROVIDERS = [
   },
   {
     name: 'Mai Tran', email: 'mai.tran@example.com', suburb: 'Hawthorn', category: 'NAILS' as ServiceCategory,
-    bio: 'Certified nail technician specialising in Korean-style nail art and dip powder. Clean, precise, and long-lasting results.',
     score: 68,
     services: [
       { title: 'BIAB / Builder Gel', price: 90, duration: 75 },
@@ -68,7 +66,6 @@ const PROVIDERS = [
   },
   {
     name: 'Sophie Williams', email: 'sophie.williams@example.com', suburb: 'Toorak', category: 'NAILS' as ServiceCategory,
-    bio: '3D nail art and chrome specialist. I create wearable works of art — florals, gemstones, negative space, and everything in between.',
     score: 89,
     services: [
       { title: 'Acrylic Full Set', price: 140, duration: 120 },
@@ -80,7 +77,6 @@ const PROVIDERS = [
   },
   {
     name: 'Jenny Ho', email: 'jenny.ho@example.com', suburb: 'Box Hill', category: 'NAILS' as ServiceCategory,
-    bio: 'Classic mani-pedi specialist. Affordable, reliable, and spotlessly clean. I offer a relaxing at-home nail service with quality products.',
     score: 61,
     services: [
       { title: 'Gel Manicure', price: 55, duration: 45 },
@@ -91,7 +87,6 @@ const PROVIDERS = [
   },
   {
     name: 'Tina Vo', email: 'tina.vo@example.com', suburb: 'Fitzroy', category: 'NAILS' as ServiceCategory,
-    bio: 'Acrylic and sculpted nail expert with 8 years of experience. I specialise in natural-looking extensions, ombre, and French tips.',
     score: 82,
     services: [
       { title: 'Acrylic Full Set', price: 110, duration: 90 },
@@ -104,7 +99,6 @@ const PROVIDERS = [
   // LASHES
   {
     name: 'Mia Chen', email: 'mia.chen@example.com', suburb: 'South Yarra', category: 'LASHES' as ServiceCategory,
-    bio: 'Certified lash artist specialising in volume and mega-volume techniques. I create fluffy, full lash sets that last up to 4 weeks with proper care.',
     score: 94,
     services: [
       { title: 'Classic Full Set', price: 120, duration: 90 },
@@ -116,7 +110,6 @@ const PROVIDERS = [
   },
   {
     name: 'Ava Park', email: 'ava.park@example.com', suburb: 'Prahran', category: 'LASHES' as ServiceCategory,
-    bio: 'Korean-trained lash technician with a gentle, precise touch. I specialise in hybrid and wispy lash styles for a natural-glam look.',
     score: 87,
     services: [
       { title: 'Hybrid Full Set', price: 150, duration: 105 },
@@ -128,7 +121,6 @@ const PROVIDERS = [
   },
   {
     name: 'Isabella Torres', email: 'isabella.torres@example.com', suburb: 'Collingwood', category: 'LASHES' as ServiceCategory,
-    bio: 'Passionate lash artist creating stunning looks from subtle to dramatic. Expert in Russian volume and wet-look lashes.',
     score: 74,
     services: [
       { title: 'Volume Full Set', price: 160, duration: 120 },
@@ -139,7 +131,6 @@ const PROVIDERS = [
   },
   {
     name: 'Rachel Kim', email: 'rachel.kim@example.com', suburb: 'Carlton', category: 'LASHES' as ServiceCategory,
-    bio: 'Lash lift and tint specialist. I help you wake up with effortlessly gorgeous eyes every morning — no extensions needed.',
     score: 63,
     services: [
       { title: 'Lash Lift', price: 75, duration: 50 },
@@ -150,7 +141,6 @@ const PROVIDERS = [
   },
   {
     name: 'Zara Ali', email: 'zara.ali@example.com', suburb: 'Brunswick', category: 'LASHES' as ServiceCategory,
-    bio: 'New to Sparq but not to lashes! 4 years experience creating bespoke lash looks. Mega volume, cat eye, and doll eye specialist.',
     score: 48,
     services: [
       { title: 'Volume Full Set', price: 140, duration: 110 },
@@ -162,7 +152,6 @@ const PROVIDERS = [
   // SYDNEY PROVIDERS
   {
     name: 'Chloe Pham', email: 'chloe.pham@example.com', suburb: 'Surry Hills', category: 'NAILS' as ServiceCategory,
-    bio: 'Surry Hills-based nail artist obsessed with colour, texture, and clean execution. Gel, BIAB, and editorial nail art for every occasion.',
     score: 91,
     services: [
       { title: 'Gel Manicure', price: 90, duration: 60 },
@@ -174,7 +163,6 @@ const PROVIDERS = [
   },
   {
     name: 'Amara Osei', email: 'amara.osei@example.com', suburb: 'Newtown', category: 'NAILS' as ServiceCategory,
-    bio: 'Creative nail artist in the heart of Newtown. I specialise in bold, graphic nail art with a minimalist edge — acrylics and gel extensions my specialty.',
     score: 76,
     services: [
       { title: 'Acrylic Full Set', price: 115, duration: 90 },
@@ -185,7 +173,6 @@ const PROVIDERS = [
   },
   {
     name: 'Jade Ferreira', email: 'jade.ferreira@example.com', suburb: 'Bondi', category: 'LASHES' as ServiceCategory,
-    bio: 'Bondi-based lash artist with a light touch and an eye for shape. I specialise in natural-looking classic and hybrid sets — perfect for beach life.',
     score: 85,
     services: [
       { title: 'Classic Full Set', price: 130, duration: 90 },
@@ -197,7 +184,6 @@ const PROVIDERS = [
   },
   {
     name: 'Nina Kassis', email: 'nina.kassis@example.com', suburb: 'Paddington', category: 'LASHES' as ServiceCategory,
-    bio: 'Paddington lash tech with a refined aesthetic. Volume, mega-volume, and wispy styles for the modern woman. Gentle, precise, and always on time.',
     score: 69,
     services: [
       { title: 'Volume Full Set', price: 155, duration: 120 },
@@ -208,7 +194,6 @@ const PROVIDERS = [
   },
   {
     name: 'Priya Sharma', email: 'priya.sharma@example.com', suburb: 'Manly', category: 'NAILS' as ServiceCategory,
-    bio: 'Manly-based nail tech bringing salon-quality results straight to your door. Specialising in long-lasting gel manicures and pedicures for the Northern Beaches.',
     score: 59,
     services: [
       { title: 'Gel Manicure', price: 80, duration: 60 },
@@ -338,7 +323,6 @@ async function main() {
         image: `https://randomuser.me/api/portraits/women/${providerCount + 10}.jpg`,
         providerProfile: {
           create: {
-            bio: pData.bio,
             suburb: pData.suburb,
             city: ['Surry Hills', 'Newtown', 'Bondi', 'Paddington', 'Manly'].includes(pData.suburb) ? 'Sydney' : 'Melbourne',
             state: ['Surry Hills', 'Newtown', 'Bondi', 'Paddington', 'Manly'].includes(pData.suburb) ? 'NSW' : 'VIC',
