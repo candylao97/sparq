@@ -65,7 +65,7 @@ export function ServicesPortfolio({ services, portfolio, portfolioCount, portfol
         {/* Header */}
         <div className="mb-1 flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-bold text-[#1A1A1A]">Your Services</h2>
+            <h2 className="text-lg font-bold text-[#1A1A1A]">Your services</h2>
             <p className="text-label text-[#717171]">
               {activeServices.length} of {services.length} live
             </p>

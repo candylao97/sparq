@@ -25,7 +25,7 @@ export function DiscoveryRecommendations({ categoriesBooked, discoveryRecommenda
   return (
     <div className="mb-6 rounded-2xl bg-white p-5 shadow-[0_1px_4px_rgba(26,31,54,0.07)]">
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-bold text-[#1A1A1A]">Discover More</h2>
+        <h2 className="text-lg font-bold text-[#1A1A1A]">Discover more</h2>
         <Link href="/search" className="text-xs font-semibold text-[#E96B56] hover:underline">
           Explore all →
         </Link>

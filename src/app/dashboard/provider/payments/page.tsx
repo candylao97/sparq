@@ -196,7 +196,7 @@ export default function PaymentsPage() {
         <section className="bg-white border border-[#e8e1de] rounded-xl p-6">
           <div className="flex items-center gap-2 mb-5">
             <TrendingUp className="h-4 w-4 text-[#E5988B]" />
-            <h3 className="text-base font-semibold text-[#1A1A1A]">Earnings Trend</h3>
+            <h3 className="text-base font-semibold text-[#1A1A1A]">Earnings trend</h3>
             <span className="text-sm text-[#717171]">(Last 30 days)</span>
           </div>
 
@@ -243,7 +243,7 @@ export default function PaymentsPage() {
         <section className="bg-white border border-[#e8e1de] rounded-xl p-6">
           <div className="flex items-center gap-2 mb-5">
             <BarChart2 className="h-4 w-4 text-[#E5988B]" />
-            <h3 className="text-base font-semibold text-[#1A1A1A]">Monthly Earnings</h3>
+            <h3 className="text-base font-semibold text-[#1A1A1A]">Monthly earnings</h3>
             <span className="text-sm text-[#717171]">(Last 12 months)</span>
           </div>
 
@@ -351,7 +351,7 @@ export default function PaymentsPage() {
         {/* ── Transaction History ── */}
         <section className="bg-white border border-[#e8e1de] rounded-xl overflow-hidden">
           <div className="px-6 py-5 border-b border-[#e8e1de]">
-            <h3 className="text-base font-semibold text-[#1A1A1A]">Transaction History</h3>
+            <h3 className="text-base font-semibold text-[#1A1A1A]">Transaction history</h3>
           </div>
 
           {transactions.length > 0 ? (
@@ -407,7 +407,7 @@ export default function PaymentsPage() {
         <section className="bg-white border border-[#e8e1de] rounded-xl overflow-hidden">
           <div className="px-6 py-5 border-b border-[#e8e1de] flex items-center gap-2">
             <AlertTriangle className="h-4 w-4 text-amber-400 flex-shrink-0" />
-            <h3 className="text-base font-semibold text-[#1A1A1A]">Cancellation Penalties</h3>
+            <h3 className="text-base font-semibold text-[#1A1A1A]">Cancellation penalties</h3>
           </div>
 
           {penaltiesLoading ? (

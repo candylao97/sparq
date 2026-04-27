@@ -39,7 +39,7 @@ export function BookingDetailsPanel({ booking, currentUserId, loading }: Props) 
   return (
     <div className="hidden h-full w-80 flex-shrink-0 flex-col border-l border-[#1A1A1A]/5 bg-[#f9f2ef] lg:flex">
       <div className="px-8 py-6">
-        <h2 className="font-headline text-xl font-bold text-[#1A1A1A]">Service Details</h2>
+        <h2 className="font-headline text-xl font-bold text-[#1A1A1A]">Service details</h2>
       </div>
       <div className="flex-1 overflow-y-auto px-8">
         <div className="rounded-xl bg-white p-6 shadow-sm mb-6">

@@ -72,7 +72,7 @@ export default function VouchersPage() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#1A1A1A]">Gift Vouchers</h1>
+          <h1 className="text-2xl font-bold text-[#1A1A1A]">Gift vouchers</h1>
           <p className="text-sm text-[#717171] mt-1">
             {active.length} active · {redeemed.length} redeemed · {expired.length} expired
           </p>
@@ -87,7 +87,7 @@ export default function VouchersPage() {
 
       {showCreate && (
         <form onSubmit={handleCreate} className="mb-6 rounded-2xl border border-[#e8e1de] bg-white p-6">
-          <h2 className="font-semibold text-[#1A1A1A] mb-4">New Gift Voucher</h2>
+          <h2 className="font-semibold text-[#1A1A1A] mb-4">New gift voucher</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-xs font-semibold text-[#717171] mb-1">Amount (AUD) *</label>

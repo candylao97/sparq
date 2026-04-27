@@ -52,7 +52,7 @@ export function RecentReviews({ reviews, unresponded, aiSummary, onRefresh }: Pr
       <div className="mb-6 rounded-2xl bg-white p-5 shadow-[0_1px_4px_rgba(26,31,54,0.07)]">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <h2 className="text-lg font-bold text-[#1A1A1A]">Recent Reviews</h2>
+            <h2 className="text-lg font-bold text-[#1A1A1A]">Recent reviews</h2>
             {unrepliedCount > 0 && (
               <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#E96B56] px-1.5 text-label font-bold text-white">
                 {unrepliedCount}

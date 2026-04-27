@@ -483,7 +483,7 @@ export default function ServicesPage() {
           >
             <ArrowLeft className="h-3 w-3" /> Dashboard
           </Link>
-          <h2 className="text-[22px] font-semibold text-[#1A1A1A]">My Services</h2>
+          <h2 className="text-[22px] font-semibold text-[#1A1A1A]">My services</h2>
           <p className="text-sm text-[#717171] mt-0.5">
             {services.length === 0
               ? 'Create your first service to start getting bookings'

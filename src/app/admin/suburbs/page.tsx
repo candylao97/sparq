@@ -75,7 +75,7 @@ export default function AdminSuburbs() {
       {/* Add suburb form */}
       {showAdd && (
         <div className="mb-6 rounded-2xl border border-[#e8e1de] bg-white p-5">
-          <h3 className="mb-4 font-bold text-[#1A1A1A]">Add New Suburb</h3>
+          <h3 className="mb-4 font-bold text-[#1A1A1A]">Add new suburb</h3>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             <input
               placeholder="Name"

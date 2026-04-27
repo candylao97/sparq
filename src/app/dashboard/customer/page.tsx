@@ -175,7 +175,7 @@ function CustomerDashboardPageInner() {
         )}
         {!disputesError && activeDisputes.length > 0 && (
           <section className="mb-8">
-            <h2 className="font-headline text-xl text-[#1A1A1A] mb-4">Open Disputes</h2>
+            <h2 className="font-headline text-xl text-[#1A1A1A] mb-4">Open disputes</h2>
             <div className="space-y-3">
               {activeDisputes.map((dispute: any) => (
                 <div key={dispute.id} className="rounded-2xl border border-[#e8e1de] bg-white p-4">

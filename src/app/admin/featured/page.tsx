@@ -52,7 +52,7 @@ export default function FeaturedProvidersPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[#1A1A1A]">Featured Artists</h1>
+        <h1 className="text-2xl font-bold text-[#1A1A1A]">Featured artists</h1>
         <p className="text-sm text-[#717171] mt-1">
           {featuredCount} artist{featuredCount !== 1 ? 's' : ''} currently featured on the homepage
         </p>

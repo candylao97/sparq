@@ -207,7 +207,7 @@ export default function AdminAnalyticsPage() {
       {/* ── Monthly revenue chart ─────────────────────────────────────────── */}
       <div className="mb-6 rounded-2xl border border-[#e8e1de] bg-white p-6">
         <h2 className="font-headline mb-5 text-base font-bold text-[#1A1A1A]">
-          Monthly Revenue &amp; Bookings
+          Monthly revenue &amp; bookings
         </h2>
 
         {loading ? (
@@ -291,7 +291,7 @@ export default function AdminAnalyticsPage() {
         {/* Category breakdown */}
         <div className="rounded-2xl border border-[#e8e1de] bg-white p-6">
           <h2 className="font-headline mb-5 text-base font-bold text-[#1A1A1A]">
-            Bookings by Category
+            Bookings by category
           </h2>
 
           {loading ? (
@@ -341,7 +341,7 @@ export default function AdminAnalyticsPage() {
         {/* Top suburbs */}
         <div className="rounded-2xl border border-[#e8e1de] bg-white p-6">
           <h2 className="font-headline mb-5 text-base font-bold text-[#1A1A1A]">
-            Top Suburbs
+            Top suburbs
           </h2>
 
           {loading ? (
@@ -390,7 +390,7 @@ export default function AdminAnalyticsPage() {
       {/* ── Health strip ──────────────────────────────────────────────────── */}
       <div className="rounded-2xl border border-[#e8e1de] bg-white p-6">
         <h2 className="font-headline mb-5 text-base font-bold text-[#1A1A1A]">
-          Platform Health
+          Platform health
         </h2>
 
         {loading ? (

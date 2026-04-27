@@ -317,7 +317,7 @@ function DetailDrawer({
         {/* Recent Bookings */}
         {detail.bookings.length > 0 && (
           <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-[#717171] mb-2">Recent Bookings</h3>
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-[#717171] mb-2">Recent bookings</h3>
             <div className="space-y-1.5">
               {detail.bookings.map(b => (
                 <div key={b.id} className="flex items-center justify-between rounded-lg bg-[#f9f2ef] px-3 py-2">
@@ -354,7 +354,7 @@ function DetailDrawer({
         {/* Admin Notes — auto-saves on blur */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-[#717171]">Internal Notes</h3>
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-[#717171]">Internal notes</h3>
             {notesSaved && (
               <span className="text-xs text-green-600 flex items-center gap-1">
                 <CheckCircle2 className="h-3 w-3" /> Saved
@@ -554,7 +554,7 @@ export default function AdminKYC() {
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-1">
             <Zap className="h-5 w-5 text-[#717171]" />
-            <h1 className="text-2xl font-bold text-[#1A1A1A]">KYC Verification</h1>
+            <h1 className="text-2xl font-bold text-[#1A1A1A]">KYC verification</h1>
           </div>
           <p className="text-sm text-[#717171]">Review artist identity, Stripe status, and risk signals before approving bookings</p>
         </div>

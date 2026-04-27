@@ -9,7 +9,7 @@ export default function PrivacyPage() {
             Legal
           </p>
           <h1 className="font-headline text-[2.5rem] md:text-[3rem] text-[#1A1A1A] leading-[1.1] mb-4">
-            Privacy Policy
+            Privacy policy
           </h1>
           <p className="text-sm text-[#717171]">
             Last updated: March 2026

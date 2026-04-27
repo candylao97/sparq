@@ -82,7 +82,7 @@ export default function AdminPayments() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[#1A1A1A]">Payments &amp; Payouts</h1>
+        <h1 className="text-2xl font-bold text-[#1A1A1A]">Payments &amp; payouts</h1>
         <p className="text-sm text-[#717171]">Monitor payout status and detect anomalies</p>
       </div>
 

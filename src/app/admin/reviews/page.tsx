@@ -104,7 +104,7 @@ export default function AdminReviews() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[#1A1A1A]">Reviews & Moderation</h1>
+        <h1 className="text-2xl font-bold text-[#1A1A1A]">Reviews & moderation</h1>
         <p className="text-sm text-[#717171]">Moderate reviews and manage contact leakage flags</p>
       </div>
 

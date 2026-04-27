@@ -15,7 +15,7 @@ export function FavouriteTalents({ talents, talentRecommendation, aiLoading }: P
   if (talents.length === 0) {
     return (
       <div className="mb-6 rounded-2xl bg-white p-5 shadow-[0_1px_4px_rgba(26,31,54,0.07)]">
-        <h2 className="mb-4 text-lg font-bold text-[#1A1A1A]">Your Go-To Artists</h2>
+        <h2 className="mb-4 text-lg font-bold text-[#1A1A1A]">Your go-to artists</h2>
         <div className="py-6 text-center">
           <Heart className="mx-auto mb-2 h-8 w-8 text-[#e8e1de]" />
           <p className="text-body-compact text-[#717171]">Book your first appointment to start building your favourites</p>
@@ -27,7 +27,7 @@ export function FavouriteTalents({ talents, talentRecommendation, aiLoading }: P
   return (
     <div className="mb-6 rounded-2xl bg-white p-5 shadow-[0_1px_4px_rgba(26,31,54,0.07)]">
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-bold text-[#1A1A1A]">Your Go-To Artists</h2>
+        <h2 className="text-lg font-bold text-[#1A1A1A]">Your go-to artists</h2>
       </div>
 
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">

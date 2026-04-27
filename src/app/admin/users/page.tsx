@@ -74,7 +74,7 @@ export default function AdminUsers() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[#1A1A1A]">User Management</h1>
+        <h1 className="text-2xl font-bold text-[#1A1A1A]">User management</h1>
         <p className="text-sm text-[#717171]">Search, view, and moderate platform users</p>
       </div>
 

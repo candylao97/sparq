@@ -92,7 +92,7 @@ Write a helpful 3-4 sentence prep brief covering what I need to know and any pre
 
         {/* AI Brief */}
         <div>
-          <h3 className="mb-2 text-body-compact font-semibold text-[#1A1A1A]">Prep Brief</h3>
+          <h3 className="mb-2 text-body-compact font-semibold text-[#1A1A1A]">Prep brief</h3>
           {loading ? (
             <div className="space-y-2">
               <Skeleton className="h-4 w-full rounded-full" />

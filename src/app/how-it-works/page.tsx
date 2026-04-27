@@ -49,7 +49,7 @@ export default function HowItWorksPage() {
         <div className="space-y-14">
           <div className="border-b border-[#e8e1de] pb-7">
             <h2 className="font-headline text-4xl uppercase tracking-tight italic font-light text-[#1A1A1A]">
-              The Curated Client
+              The curated client
             </h2>
           </div>
 
@@ -144,7 +144,7 @@ export default function HowItWorksPage() {
           <div className="order-1 lg:order-2 space-y-14 lg:pl-8">
             <div className="border-b border-[#e8e1de] pb-7">
               <h2 className="font-headline text-4xl uppercase tracking-tight italic font-light text-[#1A1A1A]">
-                The Elite Artist
+                The elite artist
               </h2>
             </div>
 
