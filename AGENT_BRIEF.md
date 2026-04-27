@@ -4,7 +4,7 @@
 conversational context, and agent working memory are NOT. When
 assigning new AUDIT or FIND ids, commit to this file in the same PR.
 
-Last updated: 2026-04-22
+Last updated: 2026-04-27
 Last AUDIT-id assigned: AUDIT-037 (gaps exist — see Notes per id)
 Last FIND-id assigned: FIND-17
 
@@ -40,24 +40,29 @@ Last FIND-id assigned: FIND-17
 ## AUDIT queue
 
 ### AUDIT-001 — Subscription tier enforcement
-- Status: IN_REVIEW
-- Branch: `fix/audit-001-subscription-tier-enforcement` (ahead 5, files 13)
-- Evidence: commit `fc0e6fb`;
-  [BATCH_G_HANDBACK.md](BATCH_G_HANDBACK.md) Shipped Branches row
-- Notes: Product-blocked by AUDIT-002 (the commission rate schedule
-  must be ratified before perk-gating is meaningful), but the code
-  is written. Branch is stacked on 004/005/006/007 — cannot review
-  in isolation without cherry-picking.
+- Status: SUPERSEDED (2026-04-27)
+- Branch: `fix/audit-001-subscription-tier-enforcement` (no longer applicable)
+- Evidence: commit `fc0e6fb`; superseded by `feat/remove-premium-tiers`
+  (commits 9245b87, 6dd538a, ad958e4 + the schema migration commit)
+- Notes: Premium tiers were removed entirely. There is now a single
+  flat 15 % commission rate for every artist, so subscription-tier
+  enforcement has no meaning — `getEffectiveProviderTier` and the
+  `provider-tier.ts` module it lived in are deleted. The original
+  branch should NOT be merged.
 
 ### AUDIT-002 — Commission rate schedule + disclosure
-- Status: ESCALATED
+- Status: COLLAPSED (2026-04-27)
 - Branch: none
 - Evidence: [ESCALATIONS.md §AUDIT-002](ESCALATIONS.md) on
-  `docs/escalations-memo`
-- Notes: Needs Legal + Finance sign-off on the rate card, T&Cs
-  notice window, and onboarding disclosure copy. Recommended default
-  per memo: Option 1 (keep dynamic tiers, publish the table, 30-day
-  notice window). Owner: Legal (sign-off) + Finance + Product.
+  `docs/escalations-memo`; superseded scope per
+  `feat/remove-premium-tiers`
+- Notes: Premium tiers were removed entirely. The "ratify the rate
+  card and notice window" decision collapses to a much simpler
+  question: "is the single flat rate (15 %) the right number?"
+  That is still a Legal/Finance call, but the supporting work
+  (tier disclosure page, version log, per-tier T&Cs amendment) is
+  no longer needed. Effectively this audit is OPEN with reduced
+  scope; reopen as a single-rate ratification when ready.
 
 ### AUDIT-003 — GST / tax remittance model
 - Status: ESCALATED
@@ -607,3 +612,18 @@ original ids (10-13). READINESS definitions renumbered to 14-17.*
   Branches in this brief labelled `IN_REVIEW` reflect this
   workflow — they have a committed branch awaiting human local
   merge rather than an open GitHub PR.
+- **2026-04-27 — Premium tiers removed.** Customer PREMIUM
+  membership and artist NEWCOMER/RISING/TRUSTED/PRO/ELITE tiers
+  were removed in their entirety on `feat/remove-premium-tiers`
+  (4 commits). All artists now pay a single flat 15 % commission;
+  all bookings have a flat 24 h accept window once payment is
+  authorised. AUDIT-001 superseded; AUDIT-002 collapsed to "is
+  15 % the right number?" as a future Legal/Finance ratification.
+  CI test baseline shifts: 55 failing / 414 passing →
+  **0 failing / 423 passing.** The 55 pre-existing `.failing`
+  tests were all tier-shaped mocks that got removed alongside
+  the code they tested; the new green baseline should be reflected
+  in `.github/workflows/ci.yml` documentation on the next CI sync.
+  Stripe Dashboard cleanup checklist (archive Products/Prices,
+  cancel test-mode subscriptions) handed off to the human
+  manually — no programmatic equivalent.
