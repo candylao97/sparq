@@ -124,23 +124,6 @@ function CustomerDashboardPageInner() {
           onRefresh={refreshData}
         />
 
-        {/* Premium upsell banner — only for FREE members */}
-        {data.profile.membership !== 'PREMIUM' && (
-          <div className="mb-6 rounded-2xl bg-gradient-to-r from-[#1A1A1A] to-[#333] p-5 flex items-center justify-between gap-4">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-[#E96B56] mb-0.5">Sparq Premium</p>
-              <p className="font-semibold text-sm text-white">No booking fees, ever.</p>
-              <p className="text-xs text-white/60 mt-0.5">Save on every booking — $9.99/month</p>
-            </div>
-            <a
-              href="/dashboard/customer/premium"
-              className="flex-shrink-0 inline-flex items-center gap-1 rounded-full bg-[#E96B56] px-4 py-2 text-xs font-bold text-white hover:bg-[#a63a29] transition-colors whitespace-nowrap"
-            >
-              Upgrade →
-            </a>
-          </div>
-        )}
-
         {/* FIX-5: Imminent appointment urgency banner */}
         {data.imminentBookings?.length > 0 && (
           <div className="rounded-2xl p-4 mb-6" style={{ background: '#fff8f0', border: '1px solid #E96B56' }}>

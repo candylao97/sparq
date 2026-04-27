@@ -47,7 +47,6 @@ export default function CreateServicePage() {
   const router = useRouter()
   const { data: session, status } = useSession()
 
-  const [providerTier, setProviderTier] = useState<string>('NEWCOMER')
   const [step, setStep] = useState(1)
   const [formData, setFormData] = useState<FormData>({
     title: '',
@@ -66,15 +65,6 @@ export default function CreateServicePage() {
   const [aiLoading, setAiLoading] = useState(false)
   const [publishing, setPublishing] = useState(false)
   const [instantBook, setInstantBook] = useState(false)
-
-  // Fetch provider tier so earnings preview uses the correct commission rate
-  useEffect(() => {
-    if (status !== 'authenticated') return
-    fetch('/api/dashboard/provider')
-      .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d?.profile?.tier) setProviderTier(d.profile.tier) })
-      .catch(() => {})
-  }, [status])
 
   if (status === 'loading') {
     return (
@@ -100,19 +90,18 @@ export default function CreateServicePage() {
     return parseInt(formData.duration, 10) || 0
   }
 
-  // P1-3: NOTE — earnings preview uses the sync/cached getCommissionRate which reflects
-  // the hardcoded defaults in utils.ts. If an admin has changed commission rates via the
-  // platform settings, the displayed estimate will NOT reflect the updated rate until the
-  // next server deploy. Actual commissions at booking time use getCommissionRateAsync.
+  // Earnings preview uses the flat commission rate. Actual commission at booking
+  // time still resolves via getCommissionRateAsync against settings, which can be
+  // overridden by admin.
   function earnings(): string {
     const p = parseFloat(formData.price)
     if (!p || p <= 0) return '0.00'
-    const rate = getCommissionRate(providerTier)
+    const rate = getCommissionRate('NEWCOMER')
     return (p * (1 - rate)).toFixed(2)
   }
 
   function commissionPct(): number {
-    return Math.round(getCommissionRate(providerTier) * 100)
+    return Math.round(getCommissionRate('NEWCOMER') * 100)
   }
 
   // ── validation ─────────────────────────────────────────────────────────────

@@ -26,7 +26,7 @@ import { TrustBadges }         from '@/components/providers/TrustBadges'
 import { HeroCTA }             from '@/components/providers/HeroCTA'
 import { AvailabilityCalendar } from '@/components/providers/AvailabilityCalendar'
 import { CancellationPolicyCard } from '@/components/providers/CancellationPolicyCard'
-import { getCategoryLabel, formatCurrency, getTierColor, getTierLabel } from '@/lib/utils'
+import { getCategoryLabel, formatCurrency } from '@/lib/utils'
 import { ProfileViewTracker } from '@/components/providers/ProfileViewTracker'
 
 // ── JSON-LD structured data ────────────────────────────────────────
@@ -319,14 +319,6 @@ export default async function ProviderProfilePage({ params }: { params: { id: st
                     <p className="font-semibold text-sm text-[#1A1A1A]">{profile.user.name}</p>
                     {profile.isVerified && (
                       <BadgeCheck className="w-4 h-4 text-[#E96B56] flex-shrink-0" aria-label="Verified" />
-                    )}
-                    {profile.tier && profile.tier !== 'NEWCOMER' && (
-                      <span
-                        className="text-[10px] font-semibold px-2 py-0.5 rounded-full text-white inline-block"
-                        style={{ backgroundColor: getTierColor(profile.tier) }}
-                      >
-                        {getTierLabel(profile.tier)}
-                      </span>
                     )}
                   </div>
                   <p className="text-xs text-[#717171] mt-0.5">{specialty}{location ? ` · ${location}` : ''}</p>

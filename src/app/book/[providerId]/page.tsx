@@ -88,7 +88,6 @@ export default function BookingPage({ params }: { params: { providerId: string }
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [bookingId, setBookingId] = useState<string | null>(null)
   const [paymentPhase, setPaymentPhase] = useState(false)
-  const [isMember, setIsMember] = useState(false)
   const isInstantBook: boolean = Boolean(selectedService?.instantBook)
   const [tip, setTip] = useState<number>(urlTip)
   const [customTip, setCustomTip] = useState('')
@@ -160,16 +159,6 @@ export default function BookingPage({ params }: { params: { providerId: string }
         })
       })
   }, [params.providerId, serviceId])
-
-  // AUDIT-006: Only fetch membership status once the user is authenticated.
-  // Anonymous browsers should not trigger a 401 on every Step-1 render.
-  useEffect(() => {
-    if (status !== 'authenticated' || !session) return
-    fetch('/api/customer/membership')
-      .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d?.membership === 'PREMIUM') setIsMember(true) })
-      .catch(() => {})
-  }, [session, status])
 
   // AUDIT-006: If we were hydrated from the URL with a date already picked
   // (e.g. user returning from the login redirect), pre-fetch the slots for
@@ -474,11 +463,9 @@ export default function BookingPage({ params }: { params: { providerId: string }
   const voucherDiscount = appliedVoucher?.amount ?? 0
   const discountedServicePrice = Math.max(0, selectedService.price - voucherDiscount - promoDiscount)
   // P0-3: Use live fee rate from DB-driven API when available; fall back to sync calculatePlatformFee (hardcoded 15%)
-  const platformFee = isMember
-    ? 0
-    : liveFeeRate !== null
-      ? Math.round(discountedServicePrice * liveFeeRate * 100) / 100
-      : calculatePlatformFee(discountedServicePrice, isMember)
+  const platformFee = liveFeeRate !== null
+    ? Math.round(discountedServicePrice * liveFeeRate * 100) / 100
+    : calculatePlatformFee(discountedServicePrice, false)
   const subtotal = discountedServicePrice + platformFee
   const total = subtotal + tip
   const providerName = provider.profile?.user?.name || 'Artist'
@@ -1090,8 +1077,8 @@ export default function BookingPage({ params }: { params: { providerId: string }
                           />
                         )}
                         <SummaryRow
-                          label={isMember ? 'Booking fee — Sparq Premium member' : 'Booking fee'}
-                          value={isMember ? 'Free' : formatCurrency(platformFee)}
+                          label="Booking fee"
+                          value={formatCurrency(platformFee)}
                           muted
                         />
                         {tip > 0 && (
@@ -1106,19 +1093,6 @@ export default function BookingPage({ params }: { params: { providerId: string }
                         </div>
                       </div>
                     </div>
-
-                    {/* Premium upsell banner */}
-                    {!isMember && platformFee > 0 && (
-                      <div className="rounded-2xl bg-[#1A1A1A] p-4 flex items-center justify-between gap-3 mb-4">
-                        <div>
-                          <p className="text-white text-xs font-bold">Join Sparq Premium</p>
-                          <p className="text-[#aaa] text-xs mt-0.5">Waive the {formatCurrency(platformFee)} booking fee on this and every booking</p>
-                        </div>
-                        <Link href="/membership" className="bg-[#E96B56] text-white text-xs font-bold px-3 py-1.5 rounded-full whitespace-nowrap hover:bg-[#a63a29] transition-colors flex-shrink-0">
-                          Upgrade
-                        </Link>
-                      </div>
-                    )}
 
                     {/* Tip selector */}
                     <div className="mb-6">
@@ -1358,19 +1332,6 @@ export default function BookingPage({ params }: { params: { providerId: string }
                             <span>Booking fee (~5%)</span>
                             <span>${bdFee.toFixed(2)}</span>
                           </div>
-
-                          {/* Premium upsell — only if not already premium */}
-                          {!isMember && bdFee > 0 && (
-                            <div className="flex items-center justify-between text-xs">
-                              <span className="text-[#717171]">
-                                <a href="/dashboard/customer/premium" target="_blank" className="text-[#E96B56] font-semibold hover:underline underline-offset-2">
-                                  Sparq Premium
-                                </a>
-                                {' '}waives this fee
-                              </span>
-                              <span className="font-semibold text-[#E96B56]">Save ${bdFee.toFixed(2)}</span>
-                            </div>
-                          )}
 
                           {bdTip > 0 && (
                             <div className="flex justify-between text-[#717171]">

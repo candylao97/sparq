@@ -9,8 +9,6 @@ interface ProviderRow {
   featuredUntil: string | null
   user: { name: string | null; email: string | null }
   suburb: string | null
-  tier: string
-  subscriptionPlan: string
 }
 
 export default function FeaturedProvidersPage() {
@@ -79,7 +77,6 @@ export default function FeaturedProvidersPage() {
               <tr>
                 <th className="text-left px-4 py-3 font-semibold text-[#1A1A1A]">Artist</th>
                 <th className="text-left px-4 py-3 font-semibold text-[#1A1A1A]">Location</th>
-                <th className="text-left px-4 py-3 font-semibold text-[#1A1A1A]">Tier</th>
                 <th className="text-left px-4 py-3 font-semibold text-[#1A1A1A]">Featured Until</th>
                 <th className="text-right px-4 py-3 font-semibold text-[#1A1A1A]">Action</th>
               </tr>
@@ -92,11 +89,6 @@ export default function FeaturedProvidersPage() {
                     <div className="text-xs text-[#717171]">{p.user.email}</div>
                   </td>
                   <td className="px-4 py-3 text-[#717171]">{p.suburb ?? '—'}</td>
-                  <td className="px-4 py-3">
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#f3ece9] text-[#1A1A1A]">
-                      {p.tier}
-                    </span>
-                  </td>
                   <td className="px-4 py-3 text-[#717171] text-xs">
                     {p.isFeatured && p.featuredUntil
                       ? new Date(p.featuredUntil).toLocaleDateString('en-AU')

@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { Star, Heart } from 'lucide-react'
 import { AiText } from '../AiText'
-import { getTierColor } from '@/lib/utils'
 import type { FavouriteTalent } from '@/types/dashboard'
 
 interface Props {
@@ -42,12 +41,6 @@ export function FavouriteTalents({ talents, talentRecommendation, aiLoading }: P
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <p className="truncate text-body-compact font-semibold text-[#1A1A1A]">{talent.name}</p>
-                <span
-                  className="rounded-full px-1.5 py-0.5 text-micro font-bold"
-                  style={{ backgroundColor: `${getTierColor(talent.tier)}15`, color: getTierColor(talent.tier) }}
-                >
-                  {talent.tier}
-                </span>
               </div>
               <p className="text-label text-[#717171]">
                 {talent.bookingCount} appointment{talent.bookingCount !== 1 ? 's' : ''} · {talent.topService}
