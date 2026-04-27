@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
       orderBy: { createdAt: 'asc' },
       take: BATCH_SIZE,
       include: {
-        provider: { include: { providerProfile: { select: { tier: true, stripeSubscriptionStatus: true } } } },
+        provider: { include: { providerProfile: { select: { id: true } } } },
       },
     })
 
@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
 
 type StuckBooking = Prisma.BookingGetPayload<{
   include: {
-    provider: { include: { providerProfile: { select: { tier: true, stripeSubscriptionStatus: true } } } }
+    provider: { include: { providerProfile: { select: { id: true } } } }
   }
 }>
 
@@ -204,17 +204,9 @@ async function reconcileAuthorised(
   piId: string,
   now: Date,
 ): Promise<ReconcileResult> {
-  // Mirror the webhook: also extend the accept deadline based on effective
-  // provider tier — PRO/ELITE = 48h, everyone else = 24h. We don't import
-  // getEffectiveProviderTier to avoid circular test mocking; the rule is
-  // simple enough to inline.
-  const profile = booking.provider?.providerProfile
-  const storedTier = profile?.tier ?? 'NEWCOMER'
-  const subStatus = (profile?.stripeSubscriptionStatus ?? '').toLowerCase()
-  const isActive = subStatus === 'active' || subStatus === 'trialing'
-  const isHighTier = (storedTier === 'PRO' || storedTier === 'ELITE') && isActive
-  const deadlineHours = isHighTier ? 48 : 24
-  const newDeadline = new Date(now.getTime() + deadlineHours * 60 * 60 * 1000)
+  // Mirror the webhook: also extend the accept deadline.
+  // Tier system removed — flat 24h accept window for everyone.
+  const newDeadline = new Date(now.getTime() + 24 * 60 * 60 * 1000)
 
   const idempotencyKey = `reconcile:${booking.id}:${piId}:authorised`
   try {

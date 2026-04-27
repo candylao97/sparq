@@ -13,7 +13,6 @@ Rules:
 - Australian English spelling (e.g. "personalised", "favourite")
 - Never use the word "AI" — you are invisible infrastructure
 - scoreTips: only include tips for pillars scoring below 70% of their max. Keys must be one of: "review", "completion", "response", "consistency", "verification". Each tip should be specific and actionable based on the actual data.
-- tierProjection: estimate weeks to next tier based on current score and gap. Null if already ELITE.
 - goalSuggestion: suggest a realistic monthly earnings goal based on the 3-month average, or null if insufficient data
 - briefing: summarise the most important thing the talent should focus on right now (pending bookings, score changes, earnings momentum)
 - earningsNarrative: compare this month vs last month with percentage and identify the main driver
@@ -21,15 +20,12 @@ Rules:
 - benchmarkNote: compare their score/rating against typical performers in their category
 - portfolioGapNote: if they have fewer than 4 photos, suggest adding more with a specific benefit. Null if 4+ photos.
 
-Tier thresholds: NEWCOMER (0-30), RISING (31-50), TRUSTED (51-70), PRO (71-85), ELITE (86-100).
-
 Return ONLY valid JSON matching this exact shape (no markdown, no explanation):
 {
   "briefing": string | null,
   "earningsNarrative": string | null,
   "goalSuggestion": string | null,
   "scoreTips": { [pillar: string]: string } | null,
-  "tierProjection": string | null,
   "weeklyInsight": string | null,
   "benchmarkNote": string | null,
   "portfolioGapNote": string | null
@@ -62,7 +58,6 @@ export async function POST(req: NextRequest) {
           earningsNarrative: parsed.earningsNarrative || null,
           goalSuggestion: parsed.goalSuggestion || null,
           scoreTips: parsed.scoreTips || null,
-          tierProjection: parsed.tierProjection || null,
           weeklyInsight: parsed.weeklyInsight || null,
           benchmarkNote: parsed.benchmarkNote || null,
           portfolioGapNote: parsed.portfolioGapNote || null,
@@ -72,14 +67,14 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       briefing: null, earningsNarrative: null, goalSuggestion: null,
-      scoreTips: null, tierProjection: null, weeklyInsight: null,
+      scoreTips: null, weeklyInsight: null,
       benchmarkNote: null, portfolioGapNote: null,
     })
   } catch (error) {
     console.error('AI dashboard insights error:', error)
     return NextResponse.json({
       briefing: null, earningsNarrative: null, goalSuggestion: null,
-      scoreTips: null, tierProjection: null, weeklyInsight: null,
+      scoreTips: null, weeklyInsight: null,
       benchmarkNote: null, portfolioGapNote: null,
     })
   }

@@ -39,8 +39,6 @@ export async function GET() {
           image: u.image,
           suburb: pp.suburb,
           city: pp.city,
-          tier: pp.tier,
-          subscriptionPlan: pp.subscriptionPlan,
           offerAtHome: pp.offerAtHome,
           offerAtStudio: pp.offerAtStudio,
           isVerified: pp.isVerified,

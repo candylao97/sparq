@@ -26,7 +26,7 @@ export async function GET() {
         where: { customerId: session.user.id },
         include: {
           service: true,
-          provider: { include: { providerProfile: { select: { tier: true, suburb: true, offerAtHome: true, offerAtStudio: true } } } },
+          provider: { include: { providerProfile: { select: { suburb: true, offerAtHome: true, offerAtStudio: true } } } },
           review: true,
         },
         orderBy: { createdAt: 'desc' },
@@ -88,7 +88,6 @@ export async function GET() {
           id: b.providerUserId,
           name: b.provider.name || 'Artist',
           image: b.provider.image,
-          tier: b.provider.providerProfile?.tier || 'NEWCOMER',
           suburb: b.provider.providerProfile?.suburb || null,
         },
         review: b.review ? {
@@ -134,7 +133,7 @@ export async function GET() {
 
     // Build favourite talents from completed bookings
     const talentMap = new Map<string, {
-      id: string; name: string; image: string | null; tier: string; suburb: string | null
+      id: string; name: string; image: string | null; suburb: string | null
       bookingCount: number; lastBookingDate: Date; services: Map<string, number>; ratings: number[]
       offerAtHome: boolean; offerAtStudio: boolean
     }>()
@@ -153,7 +152,6 @@ export async function GET() {
           id: b.providerUserId,
           name: b.provider.name || 'Artist',
           image: b.provider.image,
-          tier: b.provider.providerProfile?.tier || 'NEWCOMER',
           suburb: b.provider.providerProfile?.suburb || null,
           bookingCount: 1,
           lastBookingDate: b.date,
@@ -192,7 +190,6 @@ export async function GET() {
           id: t.id,
           name: t.name,
           image: t.image,
-          tier: t.tier,
           suburb: t.suburb,
           bookingCount: t.bookingCount,
           lastBookingDate: t.lastBookingDate.toISOString(),
@@ -223,9 +220,7 @@ export async function GET() {
       previousQuarter: calcSpend(completedPrevQuarter),
       averagePerBooking: completed.length > 0 ? calcSpend(completed) / completed.length : 0,
       totalTips: completed.reduce((s, b) => s + b.tipAmount, 0),
-      platformFeesSaved: user.customerProfile?.membership === 'PREMIUM'
-        ? completed.reduce((s, b) => s + b.platformFee, 0)
-        : 0,
+      platformFeesSaved: 0,
     }
 
     // Reviews left by this customer
@@ -244,7 +239,6 @@ export async function GET() {
         name: user.name || '',
         email: user.email || '',
         image: user.image,
-        membership: user.customerProfile?.membership || 'FREE',
         savedProviders: user.customerProfile?.savedProviders || [],
         memberSince: user.createdAt.toISOString(),
       },

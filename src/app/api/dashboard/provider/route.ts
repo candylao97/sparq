@@ -187,7 +187,6 @@ export async function GET() {
     return NextResponse.json({
       profile: {
         id: profile.id,
-        tier: profile.tier,
         isVerified: profile.isVerified,
         bio: profile.bio,
         tagline: profile.tagline,

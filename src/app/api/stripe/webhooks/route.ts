@@ -135,18 +135,12 @@ export async function POST(req: NextRequest) {
       if (bookingId) {
         const booking = await prisma.booking.findUnique({
           where: { id: bookingId },
-          include: {
-            provider: { include: { providerProfile: true } },
-          },
         })
         if (booking) {
-          // P1-4: Extend acceptDeadline based on provider tier now that payment is confirmed.
-          // PRO/ELITE providers get 48 h; everyone else gets 24 h.
-          // (The booking was created with a short 2 h deadline to free up abandoned slots quickly.)
-          const tier = booking.provider?.providerProfile?.tier ?? 'NEWCOMER'
-          const isHighTier = tier === 'PRO' || tier === 'ELITE'
-          const deadlineHours = isHighTier ? 48 : 24
-          const newDeadline = new Date(Date.now() + deadlineHours * 60 * 60 * 1000)
+          // P1-4: Extend acceptDeadline once payment is authorised. The booking
+          // was created with a 2h deadline to free up abandoned slots quickly.
+          // Tier system removed — flat 24h accept window for everyone.
+          const newDeadline = new Date(Date.now() + 24 * 60 * 60 * 1000)
 
           await prisma.booking.update({
             where: { id: bookingId },
