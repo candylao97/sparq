@@ -96,12 +96,12 @@ export default function CreateServicePage() {
   function earnings(): string {
     const p = parseFloat(formData.price)
     if (!p || p <= 0) return '0.00'
-    const rate = getCommissionRate('NEWCOMER')
+    const rate = getCommissionRate()
     return (p * (1 - rate)).toFixed(2)
   }
 
   function commissionPct(): number {
-    return Math.round(getCommissionRate('NEWCOMER') * 100)
+    return Math.round(getCommissionRate() * 100)
   }
 
   // ── validation ─────────────────────────────────────────────────────────────

@@ -36,8 +36,7 @@ Talents are based across **Australia**. Services can be delivered at the fan's h
 
 ### Pricing & Fees
 - Service price = what the talent charges
-- Platform fee = 15% of service price (waived for Premium members)
-- **Premium membership** = $9.99/month → zero service fees on all bookings
+- Platform fee = 15% of service price
 - Tip = optional, paid directly to the talent, never subject to fees
 - All prices in AUD
 

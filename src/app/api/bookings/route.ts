@@ -345,10 +345,9 @@ export async function POST(req: NextRequest) {
     })
 
     // Premium-tier system removed — all customers pay the same booking fee
-    // and all artists are charged the same flat commission rate. The
-    // 'NEWCOMER' arg is a placeholder; the lib ignores tier from commit 3 onward.
+    // and all artists are charged the same flat commission rate.
     const isMember = false
-    const commissionRate = await getCommissionRateAsync('NEWCOMER')
+    const commissionRate = await getCommissionRateAsync()
     // MON-1: Commission rate sanity check — catch misconfiguration before it silently costs revenue.
     // BL-4: Allow rate of 0 for free services (effectiveServicePrice === 0)
     if (effectiveServicePrice > 0 && (commissionRate < 0 || commissionRate > 0.50)) {

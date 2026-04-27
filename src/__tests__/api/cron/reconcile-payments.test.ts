@@ -114,7 +114,7 @@ function booking(overrides: Record<string, any> = {}): any {
     giftVoucherCode: null,
     createdAt: new Date(Date.now() - 20 * 60 * 1000), // 20 min old
     provider: {
-      providerProfile: { tier: 'NEWCOMER', stripeSubscriptionStatus: null },
+      providerProfile: { id: 'pp-1' },
     },
     ...overrides,
   }
@@ -167,7 +167,7 @@ describe('POST /api/cron/reconcile-payments — reconciliation', () => {
     })
   })
 
-  it('flips requires_capture PI to AUTHORISED with NEWCOMER 24h deadline', async () => {
+  it('flips requires_capture PI to AUTHORISED with flat 24h deadline', async () => {
     mockPrisma.booking.findMany.mockResolvedValueOnce([booking()])
     mockRetrieve.mockResolvedValueOnce(pi('requires_capture'))
     mockPrisma.processedWebhookEvent.create.mockResolvedValue({})

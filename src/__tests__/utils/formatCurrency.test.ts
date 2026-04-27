@@ -123,7 +123,7 @@ describe('calculatePlatformFee', () => {
     expect(calculatePlatformFee(200, false)).toBe(30)
   })
 
-  it('returns 0 for PREMIUM members (member benefit)', () => {
+  it('returns 0 when isMember=true (legacy param — no longer used in production now that premium tiers are removed)', () => {
     expect(calculatePlatformFee(200, true)).toBe(0)
   })
 
