@@ -78,7 +78,7 @@ function AgendaPanel({ events }: { events: CalendarEvent[] }) {
   return (
     <aside className="w-72 flex-shrink-0 m-6 rounded-xl border border-[#e8e1de] bg-white shadow-[0_2px_10px_rgba(0,0,0,0.05)] overflow-y-auto">
       <div className="p-6">
-        <h3 className="text-xl font-bold text-[#1A1A1A] mb-5">Today&apos;s Agenda</h3>
+        <h3 className="text-xl font-bold text-[#1A1A1A] mb-5">Today&apos;s agenda</h3>
         {events.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-center">
             <div className="w-12 h-12 rounded-full bg-[#fdf2f2] flex items-center justify-center mb-3">
@@ -199,7 +199,7 @@ function BlockedTimeModal({ onClose, onAdd }: BlockedTimeModalProps) {
         {/* Header */}
         <div className="px-6 pt-6 pb-4 border-b border-[#e8e1de] flex items-start justify-between">
           <div>
-            <h2 className="text-lg font-bold text-[#1A1A1A]">Add Blocked Time</h2>
+            <h2 className="text-lg font-bold text-[#1A1A1A]">Add blocked time</h2>
             <p className="text-xs text-[#717171] mt-0.5">Block off time you&apos;re unavailable for bookings</p>
           </div>
           <button onClick={onClose} className="text-[#717171] hover:text-[#1A1A1A] transition-colors mt-0.5">
@@ -353,7 +353,7 @@ function SyncCalendarModal({ onClose }: SyncCalendarModalProps) {
         {/* Header */}
         <div className="px-6 pt-6 pb-4 border-b border-[#e8e1de] flex items-start justify-between">
           <div>
-            <h2 className="text-lg font-bold text-[#1A1A1A]">Sync Your Calendar</h2>
+            <h2 className="text-lg font-bold text-[#1A1A1A]">Sync your calendar</h2>
             <p className="text-xs text-[#717171] mt-0.5">Export your Sparq bookings to any calendar app</p>
           </div>
           <button onClick={onClose} className="text-[#717171] hover:text-[#1A1A1A] transition-colors mt-0.5">
@@ -562,7 +562,7 @@ function WeeklyScheduleModal({ onClose, initialSchedule }: WeeklyScheduleModalPr
         {/* Header */}
         <div className="px-6 pt-6 pb-4 border-b border-[#e8e1de] flex items-start justify-between flex-shrink-0">
           <div>
-            <h2 className="text-lg font-bold text-[#1A1A1A]">Weekly Schedule</h2>
+            <h2 className="text-lg font-bold text-[#1A1A1A]">Weekly schedule</h2>
             <p className="text-xs text-[#717171] mt-0.5">Set your regular working hours for each day</p>
           </div>
           <button onClick={onClose} className="text-[#717171] hover:text-[#1A1A1A] transition-colors mt-0.5">
@@ -707,7 +707,7 @@ function BusinessHoursPanel({ schedule, onChange }: BusinessHoursPanelProps) {
       <div className="flex items-start justify-between mb-5">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#717171] mb-1">Availability</p>
-          <h2 className="font-headline text-xl text-[#1A1A1A]">Business Hours</h2>
+          <h2 className="font-headline text-xl text-[#1A1A1A]">Business hours</h2>
           <p className="text-sm text-[#717171] mt-0.5">Set your regular working hours — clients can only book during these times</p>
         </div>
       </div>
@@ -860,7 +860,7 @@ function VacationModeModal({ onClose, onApply }: VacationModeModalProps) {
         {/* Header */}
         <div className="px-6 pt-6 pb-4 border-b border-[#e8e1de] flex items-start justify-between">
           <div>
-            <h2 className="text-lg font-bold text-[#1A1A1A]">Vacation Mode</h2>
+            <h2 className="text-lg font-bold text-[#1A1A1A]">Vacation mode</h2>
             <p className="text-xs text-[#717171] mt-0.5">Block all bookings for a date range</p>
           </div>
           <button onClick={onClose} className="text-[#717171] hover:text-[#1A1A1A] transition-colors mt-0.5">

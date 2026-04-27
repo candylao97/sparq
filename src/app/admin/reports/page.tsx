@@ -94,7 +94,7 @@ export default function AdminReports() {
         <div className="rounded-2xl border border-[#e8e1de] bg-white p-6">
           <div className="mb-4 flex items-center gap-2">
             <DollarSign className="h-5 w-5 text-[#717171]" />
-            <h2 className="font-bold text-[#1A1A1A]">Revenue by Month</h2>
+            <h2 className="font-bold text-[#1A1A1A]">Revenue by month</h2>
           </div>
           <div className="space-y-3">
             {data.revenueByMonth.map(r => (
@@ -118,7 +118,7 @@ export default function AdminReports() {
         <div className="rounded-2xl border border-[#e8e1de] bg-white p-6">
           <div className="mb-4 flex items-center gap-2">
             <BarChart3 className="h-5 w-5 text-[#717171]" />
-            <h2 className="font-bold text-[#1A1A1A]">Bookings by Status</h2>
+            <h2 className="font-bold text-[#1A1A1A]">Bookings by status</h2>
           </div>
           <div className="space-y-4">
             {data.bookingsByStatus.map(b => {
@@ -152,7 +152,7 @@ export default function AdminReports() {
         <div className="rounded-2xl border border-[#e8e1de] bg-white p-6">
           <div className="mb-4 flex items-center gap-2">
             <Users className="h-5 w-5 text-[#717171]" />
-            <h2 className="font-bold text-[#1A1A1A]">New Users by Month</h2>
+            <h2 className="font-bold text-[#1A1A1A]">New users by month</h2>
           </div>
           <div className="space-y-3">
             {data.newUsersByMonth.map(u => (
@@ -174,7 +174,7 @@ export default function AdminReports() {
         <div className="rounded-2xl border border-[#e8e1de] bg-white p-6">
           <div className="mb-4 flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-[#717171]" />
-            <h2 className="font-bold text-[#1A1A1A]">Top Providers by Earnings</h2>
+            <h2 className="font-bold text-[#1A1A1A]">Top providers by earnings</h2>
           </div>
           {data.topProviders.length === 0 ? (
             <p className="text-sm text-[#717171]">No provider data yet</p>
@@ -205,7 +205,7 @@ export default function AdminReports() {
         <div className="rounded-2xl border border-[#e8e1de] bg-white p-6 lg:col-span-2">
           <div className="mb-4 flex items-center gap-2">
             <TrendingDown className="h-5 w-5 text-[#717171]" />
-            <h2 className="font-bold text-[#1A1A1A]">Booking Drop-off Analysis</h2>
+            <h2 className="font-bold text-[#1A1A1A]">Booking drop-off analysis</h2>
           </div>
           <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
             <div>

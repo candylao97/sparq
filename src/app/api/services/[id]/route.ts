@@ -10,7 +10,7 @@ const VALID_LOCATION_TYPES = ['AT_HOME', 'STUDIO', 'BOTH'] as const
 type LocationType = (typeof VALID_LOCATION_TYPES)[number]
 
 const VALID_CATEGORIES = [
-  'NAILS', 'LASHES', 'HAIR', 'MAKEUP', 'BROWS', 'WAXING', 'MASSAGE', 'FACIALS', 'OTHER',
+  'NAILS', 'LASHES', 'MAKEUP',
 ] as const
 type ValidCategory = (typeof VALID_CATEGORIES)[number]
 

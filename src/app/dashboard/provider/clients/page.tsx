@@ -323,7 +323,7 @@ function ClientDetail({ client }: { client: Client }) {
           {/* Right: recent history */}
           <div className="bg-[#f9f2ef] rounded-2xl p-6">
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-base font-bold text-[#1A1A1A]">Recent History</h3>
+              <h3 className="text-base font-bold text-[#1A1A1A]">Recent history</h3>
               <button className="text-xs font-semibold text-[#E96B56] hover:underline">View All</button>
             </div>
             {client.history.length === 0 ? (

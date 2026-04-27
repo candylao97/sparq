@@ -127,7 +127,7 @@ export default function AdminDisputes() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[#1A1A1A]">Dispute Resolution</h1>
+        <h1 className="text-2xl font-bold text-[#1A1A1A]">Dispute resolution</h1>
         <p className="text-sm text-[#717171]">Manage customer disputes and arbitration outcomes</p>
       </div>
 

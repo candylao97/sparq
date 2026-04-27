@@ -25,7 +25,7 @@ export function CustomerReferralWidget() {
     <div className="rounded-2xl border border-[#e8e1de] bg-[#f9f2ef] p-5">
       <div className="flex items-center gap-2 mb-2">
         <Gift className="h-4 w-4 text-[#E96B56]" />
-        <h3 className="font-semibold text-sm text-[#1A1A1A]">Give $10, Get $10</h3>
+        <h3 className="font-semibold text-sm text-[#1A1A1A]">Give $10, get $10</h3>
       </div>
       <p className="text-xs text-[#717171] mb-3">
         Invite a friend to Sparq. When they complete their first booking, you both get $10 credit.

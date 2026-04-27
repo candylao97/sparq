@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url)
   const category = searchParams.get('category') as ServiceCategory | null
-  // P1-1: Cap query length to prevent ReDoS on bio/service Prisma contains
+  // P1-1: Cap query length to prevent ReDoS on tagline/service Prisma contains
   const safeQuery = (searchParams.get('q') ?? '').slice(0, 200).trim()
   const q = safeQuery || null // preserve null-ish behaviour for downstream checks
   const location = searchParams.get('location')
@@ -36,23 +36,23 @@ export async function GET(req: NextRequest) {
   try {
     const where: Prisma.ProviderProfileWhereInput = {}
     where.accountStatus = 'ACTIVE'
-    // P1-F: Profile completeness gate — require bio, suburb, and 3+ portfolio photos
-    // This ensures artists appear in discovery only when they're ready to convert clients.
+    // P1-F: Profile completeness gate — tagline + suburb + at least one service
+    // and one portfolio photo. (Bio was removed — tagline is the closest
+    // remaining "have they filled out their profile?" signal.)
     where.AND = [
       { services: { some: { isActive: true, isDeleted: false } } },
       { portfolio: { some: {} } },
-      // Must have bio and suburb for profile completeness
-      { bio: { not: null } },
+      { tagline: { not: null } },
       { suburb: { not: null } },
     ]
-    // P4-1: Free-text search — filter on service titles, bio, and provider name
+    // P4-1: Free-text search — filter on service titles, tagline, and provider name
     // P1-1: safeQuery is already trimmed and capped at 200 chars (ReDoS protection)
     if (safeQuery) {
       const qTrim = safeQuery;
       (where.AND as Prisma.ProviderProfileWhereInput[]).push({
         OR: [
           { user: { name: { contains: qTrim, mode: 'insensitive' } } },
-          { bio: { contains: qTrim, mode: 'insensitive' } },
+          { tagline: { contains: qTrim, mode: 'insensitive' } },
           { suburb: { contains: qTrim, mode: 'insensitive' } },
           { services: { some: { title: { contains: qTrim, mode: 'insensitive' }, isActive: true, isDeleted: false } } },
         ],

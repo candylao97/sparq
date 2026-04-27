@@ -33,7 +33,7 @@ export default function FeaturedListingPage() {
     <div className="max-w-2xl mx-auto px-6 py-12">
       <div className="flex items-center gap-3 mb-2">
         <Star className="h-6 w-6 text-[#E96B56] fill-[#E96B56]" />
-        <h1 className="font-headline text-2xl text-[#1A1A1A]">Featured Listing</h1>
+        <h1 className="font-headline text-2xl text-[#1A1A1A]">Featured listing</h1>
       </div>
       <p className="text-[#717171] mb-10 text-sm leading-relaxed">
         Featured artists appear at the top of search results with a ⭐ badge — get more visibility and more bookings.

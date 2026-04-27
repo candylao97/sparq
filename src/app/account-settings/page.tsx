@@ -607,7 +607,7 @@ function PersonalInfoSection({
       {/* ── Hero heading ── */}
       <section>
         <h1 className="font-headline text-4xl font-extrabold tracking-tight text-[#1A1A1A] mb-3 sm:text-5xl">
-          Personal Information
+          Personal information
         </h1>
         <p className="text-sm text-[#717171] max-w-xl leading-relaxed">
           Update your personal details and how others see you on the platform. These changes will be reflected across your public profile and booking system.
@@ -642,7 +642,7 @@ function PersonalInfoSection({
           </button>
         </div>
         <div className="text-center sm:text-left">
-          <h3 className="text-lg font-bold text-[#1A1A1A] mb-1">Profile Photo</h3>
+          <h3 className="text-lg font-bold text-[#1A1A1A] mb-1">Profile photo</h3>
           <p className="text-sm text-[#717171] mb-4">JPG, GIF or PNG. Max size of 800K</p>
           <div className="flex gap-4 justify-center sm:justify-start">
             <button
@@ -1457,7 +1457,7 @@ export default function AccountSettingsPage() {
             <nav className="sticky top-6" aria-label="Settings navigation">
               {/* Header */}
               <div className="mb-8 px-1">
-                <h2 className="text-lg font-bold text-[#E96B56]">Account Settings</h2>
+                <h2 className="text-lg font-bold text-[#E96B56]">Account settings</h2>
                 <p className="mt-0.5 text-xs text-[#717171]">Manage your professional presence</p>
               </div>
 

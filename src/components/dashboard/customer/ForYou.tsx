@@ -7,6 +7,7 @@ import type { FavouriteTalent } from '@/types/dashboard'
 const CATEGORY_META: Record<string, { label: string; desc: string; Icon: typeof Sparkles }> = {
   NAILS: { label: 'Nail art', desc: 'Gels, acrylics, nail art & more', Icon: Sparkles },
   LASHES: { label: 'Lash extensions', desc: 'Classic, volume & hybrid sets', Icon: Eye },
+  MAKEUP: { label: 'Makeup', desc: 'Bridal, editorial & special occasion', Icon: Sparkles },
 }
 
 interface Props {
@@ -16,7 +17,7 @@ interface Props {
 }
 
 export function ForYou({ favouriteTalents, categoriesBooked }: Props) {
-  const unbookedCategories = ['NAILS', 'LASHES'].filter(c => !categoriesBooked.includes(c))
+  const unbookedCategories = ['NAILS', 'LASHES', 'MAKEUP'].filter(c => !categoriesBooked.includes(c))
   const artistCards = favouriteTalents.slice(0, 2)
   const totalCards = artistCards.length + unbookedCategories.length
 

@@ -343,7 +343,7 @@ export default function GrowthPage() {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-widest text-[#E96B56] mb-1">Growth</p>
-            <h1 className="text-2xl font-bold font-headline text-[#1A1A1A]">Marketing Performance</h1>
+            <h1 className="text-2xl font-bold font-headline text-[#1A1A1A]">Marketing performance</h1>
           </div>
           <a href="/dashboard/provider/featured" className="inline-flex items-center gap-1.5 rounded-xl bg-[#E96B56] px-4 py-2 text-sm font-bold text-white hover:bg-[#a63a29] transition-colors">
             <Plus className="h-4 w-4" /> New Campaign
@@ -380,7 +380,7 @@ export default function GrowthPage() {
         {!loading && data && (
           <div className="bg-white rounded-2xl p-5 shadow-sm space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-bold text-[#1A1A1A]">Revenue Trend</h2>
+              <h2 className="text-sm font-bold text-[#1A1A1A]">Revenue trend</h2>
               <span className="text-xs text-[#717171]">Completed bookings</span>
             </div>
             <RevenueSparkline data={data.recentBookings} />
@@ -393,7 +393,7 @@ export default function GrowthPage() {
           {/* ── Promotional Campaigns ── */}
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-base font-bold text-[#1A1A1A]">Promotional Campaigns</h2>
+              <h2 className="text-base font-bold text-[#1A1A1A]">Promotional campaigns</h2>
               <button className="text-xs font-semibold text-[#E96B56] hover:underline">View all</button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -439,7 +439,7 @@ export default function GrowthPage() {
             <div className="bg-white rounded-2xl p-5 shadow-sm space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-sm font-bold text-[#1A1A1A]">Social Feed</h2>
+                  <h2 className="text-sm font-bold text-[#1A1A1A]">Social feed</h2>
                   <p className="text-xs text-[#717171]">Your recent posts</p>
                 </div>
                 <button className="text-xs font-semibold text-[#E96B56] hover:underline">Connect</button>
@@ -473,7 +473,7 @@ export default function GrowthPage() {
             <div className="bg-white rounded-2xl p-5 shadow-sm space-y-1">
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  <h2 className="text-sm font-bold text-[#1A1A1A]">Email Studio</h2>
+                  <h2 className="text-sm font-bold text-[#1A1A1A]">Email studio</h2>
                   <p className="text-xs text-[#717171]">Automated client outreach</p>
                 </div>
                 <span className="text-[10px] font-bold bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full">

@@ -35,7 +35,6 @@ interface ProfileData {
   avgRating: number | null
   recentReviews: RecentReview[]
   providerProfile: {
-    bio: string | null
     tagline: string | null
     suburb: string | null
     city: string
@@ -104,7 +103,6 @@ export default function ProfilePage() {
   // Editable fields
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
-  const [bio, setBio] = useState('')
   const [tagline, setTagline] = useState('')
   const [suburb, setSuburb] = useState('')
   const [city, setCity] = useState('')
@@ -118,7 +116,6 @@ export default function ProfilePage() {
       setProfile(data)
       setName(data.name || '')
       setPhone(data.phone || '')
-      setBio(data.providerProfile?.bio || '')
       setTagline(data.providerProfile?.tagline || '')
       setSuburb(data.providerProfile?.suburb || '')
       setCity(data.providerProfile?.city || '')
@@ -135,21 +132,14 @@ export default function ProfilePage() {
     if (status === 'authenticated') fetchProfile()
   }, [status, router, fetchProfile])
 
-  const BIO_MIN_LENGTH = 50
-
   async function handleSave(section: EditSection) {
-    // UX-M5: Enforce minimum 50-character bio for providers
     const isProvider = profile?.role === 'PROVIDER' || profile?.role === 'BOTH'
-    if (isProvider && section === 'artist' && bio.trim().length > 0 && bio.trim().length < BIO_MIN_LENGTH) {
-      toast.error(`Your bio needs at least ${BIO_MIN_LENGTH} characters to help clients get to know you.`)
-      return
-    }
     setSaving(true)
     try {
       const body: Record<string, unknown> = { name, phone }
       if (isProvider && section === 'artist') {
         body.providerData = {
-          bio, tagline, suburb, city,
+          tagline, suburb, city,
           languages: languages.split(',').map(l => l.trim()).filter(Boolean),
         }
       }
@@ -173,7 +163,6 @@ export default function ProfilePage() {
     if (!profile) return
     setName(profile.name || '')
     setPhone(profile.phone || '')
-    setBio(profile.providerProfile?.bio || '')
     setTagline(profile.providerProfile?.tagline || '')
     setSuburb(profile.providerProfile?.suburb || '')
     setCity(profile.providerProfile?.city || '')
@@ -306,28 +295,6 @@ export default function ProfilePage() {
                   <label className="mb-1 block text-xs font-medium text-[#717171]">Tagline</label>
                   <input value={tagline} onChange={e => setTagline(e.target.value)} placeholder="A short headline..." className="w-full rounded-xl border border-[#e8e1de] px-3 py-2.5 text-sm outline-none focus:border-[#E96B56] focus:ring-1 focus:ring-[#E96B56]" />
                 </div>
-                <div>
-                  <label className="mb-1 block text-xs font-medium text-[#717171]">Bio</label>
-                  <textarea
-                    value={bio}
-                    onChange={e => setBio(e.target.value)}
-                    rows={5}
-                    placeholder="Tell clients about yourself — your style, experience, and what makes your work special..."
-                    className={`w-full rounded-xl border px-3 py-2.5 text-sm outline-none transition-all resize-none ${
-                      bio.trim().length > 0 && bio.trim().length < BIO_MIN_LENGTH
-                        ? 'border-amber-400 focus:border-amber-400 focus:ring-1 focus:ring-amber-200'
-                        : 'border-[#e8e1de] focus:border-[#E96B56] focus:ring-1 focus:ring-[#E96B56]'
-                    }`}
-                  />
-                  <div className="mt-1 flex items-center justify-between">
-                    {bio.trim().length > 0 && bio.trim().length < BIO_MIN_LENGTH ? (
-                      <p className="text-xs text-amber-600">{BIO_MIN_LENGTH - bio.trim().length} more characters needed</p>
-                    ) : (
-                      <span />
-                    )}
-                    <p className="text-xs text-[#717171] ml-auto">{bio.length} chars</p>
-                  </div>
-                </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="mb-1 block text-xs font-medium text-[#717171]">Suburb</label>
@@ -353,13 +320,10 @@ export default function ProfilePage() {
               </div>
             ) : (
               <div className="space-y-1.5">
-                {profile.providerProfile.tagline && (
+                {profile.providerProfile.tagline ? (
                   <p className="text-[15px] font-medium text-[#1A1A1A]">{profile.providerProfile.tagline}</p>
-                )}
-                {profile.providerProfile.bio ? (
-                  <p className="text-[15px] leading-relaxed text-[#717171] whitespace-pre-wrap">{profile.providerProfile.bio}</p>
                 ) : (
-                  <p className="text-sm italic text-[#bbb]">No bio yet. Add one so clients can get to know you.</p>
+                  <p className="text-sm italic text-[#bbb]">No tagline yet. Add one so clients can get to know you.</p>
                 )}
               </div>
             )

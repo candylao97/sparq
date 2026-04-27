@@ -140,7 +140,7 @@ export default function AdminCronPage() {
 
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="font-headline text-3xl text-[#1A1A1A] mb-1">Cron Jobs</h1>
+            <h1 className="font-headline text-3xl text-[#1A1A1A] mb-1">Cron jobs</h1>
             <p className="text-sm text-[#717171]">Manually trigger scheduled tasks for testing or emergencies</p>
           </div>
           <div className="flex items-center gap-1.5 text-xs text-[#717171] bg-[#f3ece9] px-3 py-1.5 rounded-full">

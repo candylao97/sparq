@@ -49,7 +49,7 @@ export default function AuditLogPage() {
     <div className="min-h-screen bg-[#FDFBF7]">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-20 py-10">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="font-headline text-3xl text-[#1A1A1A]">Audit Log</h1>
+          <h1 className="font-headline text-3xl text-[#1A1A1A]">Audit log</h1>
           {hasFilters && (
             <button
               onClick={clearFilters}

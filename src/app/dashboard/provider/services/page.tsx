@@ -45,16 +45,10 @@ function formatDuration(minutes: number) {
 
 // Category-specific gradient for the card "image" area
 const CATEGORY_STYLE: Record<string, { from: string; to: string }> = {
-  NAILS:    { from: '#fce7e3', to: '#f9d0c9' },
-  LASHES:   { from: '#e8e3f9', to: '#d4ccf5' },
-  HAIR:     { from: '#f9f2ef', to: '#f0e8e3' },
-  MAKEUP:   { from: '#fdf0ee', to: '#fae4e0' },
-  BROWS:    { from: '#f3ece9', to: '#ebe0db' },
-  WAXING:   { from: '#FDFBF7', to: '#f5f0ea' },
-  MASSAGE:  { from: '#f0f4f0', to: '#e4ede4' },
-  FACIALS:  { from: '#fef0ef', to: '#fbe3e1' },
-  OTHER:    { from: '#f9f2ef', to: '#f0e8e3' },
-  DEFAULT:  { from: '#fdf6f4', to: '#f5e8e4' },
+  NAILS:   { from: '#fce7e3', to: '#f9d0c9' },
+  LASHES:  { from: '#e8e3f9', to: '#d4ccf5' },
+  MAKEUP:  { from: '#fdf0ee', to: '#fae4e0' },
+  DEFAULT: { from: '#fdf6f4', to: '#f5e8e4' },
 }
 
 function CardImageArea({ category, isActive }: { category: string; isActive: boolean }) {
@@ -489,7 +483,7 @@ export default function ServicesPage() {
           >
             <ArrowLeft className="h-3 w-3" /> Dashboard
           </Link>
-          <h2 className="text-[22px] font-semibold text-[#1A1A1A]">My Services</h2>
+          <h2 className="text-[22px] font-semibold text-[#1A1A1A]">My services</h2>
           <p className="text-sm text-[#717171] mt-0.5">
             {services.length === 0
               ? 'Create your first service to start getting bookings'

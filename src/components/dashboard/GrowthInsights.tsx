@@ -156,7 +156,7 @@ export function GrowthInsights({
       {/* Header */}
       <div className="mb-4 flex items-center gap-2">
         <TrendingUp className="h-5 w-5 text-[#E96B56]" />
-        <h2 className="text-lg font-bold text-[#1A1A1A]">Growth Playbook</h2>
+        <h2 className="text-lg font-bold text-[#1A1A1A]">Growth playbook</h2>
         <span className="ml-auto text-xs text-[#717171]">3 signals tracked</span>
       </div>
 

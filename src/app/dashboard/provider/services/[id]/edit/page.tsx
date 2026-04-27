@@ -11,13 +11,7 @@ import { ArrowLeft, Minus, Plus } from 'lucide-react'
 type ServiceCategory =
   | 'NAILS'
   | 'LASHES'
-  | 'HAIR'
   | 'MAKEUP'
-  | 'BROWS'
-  | 'WAXING'
-  | 'MASSAGE'
-  | 'FACIALS'
-  | 'OTHER'
 
 type LocationType = 'AT_HOME' | 'STUDIO' | 'BOTH'
 
@@ -51,15 +45,9 @@ interface ServiceData {
 const DURATION_PRESETS = [30, 45, 60, 75, 90, 120]
 
 const CATEGORIES: { value: ServiceCategory; label: string; emoji: string }[] = [
-  { value: 'NAILS',   label: 'Nails',    emoji: '💅' },
-  { value: 'LASHES',  label: 'Lashes',   emoji: '👁️' },
-  { value: 'HAIR',    label: 'Hair',     emoji: '💇' },
-  { value: 'MAKEUP',  label: 'Makeup',   emoji: '💄' },
-  { value: 'BROWS',   label: 'Brows',    emoji: '✨' },
-  { value: 'WAXING',  label: 'Waxing',   emoji: '🌿' },
-  { value: 'MASSAGE', label: 'Massage',  emoji: '🤲' },
-  { value: 'FACIALS', label: 'Facials',  emoji: '🧖' },
-  { value: 'OTHER',   label: 'Other',    emoji: '🌟' },
+  { value: 'NAILS',  label: 'Nails',  emoji: '💅' },
+  { value: 'LASHES', label: 'Lashes', emoji: '👁️' },
+  { value: 'MAKEUP', label: 'Makeup', emoji: '💄' },
 ]
 
 const LOCATION_OPTIONS: { value: LocationType; emoji: string; title: string; subtitle: string }[] = [

@@ -26,6 +26,7 @@ type Service = {
 const CATEGORY_BADGE: Record<string, string> = {
   NAILS: 'bg-pink-50 text-pink-700',
   LASHES: 'bg-purple-50 text-purple-700',
+  MAKEUP: 'bg-rose-50 text-rose-700',
 }
 
 export default function AdminServices() {
@@ -72,7 +73,7 @@ export default function AdminServices() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[#1A1A1A]">Service Moderation</h1>
+        <h1 className="text-2xl font-bold text-[#1A1A1A]">Service moderation</h1>
         <p className="text-sm text-[#717171]">Review and moderate artist service listings</p>
       </div>
 
@@ -95,6 +96,7 @@ export default function AdminServices() {
           <option value="">All Categories</option>
           <option value="NAILS">Nails</option>
           <option value="LASHES">Lashes</option>
+          <option value="MAKEUP">Makeup</option>
         </select>
         {[
           { value: '', label: 'All' },

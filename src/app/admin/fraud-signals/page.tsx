@@ -48,7 +48,7 @@ export default function AdminFraudSignals() {
         <div className="flex items-center gap-3">
           <ShieldAlert className="w-6 h-6 text-red-500" />
           <div>
-            <h1 className="text-xl font-bold text-[#1A1A1A]">Fraud Signals</h1>
+            <h1 className="text-xl font-bold text-[#1A1A1A]">Fraud signals</h1>
             <p className="text-sm text-[#717171]">Users flagged by risk heuristics in the last 7 days</p>
           </div>
         </div>

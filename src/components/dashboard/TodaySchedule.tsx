@@ -22,7 +22,7 @@ export function TodaySchedule({ bookings }: Props) {
       <div className="mb-6 rounded-2xl bg-white p-5 shadow-[0_1px_4px_rgba(26,31,54,0.07)]">
         <div className="mb-4 flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-bold text-[#1A1A1A]">Today&apos;s Schedule</h2>
+            <h2 className="text-lg font-bold text-[#1A1A1A]">Today&apos;s schedule</h2>
             <p className="text-xs text-[#717171]">{dateStr}</p>
           </div>
           {bookings.length > 0 && (

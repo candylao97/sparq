@@ -14,6 +14,11 @@ const PORTFOLIO_PHOTOS = {
     'https://images.unsplash.com/photo-1639629509821-c54cdd984227?w=600',
     'https://images.unsplash.com/photo-1674049406467-824ea37c7184?w=600',
   ],
+  MAKEUP: [
+    'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=600',
+    'https://images.unsplash.com/photo-1522338242992-e1a54906a8da?w=600',
+    'https://images.unsplash.com/photo-1503236823255-94609f598e71?w=600',
+  ],
 }
 
 // Melbourne suburb coordinates for map feature
@@ -45,7 +50,6 @@ const PROVIDERS = [
   // NAILS
   {
     name: 'Lily Nguyen', email: 'lily.nguyen@example.com', suburb: 'Richmond', category: 'NAILS' as ServiceCategory,
-    bio: 'Award-winning nail artist with a passion for intricate designs. From minimalist to elaborate nail art, I do it all. Gel, acrylic, BIAB, and natural nail care.',
     score: 97,
     services: [
       { title: 'Gel Manicure', price: 85, duration: 60 },
@@ -57,7 +61,6 @@ const PROVIDERS = [
   },
   {
     name: 'Mai Tran', email: 'mai.tran@example.com', suburb: 'Hawthorn', category: 'NAILS' as ServiceCategory,
-    bio: 'Certified nail technician specialising in Korean-style nail art and dip powder. Clean, precise, and long-lasting results.',
     score: 68,
     services: [
       { title: 'BIAB / Builder Gel', price: 90, duration: 75 },
@@ -68,7 +71,6 @@ const PROVIDERS = [
   },
   {
     name: 'Sophie Williams', email: 'sophie.williams@example.com', suburb: 'Toorak', category: 'NAILS' as ServiceCategory,
-    bio: '3D nail art and chrome specialist. I create wearable works of art — florals, gemstones, negative space, and everything in between.',
     score: 89,
     services: [
       { title: 'Acrylic Full Set', price: 140, duration: 120 },
@@ -80,7 +82,6 @@ const PROVIDERS = [
   },
   {
     name: 'Jenny Ho', email: 'jenny.ho@example.com', suburb: 'Box Hill', category: 'NAILS' as ServiceCategory,
-    bio: 'Classic mani-pedi specialist. Affordable, reliable, and spotlessly clean. I offer a relaxing at-home nail service with quality products.',
     score: 61,
     services: [
       { title: 'Gel Manicure', price: 55, duration: 45 },
@@ -91,7 +92,6 @@ const PROVIDERS = [
   },
   {
     name: 'Tina Vo', email: 'tina.vo@example.com', suburb: 'Fitzroy', category: 'NAILS' as ServiceCategory,
-    bio: 'Acrylic and sculpted nail expert with 8 years of experience. I specialise in natural-looking extensions, ombre, and French tips.',
     score: 82,
     services: [
       { title: 'Acrylic Full Set', price: 110, duration: 90 },
@@ -104,7 +104,6 @@ const PROVIDERS = [
   // LASHES
   {
     name: 'Mia Chen', email: 'mia.chen@example.com', suburb: 'South Yarra', category: 'LASHES' as ServiceCategory,
-    bio: 'Certified lash artist specialising in volume and mega-volume techniques. I create fluffy, full lash sets that last up to 4 weeks with proper care.',
     score: 94,
     services: [
       { title: 'Classic Full Set', price: 120, duration: 90 },
@@ -116,7 +115,6 @@ const PROVIDERS = [
   },
   {
     name: 'Ava Park', email: 'ava.park@example.com', suburb: 'Prahran', category: 'LASHES' as ServiceCategory,
-    bio: 'Korean-trained lash technician with a gentle, precise touch. I specialise in hybrid and wispy lash styles for a natural-glam look.',
     score: 87,
     services: [
       { title: 'Hybrid Full Set', price: 150, duration: 105 },
@@ -128,7 +126,6 @@ const PROVIDERS = [
   },
   {
     name: 'Isabella Torres', email: 'isabella.torres@example.com', suburb: 'Collingwood', category: 'LASHES' as ServiceCategory,
-    bio: 'Passionate lash artist creating stunning looks from subtle to dramatic. Expert in Russian volume and wet-look lashes.',
     score: 74,
     services: [
       { title: 'Volume Full Set', price: 160, duration: 120 },
@@ -139,7 +136,6 @@ const PROVIDERS = [
   },
   {
     name: 'Rachel Kim', email: 'rachel.kim@example.com', suburb: 'Carlton', category: 'LASHES' as ServiceCategory,
-    bio: 'Lash lift and tint specialist. I help you wake up with effortlessly gorgeous eyes every morning — no extensions needed.',
     score: 63,
     services: [
       { title: 'Lash Lift', price: 75, duration: 50 },
@@ -150,7 +146,6 @@ const PROVIDERS = [
   },
   {
     name: 'Zara Ali', email: 'zara.ali@example.com', suburb: 'Brunswick', category: 'LASHES' as ServiceCategory,
-    bio: 'New to Sparq but not to lashes! 4 years experience creating bespoke lash looks. Mega volume, cat eye, and doll eye specialist.',
     score: 48,
     services: [
       { title: 'Volume Full Set', price: 140, duration: 110 },
@@ -159,10 +154,41 @@ const PROVIDERS = [
     ],
     offerAtHome: false, offerAtStudio: true, isVerified: false,
   },
+  // MAKEUP
+  {
+    name: 'Charlotte Reid', email: 'charlotte.reid@example.com', suburb: 'South Yarra', category: 'MAKEUP' as ServiceCategory,
+    score: 92,
+    services: [
+      { title: 'Bridal Makeup', price: 220, duration: 120 },
+      { title: 'Bridal Trial', price: 130, duration: 75 },
+      { title: 'Special Occasion Makeup', price: 140, duration: 75 },
+      { title: 'Lashes Application', price: 25, duration: 15 },
+    ],
+    offerAtHome: true, offerAtStudio: true, isVerified: true,
+  },
+  {
+    name: 'Hannah Patel', email: 'hannah.patel@example.com', suburb: 'Fitzroy', category: 'MAKEUP' as ServiceCategory,
+    score: 78,
+    services: [
+      { title: 'Editorial Glam', price: 180, duration: 90 },
+      { title: 'Special Occasion Makeup', price: 120, duration: 70 },
+      { title: 'Soft Glam', price: 130, duration: 75 },
+    ],
+    offerAtHome: true, offerAtStudio: false, isVerified: true,
+  },
+  {
+    name: 'Olivia Bennett', email: 'olivia.bennett@example.com', suburb: 'Toorak', category: 'MAKEUP' as ServiceCategory,
+    score: 84,
+    services: [
+      { title: 'Special Occasion Makeup', price: 150, duration: 75 },
+      { title: 'Bridal Makeup', price: 240, duration: 120 },
+      { title: 'Lashes Application', price: 30, duration: 15 },
+    ],
+    offerAtHome: true, offerAtStudio: true, isVerified: true,
+  },
   // SYDNEY PROVIDERS
   {
     name: 'Chloe Pham', email: 'chloe.pham@example.com', suburb: 'Surry Hills', category: 'NAILS' as ServiceCategory,
-    bio: 'Surry Hills-based nail artist obsessed with colour, texture, and clean execution. Gel, BIAB, and editorial nail art for every occasion.',
     score: 91,
     services: [
       { title: 'Gel Manicure', price: 90, duration: 60 },
@@ -174,7 +200,6 @@ const PROVIDERS = [
   },
   {
     name: 'Amara Osei', email: 'amara.osei@example.com', suburb: 'Newtown', category: 'NAILS' as ServiceCategory,
-    bio: 'Creative nail artist in the heart of Newtown. I specialise in bold, graphic nail art with a minimalist edge — acrylics and gel extensions my specialty.',
     score: 76,
     services: [
       { title: 'Acrylic Full Set', price: 115, duration: 90 },
@@ -185,7 +210,6 @@ const PROVIDERS = [
   },
   {
     name: 'Jade Ferreira', email: 'jade.ferreira@example.com', suburb: 'Bondi', category: 'LASHES' as ServiceCategory,
-    bio: 'Bondi-based lash artist with a light touch and an eye for shape. I specialise in natural-looking classic and hybrid sets — perfect for beach life.',
     score: 85,
     services: [
       { title: 'Classic Full Set', price: 130, duration: 90 },
@@ -197,7 +221,6 @@ const PROVIDERS = [
   },
   {
     name: 'Nina Kassis', email: 'nina.kassis@example.com', suburb: 'Paddington', category: 'LASHES' as ServiceCategory,
-    bio: 'Paddington lash tech with a refined aesthetic. Volume, mega-volume, and wispy styles for the modern woman. Gentle, precise, and always on time.',
     score: 69,
     services: [
       { title: 'Volume Full Set', price: 155, duration: 120 },
@@ -208,7 +231,6 @@ const PROVIDERS = [
   },
   {
     name: 'Priya Sharma', email: 'priya.sharma@example.com', suburb: 'Manly', category: 'NAILS' as ServiceCategory,
-    bio: 'Manly-based nail tech bringing salon-quality results straight to your door. Specialising in long-lasting gel manicures and pedicures for the Northern Beaches.',
     score: 59,
     services: [
       { title: 'Gel Manicure', price: 80, duration: 60 },
@@ -241,6 +263,16 @@ const REVIEW_TEXTS: Record<string, string[]> = {
     'I have been getting lashes for years and this is the best set I have ever had. Absolutely flawless.',
     'So careful around the eyes. The whole experience was relaxing and the results speak for themselves.',
   ],
+  MAKEUP: [
+    'Absolutely flawless bridal makeup. It lasted all day through the ceremony and reception with zero touch-ups.',
+    'The editorial glam look she created was unreal — exactly what I asked for and somehow even better.',
+    'Soft glam done right. Looked like myself but the most polished version. Would book again in a heartbeat.',
+    'My trial was so reassuring — she really listened and adjusted everything until it felt right.',
+    'Perfect special occasion makeup. Got compliments all night and my lashes stayed put.',
+    'Travelled to me on the morning of my engagement shoot, set up beautifully, and we still finished early.',
+    'She has such a calm presence and knows exactly what suits each face shape. Genuinely talented.',
+    'I am not usually a makeup person but she made me feel so confident. The finish photographed beautifully.',
+  ],
 }
 
 function getServiceDescription(title: string, providerName: string): string {
@@ -261,6 +293,12 @@ function getServiceDescription(title: string, providerName: string): string {
     'Lash Lift': 'A semi-permanent curl applied to your natural lashes — opens up the eye and eliminates the need for a lash curler.',
     'Lash Lift & Tint': 'Lash lift combined with a tint for darker, more defined lashes. Results last 6–8 weeks.',
     'Gel Mani & Pedi Combo': 'The full package — gel manicure on hands, classic pedicure on feet. Save time and arrive looking polished from tip to toe.',
+    'Bridal Makeup': 'Long-wear bridal application with skin prep, contour, and lashes. Photo-tested to look flawless on camera and last all day.',
+    'Bridal Trial': 'A pre-wedding session to nail down your final look. Plenty of time for tweaks, references, and notes for the day-of.',
+    'Special Occasion Makeup': 'Polished, photo-ready makeup for events — engagements, milestones, formals. Includes lashes if requested.',
+    'Editorial Glam': 'Bold, camera-ready editorial looks for shoots, content, and statement nights out. Custom to your reference brief.',
+    'Soft Glam': 'Subtle, glowing makeup that enhances your natural features without feeling heavy. Daytime or evening.',
+    'Lashes Application': 'Strip or cluster lash application added to any makeup booking. Quick, secure, and removable at the end of the night.',
   }
   return map[title] ?? `${title} with ${firstName} — professional service at your convenience.`
 }
@@ -338,7 +376,6 @@ async function main() {
         image: `https://randomuser.me/api/portraits/women/${providerCount + 10}.jpg`,
         providerProfile: {
           create: {
-            bio: pData.bio,
             suburb: pData.suburb,
             city: ['Surry Hills', 'Newtown', 'Bondi', 'Paddington', 'Manly'].includes(pData.suburb) ? 'Sydney' : 'Melbourne',
             state: ['Surry Hills', 'Newtown', 'Bondi', 'Paddington', 'Manly'].includes(pData.suburb) ? 'NSW' : 'VIC',
