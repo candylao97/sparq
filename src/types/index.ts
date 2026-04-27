@@ -9,8 +9,6 @@ import {
   ServiceCategory,
   ServiceLocation,
   BookingStatus,
-  ProviderTier,
-  SubscriptionPlan,
   PaymentStatus,
 } from '@prisma/client'
 
@@ -43,8 +41,6 @@ export type ProviderCardData = {
   image: string | null
   suburb: string | null
   city: string
-  tier: ProviderTier
-  subscriptionPlan: SubscriptionPlan
   offerAtHome: boolean
   offerAtStudio: boolean
   isVerified: boolean
@@ -124,4 +120,4 @@ export type ContactLeakageFlag = {
   createdAt: Date
 }
 
-export { ServiceCategory, ServiceLocation, BookingStatus, ProviderTier, SubscriptionPlan, PaymentStatus }
+export { ServiceCategory, ServiceLocation, BookingStatus, PaymentStatus }

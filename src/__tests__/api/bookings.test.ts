@@ -136,12 +136,6 @@ jest.mock('@/lib/utils.server', () => ({
   getTipCap: jest.fn().mockResolvedValue(1000),
 }))
 
-// audit-001 derives the effective tier via a Stripe-subscription-aware lookup.
-// The test fixtures already set `provider.tier = 'TRUSTED'`; pass that through.
-jest.mock('@/lib/provider-tier', () => ({
-  getEffectiveProviderTier: jest.fn(({ tier }) => tier ?? 'NEWCOMER'),
-}))
-
 jest.mock('@/lib/settings', () => ({
   getSettingFloat: jest.fn().mockResolvedValue(null),
 }))

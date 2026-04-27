@@ -10,7 +10,6 @@ function buildAiContext(data: DashboardData) {
   const sf = data.profile.scoreFactors
   return {
     firstName: '', // filled by caller
-    tier: data.profile.tier,
     scoreFactors: sf ? {
       reviewScore: sf.reviewScore,
       completionScore: sf.completionScore,

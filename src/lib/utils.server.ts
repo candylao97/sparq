@@ -5,8 +5,10 @@
  */
 import { getSettingFloat } from '@/lib/settings'
 
-export async function getCommissionRateAsync(tier: string): Promise<number> {
-  return getSettingFloat(`commission.${tier}`)
+// Premium tier system removed — single flat commission rate.
+// `_tier` retained for source-compat with callers still passing a placeholder.
+export async function getCommissionRateAsync(_tier?: string): Promise<number> {
+  return getSettingFloat('commission.rate')
 }
 
 export async function calculatePlatformFeeAsync(

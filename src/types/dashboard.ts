@@ -1,6 +1,5 @@
 export interface DashboardProfile {
   id: string
-  tier: string
   isVerified: boolean
   bio: string | null
   tagline: string | null
@@ -145,7 +144,6 @@ export interface AiInsights {
   earningsNarrative: string | null
   goalSuggestion: string | null
   scoreTips: Record<string, string> | null
-  tierProjection: string | null
   weeklyInsight: string | null
   benchmarkNote: string | null
   portfolioGapNote: string | null
@@ -165,7 +163,7 @@ export interface CustomerBooking {
   address: string | null
   notes: string | null
   service: { id: string; title: string; duration: number; category: string }
-  provider: { id: string; name: string; image: string | null; tier: string; suburb: string | null }
+  provider: { id: string; name: string; image: string | null; suburb: string | null }
   review: { id: string; rating: number; text: string | null; providerResponse: string | null } | null
   unreadMessageCount: number
 }
@@ -174,7 +172,6 @@ export interface FavouriteTalent {
   id: string
   name: string
   image: string | null
-  tier: string
   suburb: string | null
   bookingCount: number
   lastBookingDate: string
@@ -223,7 +220,6 @@ export interface CustomerDashboardData {
     name: string
     email: string
     image: string | null
-    membership: string
     savedProviders: string[]
     memberSince: string
   }
