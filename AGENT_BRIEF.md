@@ -4,9 +4,9 @@
 conversational context, and agent working memory are NOT. When
 assigning new AUDIT or FIND ids, commit to this file in the same PR.
 
-Last updated: 2026-04-27
+Last updated: 2026-04-28
 Last AUDIT-id assigned: AUDIT-037 (gaps exist — see Notes per id)
-Last FIND-id assigned: FIND-17
+Last FIND-id assigned: FIND-26
 
 ## Status legend
 
@@ -18,6 +18,9 @@ Last FIND-id assigned: FIND-17
 - `ESCALATED` — awaiting human decision
 - `BLOCKED` — depends on another item (name it)
 - `DUPLICATE` — consolidated (name the winner)
+- `SUPERSEDED` — code merged then later removed by a different decision
+- `COLLAPSED` — original scope no longer meaningful; reduced or
+  reframed (often paired with a Decisions log entry)
 - `UNKNOWN` — evidence insufficient; see notes
 
 ## Notes on the queue
@@ -28,12 +31,14 @@ Last FIND-id assigned: FIND-17
   description and are marked `UNKNOWN`. See the bulk-UNKNOWN note at
   the end of the AUDIT section.
 - PR surface is not verified in the current local-merge workflow
-  (see Decisions log). Branches with finished-looking diffs are
-  recorded as `IN_REVIEW` on the assumption the human will merge
-  locally.
-- `main` has only the single `Initial commit`. Nothing in the queue
-  is `MERGED` other than AUDIT-008 (a documented no-op — no code
-  change, deliberately closed).
+  (see Decisions log 2026-04-22). The 2026-04-25 CI setup
+  (`chore/ci-setup` → `f16cd40`) gates pushes via GitHub Actions
+  on typecheck / build / test (lint runs but is non-blocking).
+  Branches with finished-looking diffs that haven't yet been merged
+  are recorded as `IN_REVIEW`.
+- Main has 60+ merge commits since the recovery brief landed;
+  status per item below. Per-item evidence cites the merge SHA
+  where relevant.
 
 ---
 
@@ -41,14 +46,18 @@ Last FIND-id assigned: FIND-17
 
 ### AUDIT-001 — Subscription tier enforcement
 - Status: SUPERSEDED (2026-04-27)
-- Branch: `fix/audit-001-subscription-tier-enforcement` (no longer applicable)
-- Evidence: commit `fc0e6fb`; superseded by `feat/remove-premium-tiers`
-  (commits 9245b87, 6dd538a, ad958e4 + the schema migration commit)
-- Notes: Premium tiers were removed entirely. There is now a single
-  flat 15 % commission rate for every artist, so subscription-tier
-  enforcement has no meaning — `getEffectiveProviderTier` and the
-  `provider-tier.ts` module it lived in are deleted. The original
-  branch should NOT be merged.
+- Branch: `fix/audit-001-subscription-tier-enforcement` (lifecycle: MERGED → SUPERSEDED)
+- Evidence: original code shipped via merge `0d91f23` on 2026-04-22;
+  superseded by `feat/remove-premium-tiers` (merge `9ab7f9a` on
+  2026-04-27)
+- Notes: Premium tiers were removed entirely. The original branch
+  DID merge to main (the `getEffectiveProviderTier` helper and
+  `provider-tier.ts` module landed on 2026-04-22), then both were
+  deleted by the premium-removal series a week later. There is now
+  a single flat 15 % commission rate for every artist, so
+  subscription-tier enforcement has no meaning. Both
+  `getEffectiveProviderTier` and `provider-tier.ts` are no longer
+  on main.
 
 ### AUDIT-002 — Commission rate schedule + disclosure
 - Status: COLLAPSED (2026-04-27)
@@ -76,32 +85,36 @@ Last FIND-id assigned: FIND-17
   Tax on).
 
 ### AUDIT-004 — Availability calendar on provider profile
-- Status: IN_REVIEW
-- Branch: `fix/audit-004-availability-calendar` (ahead 4, files 10)
-- Evidence: commit `b684821`
-- Notes: Branch is stacked on 005/006/007. Adds `AvailabilityCalendar`
-  component + 188 lines of tests; pure UI/contract addition.
+- Status: MERGED
+- Branch: `fix/audit-004-availability-calendar`
+- Evidence: merged via `0ba8aad` on 2026-04-22 (original commit `b684821`).
+  Backup tag `backup/fix-audit-004-2026-04-22`.
+- Notes: `AvailabilityCalendar` component + 188 lines of tests on main.
+  Pure UI/contract addition. (See also Decisions log 2026-04-24 —
+  branch `fix/remove-provider-profile-calendar` was prepared as a
+  follow-up to remove the inline calendar from the profile page,
+  but not yet merged.)
 
 ### AUDIT-005 — Instant-book confirmation-page copy
-- Status: IN_REVIEW
-- Branch: `fix/audit-005-instant-book-confirmation-copy` (ahead 1, files 4)
-- Evidence: commit `89e74b1`
-- Notes: Smallest clean branch in the queue. `src/lib/booking-confirmation.ts`
-  + snapshot test. Safe to merge first.
+- Status: MERGED
+- Branch: `fix/audit-005-instant-book-confirmation-copy`
+- Evidence: merged via `29ac8ed` on 2026-04-22 (original commit `89e74b1`).
+  Backup tag `backup/fix-audit-005-2026-04-22`.
+- Notes: `src/lib/booking-confirmation.ts` + snapshot test on main.
 
 ### AUDIT-006 — Login gate preserve state
-- Status: IN_REVIEW
-- Branch: `fix/audit-006-login-gate-preserve-state` (ahead 2, files 7)
-- Evidence: commit `422efd3`
-- Notes: Contains commits for 005 as well. Introduces
-  `src/lib/booking-url-state.ts`.
+- Status: MERGED
+- Branch: `fix/audit-006-login-gate-preserve-state`
+- Evidence: merged via `74ffce4` on 2026-04-22 (original commit `422efd3`).
+  Backup tag `backup/fix-audit-006-2026-04-22`.
+- Notes: `src/lib/booking-url-state.ts` introduced; URL-state helper
+  shared with AUDIT-007.
 
 ### AUDIT-007 — Retry payment link preserves wizard state
-- Status: IN_REVIEW
-- Branch: `fix/audit-007-retry-payment-preserve-state` (ahead 3, files 7)
-- Evidence: commit `7ef3c87`
-- Notes: Contains 005/006 commits. Depends on the URL-state helper
-  shared with 006.
+- Status: MERGED
+- Branch: `fix/audit-007-retry-payment-preserve-state`
+- Evidence: merged via `952583d` on 2026-04-22 (original commit `7ef3c87`).
+- Notes: Depends on the URL-state helper shared with AUDIT-006 (also merged).
 
 ### AUDIT-008 — PDF receipt
 - Status: BLOCKED — contradiction with FIND-9, both blocked on AUDIT-003
@@ -120,13 +133,16 @@ Last FIND-id assigned: FIND-17
   browser-print. Reopen AUDIT-008 after AUDIT-003 lands.
 
 ### AUDIT-009 — Cancellation policy visibility on artist profile
-- Status: IN_REVIEW (product-blocked by AUDIT-013)
-- Branch: `fix/audit-009-012-cancellation-policy-visibility` (ahead 8, files 27)
-- Evidence: commit `f7711b3`
-- Notes: Bundled with AUDIT-012 in the same branch. Branch is the
-  most stacked in the queue (carries 001/004/005/006/007/014/021
-  commits as well). Merging before AUDIT-013 is ratified would
-  surface unratified tier values to users.
+- Status: MERGED (product-blocked by AUDIT-013 for full activation)
+- Branch: `fix/audit-009-012-handauthored`
+- Evidence: merged via `209d252` on 2026-04-22 (commit `5e2518a`).
+  Backup tag `backup/fix-audit-009-012-2026-04-22` preserves the
+  original bundled branch (`f7711b3`).
+- Notes: Bundled with AUDIT-012 in the same branch. The cancellation
+  policy is now visible on artist profiles + editable from settings.
+  Tier ratification (AUDIT-013) is still escalated; until that lands
+  the surfaced values are the existing FLEXIBLE/MODERATE/STRICT
+  defaults rather than ratified policy.
 
 ### AUDIT-010 — KYC + identity verification policy
 - Status: ESCALATED
@@ -159,11 +175,12 @@ Last FIND-id assigned: FIND-17
   isFeatured / accountStatus) is deliberately not ported.
 
 ### AUDIT-012 — Cancellation policy editable from settings
-- Status: IN_REVIEW (product-blocked by AUDIT-013)
-- Branch: `fix/audit-009-012-cancellation-policy-visibility` (bundled with 009)
-- Evidence: commit `f7711b3`
-- Notes: Same bundled branch as AUDIT-009. Depends on AUDIT-013 for
-  policy values to be meaningful before merge.
+- Status: MERGED (product-blocked by AUDIT-013 for full activation)
+- Branch: `fix/audit-009-012-handauthored` (bundled with AUDIT-009)
+- Evidence: merged via `209d252` on 2026-04-22 (commit `5e2518a`).
+- Notes: Same bundled branch as AUDIT-009. Settings page exposes
+  the policy editor; values shown are pre-ratification defaults
+  pending AUDIT-013.
 
 ### AUDIT-013 — Refund / cancellation-policy tiers
 - Status: ESCALATED
@@ -176,12 +193,13 @@ Last FIND-id assigned: FIND-17
   memo: Option 1 (ratify as-is, revisit at 3-month mark).
 
 ### AUDIT-014 — Chargeback defense UI (Stripe Disputes API)
-- Status: IN_REVIEW
-- Branch: `fix/audit-014-chargeback-defense-ui` (ahead 7, files 22)
-- Evidence: commit `8ac175d`
-- Notes: Stacked on 001/004/005/006/007/021. Evidence upload +
-  representment workflow in admin dashboard. Non-trivial diff;
-  needs careful review.
+- Status: MERGED
+- Branch: `fix/audit-014-chargeback-defense-ui`
+- Evidence: merged via `1f2cac7` on 2026-04-22 (commit `653edf2`).
+  Backup tag `backup/fix-audit-014-2026-04-22`.
+- Notes: Evidence upload + representment workflow in admin dashboard
+  on main. See `src/app/admin/chargebacks/` and the API routes
+  under it.
 
 ### AUDIT-015 — Dispute SLA + escalation ladder
 - Status: ESCALATED
@@ -199,13 +217,13 @@ Last FIND-id assigned: FIND-17
   Option 1 (narrow takedown: PII / abuse / provably false).
 
 ### AUDIT-017 — Velocity checks on high-value endpoints
-- Status: IN_REVIEW
-- Branch: `fix/audit-017-velocity-checks` (ahead 1, files 7)
-- Evidence: commit `edb4a25`
-- Notes: Clean isolated branch. Upstash-Redis-backed rate-limits
-  on 5 routes (booking POST/PATCH/reschedule, disputes POST,
-  gift-card purchase). Test coverage: 6 tests. Safe first-merge
-  candidate.
+- Status: MERGED
+- Branch: `fix/audit-017-velocity-checks`
+- Evidence: merged via `55c02d5` on 2026-04-22 (commit `189c716`).
+  Backup tag `backup/fix-audit-017-2026-04-22`.
+- Notes: Upstash-Redis-backed rate-limits on 5 routes (booking
+  POST/PATCH/reschedule, disputes POST, gift-card purchase).
+  6-test suite on main.
 
 ### AUDIT-020 — Pricing / surcharge transparency
 - Status: ESCALATED
@@ -216,12 +234,13 @@ Last FIND-id assigned: FIND-17
   fee).
 
 ### AUDIT-021 — Payment reconciliation cron for dropped webhooks
-- Status: IN_REVIEW
-- Branch: `fix/audit-021-payment-reconciliation-cron` (ahead 6, files 17)
-- Evidence: commit `3de6e3e`
-- Notes: Stacked on 001/004/005/006/007. Adds
-  `/api/cron/reconcile-payments` + `vercel.json` with 8 cron
-  schedules. Operational-safety addition.
+- Status: MERGED
+- Branch: `fix/audit-021-payment-reconciliation-cron`
+- Evidence: merged via `fa297fe` on 2026-04-22 (commit `f45884d`).
+  Backup tag `backup/fix-audit-021-2026-04-22`.
+- Notes: `/api/cron/reconcile-payments` + `vercel.json` with cron
+  schedules on main. FIND-18 (tip payout) cross-references this
+  route — both touch the payout pipeline.
 
 ### AUDIT-036 — Data retention & account deletion
 - Status: ESCALATED
@@ -281,47 +300,45 @@ Last FIND-id assigned: FIND-17
 original ids (10-13). READINESS definitions renumbered to 14-17.*
 
 ### FIND-1 — Availability endpoint 404 (id-scheme mismatch)
-- Status: OPEN
-- Branch: none
-- Evidence: [READINESS_OUTPUT.md line 33](READINESS_OUTPUT.md),
-  [ROOT_CAUSE_OUTPUT.md §2.6](ROOT_CAUSE_OUTPUT.md)
-- Notes: `/api/providers/[id]` uses `ProviderProfile.id`; sibling
-  `/api/providers/[id]/availability` uses `User.id` (at
-  `src/app/api/providers/[id]/availability/route.ts:78,100`). Book
-  page (`src/app/providers/[id]/page.tsx:272`) passes `profile.id`
-  to both. 1-line fix; regression test needed.
+- Status: MERGED
+- Branch: `fix/find-1-2-3-provider-id-unification` (bundled with FIND-2 + FIND-3)
+- Evidence: merged via `98a7cb5` on 2026-04-22 (commit `c3ec6f2`).
+  See also FIND-22 for the raw-SQL follow-up that the codemod missed.
+- Notes: Renamed `providerId` → `providerProfileId` / `providerUserId`
+  consistently across the schema and all Prisma reads. Original
+  bug-fix scope shipped; the raw-SQL queries on `/`, `/search`,
+  and `/api/providers/nearby` weren't touched by the codemod and
+  surfaced as a 500 — FIND-22 cleaned that up the same evening.
 
 ### FIND-2 — Payout history always empty
-- Status: OPEN
-- Branch: none
-- Evidence: READINESS_OUTPUT.md line 34, ROOT_CAUSE_OUTPUT.md §2.2
-- Notes: Payout writes at `src/app/api/bookings/[id]/route.ts:126,171`
-  store `ProviderProfile.id`; dashboard reads at
-  `src/app/api/dashboard/provider/payout-history/route.ts:31` use
-  `session.user.id`. Four writer sites need fixing, plus backfill
-  migration. **Structurally enabled by FIND-12** (no FK on
-  `Payout.providerId`); fix FIND-12 first or alongside.
+- Status: MERGED
+- Branch: `fix/find-1-2-3-provider-id-unification` (bundled)
+- Evidence: merged via `98a7cb5` on 2026-04-22 (commit `c3ec6f2`).
+- Notes: Both writer and reader sides now use the same id scheme.
+  No backfill needed — the local DB had 0 payouts at the time. The
+  structural weakness flagged as FIND-12 (no FK on `Payout.providerId`)
+  is closed as a side-effect of the rename: the new field is
+  `Payout.providerUserId` with a real `@relation` to User.
 
 ### FIND-3 — Silent notification FK violation
-- Status: OPEN
-- Branch: none
-- Evidence: READINESS_OUTPUT.md line 35, ROOT_CAUSE_OUTPUT.md §2.4
-- Notes: `src/app/api/cron/process-payouts/route.ts:235` writes
-  `userId: payout.providerId` (a ProviderProfile.id) into
-  `Notification.userId` which FKs to `User.id`. Fails, gets
-  swallowed by `.catch(() => {})` — see FIND-13 for the enabling
-  anti-pattern.
+- Status: MERGED
+- Branch: `fix/find-1-2-3-provider-id-unification` (bundled)
+- Evidence: merged via `98a7cb5` on 2026-04-22 (commit `c3ec6f2`).
+- Notes: The cron's `userId:` write now passes a User.id correctly.
+  FIND-13 (the bare-catch anti-pattern that hid the original error)
+  is still OPEN — the silent-catch sites elsewhere in the codebase
+  remain.
 
 ### FIND-4 — No ToS consent capture (compliance blocker)
-- Status: IN_REVIEW (code landed on `fix/find-4-tos-consent`;
-  depends on `fix/find-1-2-3-provider-id-unification` being merged
-  first for the migration chain to apply cleanly)
+- Status: MERGED — engineering done; legal text + existing-user
+  re-prompt still ESCALATED
 - Branch: `fix/find-4-tos-consent`
-- Evidence: migration
-  `prisma/migrations/20260424_add_tos_consent_fields`; schema adds
-  `User.termsAcceptedAt` + `User.termsVersion`; register endpoint
-  hard-requires `acceptedTerms: true`; /login signup + /register/provider
-  listing step both gate the submit button on a required checkbox.
+- Evidence: merged via `cb92a7b` on 2026-04-22 (commit `921dbbc`).
+  Migration `prisma/migrations/20260424_add_tos_consent_fields`;
+  schema adds `User.termsAcceptedAt` + `User.termsVersion`;
+  register endpoint hard-requires `acceptedTerms: true`;
+  /login signup + /register/provider listing step both gate the
+  submit button on a required checkbox.
 - Notes:
   - **Placeholder ToS version string** `v1-placeholder` lives in
     `src/lib/tos.ts` as `CURRENT_TOS_VERSION`. Legal must replace
@@ -353,13 +370,12 @@ original ids (10-13). READINESS definitions renumbered to 14-17.*
   default.
 
 ### FIND-6 — No email unsubscribe mechanism (compliance blocker)
-- Status: IN_REVIEW (code landed on `fix/find-6-email-unsubscribe`;
-  depends on `fix/find-4-tos-consent` being merged first for the
-  migration chain to apply cleanly)
+- Status: MERGED — engineering done; transactional-list legal
+  review + bounce SLA still ESCALATED
 - Branch: `fix/find-6-email-unsubscribe`
-- Evidence: migration
-  `prisma/migrations/20260425_add_suppression_table`; new
-  `Suppression` model; `src/lib/unsubscribe.ts` (HMAC token +
+- Evidence: merged via `3613a13` on 2026-04-22 (commit `7dbeaf1`).
+  Migration `prisma/migrations/20260425_add_suppression_table`;
+  new `Suppression` model; `src/lib/unsubscribe.ts` (HMAC token +
   verify); `src/app/api/unsubscribe/route.ts` (GET + POST); new
   `/unsubscribe` confirmation page; `src/lib/email.ts`
   `sendEmail` rewritten to run suppression pre-check, append
@@ -461,16 +477,14 @@ original ids (10-13). READINESS definitions renumbered to 14-17.*
   Delete the loser after checking Stripe dashboard config.
 
 ### FIND-12 — `Payout.providerId` has no FK / index / `@relation`
-- Status: OPEN
-- Branch: none
-- Evidence: [ROOT_CAUSE_OUTPUT.md §2.2 + §4](ROOT_CAUSE_OUTPUT.md)
-- Notes: `Payout.providerId` is a plain `String` with no Prisma
-  `@relation`, no Postgres FK constraint, no `@@index([providerId])`.
-  This is the structural weakness that made FIND-2 and FIND-3
-  possible and undetected. DB currently has 0 payouts — this is the
-  cheap moment to pick an id scheme and add the FK. Fix FIND-12
-  first; FIND-2 becomes a trivial one-line rewrite with a loud
-  migration error if it ever regresses.
+- Status: MERGED (closed as side-effect of FIND-1/2/3)
+- Branch: `fix/find-1-2-3-provider-id-unification`
+- Evidence: merged via `98a7cb5` on 2026-04-22.
+- Notes: The id-unification rename created `Payout.providerUserId`
+  with a real `@relation("ProviderPayouts")` to `User` and
+  `onDelete: Restrict`. The original `providerId` column with no
+  FK no longer exists. Closes the structural weakness that made
+  FIND-2 and FIND-3 possible.
 
 ### FIND-13 — 77 bare `.catch(() => {})` wrappers across 34 files
 - Status: OPEN
@@ -530,6 +544,134 @@ original ids (10-13). READINESS definitions renumbered to 14-17.*
   Stripe error copy. Low severity. *(Renumbered from FIND-13 in
   Phase 2.)*
 
+### FIND-18 — Tip payout bug (P0): tips captured but never transferred to artist
+- Status: MERGED
+- Branch: `fix/find-18-tip-payout`
+- Evidence: merged via `81a691e` on 2026-04-28 (commit `5f0b2c4`).
+- Notes: Tips were authorised + captured on the booking PaymentIntent,
+  then EXCLUDED from the artist payout transfer at all four
+  completion paths (normal COMPLETED, NO_SHOW → COMPLETED,
+  $0/voucher COMPLETED, auto-expire cron). Net effect: tips sat on
+  the platform Stripe balance forever while the provider dashboard
+  showed `tipStats` as if the artist had received them. Fix
+  collapses the four `providerPayout = totalPrice - platformFee
+  - (booking.tipAmount ?? 0)` sites to `providerPayout =
+  totalPrice - platformFee` and adds structured `[FIND-18]` log
+  lines. Refund paths (which fully refund tip to customer on
+  cancel) and partial-refund payout paths (which exclude tip
+  because it's already been refunded) were verified untouched.
+  Tests: +5 (4 PATCH paths incl. zero-tip regression guard, 1
+  cron path). Backfill: fix-forward only (option A) — pre-launch
+  test data, no migration script.
+- Cross-refs: AUDIT-021 (payment reconciliation cron) and FIND-11
+  (two live Stripe webhook routes) both touch the same payout
+  pipeline.
+
+### FIND-19 — Provider bio field removed
+- Status: MERGED
+- Branch: `feat/launch-prep-batch-2` (Item 3 of the launch-prep batch)
+- Evidence: merged via `ff71436` on 2026-04-28 (commit `68521e6`).
+  Migration `prisma/migrations/20260427140747_remove_provider_bio`.
+- Notes: Single `ALTER TABLE "ProviderProfile" DROP COLUMN "bio"`
+  + 13 read sites cleaned (profile editor textarea + 50-char min
+  validation, public profile "About" snippet, SEO fallback now
+  uses tagline, homepage featured-providers filter swapped from
+  `bio: { not: null }` to `tagline: { not: null }`, free-text
+  search drops bio clause, risk-scoring PII detector reads tagline
+  only, dashboard API drops bio field, admin list type cleaned).
+  Bio: pre-launch only on `ProviderProfile` (never on `User` or
+  `CustomerProfile`).
+
+### FIND-20 — ServiceCategory enum restricted to NAILS / LASHES / MAKEUP
+- Status: MERGED
+- Branch: `feat/launch-prep-batch-2` (Item 1 of the launch-prep batch)
+- Evidence: merged via `ff71436` on 2026-04-28 (commit `590e778`).
+  Migration `prisma/migrations/20260427142920_restrict_service_categories`.
+- Notes: 7 enum values dropped (HAIR, BROWS, WAXING, MASSAGE,
+  FACIALS, TUTORING, OTHER) via DELETE-then-recreate-and-swap (same
+  pattern as `NotificationType` removal in premium-removal). MAKEUP
+  added to UI surfaces it didn't yet appear on (homepage 3rd card,
+  artist signup, service-create form, customer "Recommended for
+  you", footer, admin filter). Seed updated: 8 NAILS + 7 LASHES
+  + 3 MAKEUP = 18 providers. `/search` silently strips invalid
+  `?category=` params with a `console.warn` for monitoring.
+
+### FIND-21 — Headings normalised to Title Case (h1–h4)
+- Status: MERGED
+- Branch: `feat/launch-prep-batch-2` (Item 2 of the launch-prep batch)
+- Evidence: merged via `ff71436` on 2026-04-28 (commit `c8f3bc9`).
+- Notes: 64 hardcoded headings transformed across 34 files via
+  one-shot Node script (not committed). Rule: first letter
+  capitalised, rest lowercase. Brand / acronym / product-name
+  exemptions: Sparq, Stripe, Google, iCal, KYC, FAQ, GST, ABN,
+  MFA, URL, SMS, PDF, CSV, IDs, AUSTRAC. Dynamic-content headings
+  (24 instances — service titles, names, page-title props) left
+  unchanged per the proper-noun exemption. 4 manual fixes after
+  diff review: "Stripe Connect" restored, three multi-sentence
+  headings re-capitalised after `.`/`?`. Pure UI text rewrite —
+  no schema or logic change.
+
+### FIND-22 — Search 500 + ratings raw-SQL rename follow-up
+- Status: MERGED
+- Branch: `fix/search-500-raw-sql-rename`
+- Evidence: merged via `3f96e74` on 2026-04-22 (commits `6975a69` +
+  `1b362b2`).
+- Notes: The FIND-1/2/3 codemod renamed `Payout.providerId` →
+  `Payout.providerUserId` etc. across all Prisma reads, but missed
+  the raw-SQL queries that compute homepage / nearby / search
+  rating aggregates. Result was a 500 on `/search` immediately
+  after FIND-1/2/3 merged. This branch landed the raw-SQL column
+  renames and an audit pass that caught additional drift in the
+  homepage and nearby routes. Distinct work from FIND-1/2/3 (the
+  codemod), so tracked as its own FIND.
+
+### FIND-23 — Availability profile / booking-wizard mismatch (Batch B Items 3+4)
+- Status: MERGED
+- Branch: `fix/availability-profile-booking-mismatch`
+- Evidence: merged via `0f11321` on 2026-04-24 (commit `b87b999`).
+- Notes: TZ-safe Sydney-local 30-day walk in
+  `src/app/api/providers/[id]/route.ts` ensures the dates an artist
+  appears available on their profile match what the booking wizard
+  shows. Also seeded 112 availability sentinel rows across 16
+  providers so the empty-seed waitlist CTA at FIND-10 doesn't fire
+  for new artists. Three distinct bugs investigated; #1 (FIND-1
+  class widget id mismatch) was superseded by Batch A Item 7 (the
+  inline-calendar removal — branch
+  `fix/remove-provider-profile-calendar`, not yet merged; see
+  Decisions log 2026-04-24).
+
+### FIND-24 — Address validation (Batch B Item 5, structural — no Places SDK)
+- Status: MERGED
+- Branch: `fix/address-validation-booking-and-service-area`
+- Evidence: merged via `0c3e6ed` on 2026-04-24 (commit `627e025`).
+- Notes: Shared `src/lib/address-validation.ts` module — two
+  validators (`isValidBookingAddress`, `isValidServiceArea`) used by
+  client + server so both layers agree. Customer booking address
+  needs a street number; artist service area needs "Suburb [,] STATE
+  postcode". 15 unit tests. Option C from the original 3-option
+  proposal: pure structural validation, no Google Places SDK
+  (deferred to a post-launch session if needed).
+
+### FIND-25 — Booking time canonicalisation (was QA-001)
+- Status: MERGED
+- Branch: `fix/qa-001-booking-time-format`
+- Evidence: merged via `f60d4ce` on 2026-04-22 (commit `54c3d5a`).
+- Notes: Booking wizard now canonicalises time to 24h before POST
+  and on URL hydration. Patched mid-recovery as a quality issue
+  surfaced during validation. Originally tracked as QA-001;
+  assigned a FIND-id at the 2026-04-28 brief refresh.
+
+### FIND-26 — Artist upgrade role JWT propagation (was QA-002)
+- Status: MERGED
+- Branch: `fix/qa-002-artist-upgrade-role`
+- Evidence: merged via `08e7f99` on 2026-04-22 (commit `44cf8d3`).
+- Notes: When a customer upgrades to artist (`/api/user/upgrade-role`),
+  the new role now propagates through the JWT correctly so the
+  redirect to `/dashboard/provider` lands on the right page.
+  Patched mid-recovery as a quality issue surfaced during validation.
+  Originally tracked as QA-002; assigned a FIND-id at the
+  2026-04-28 brief refresh.
+
 ---
 
 ## Cross-references
@@ -542,34 +684,48 @@ original ids (10-13). READINESS definitions renumbered to 14-17.*
 - **FIND-9 overlaps AUDIT-008.** Contradictory verdicts on the same
   PDF-receipt question. Tiebreak blocked on AUDIT-003 (GST model);
   see FIND-9 and AUDIT-008 notes.
-- **FIND-2 is structurally enabled by FIND-12.** Fix FIND-12 (FK
-  constraint) first, and FIND-2 becomes both trivial and
-  future-proof. Sequencing matters.
-- **FIND-3 is enabled by FIND-13.** The swallowed FK violation was
-  invisible only because of the bare-catch. Fix FIND-13 first and
-  FIND-3 would have been loud in logs months ago.
+- **FIND-2 was structurally enabled by FIND-12.** Both closed
+  together by the FIND-1/2/3 unification (`98a7cb5`); the rename
+  created a real `@relation` with FK and removed the structural
+  weakness in one pass.
+- **FIND-3 is enabled by FIND-13.** FIND-3 itself merged via
+  `98a7cb5`, but FIND-13 (the bare-catch anti-pattern) is still
+  OPEN — the silent-catch sites elsewhere remain.
 - **FIND-7 is blocked by AUDIT-013.** Policy enforcement can't be
   implemented until the tiers are ratified.
-- **AUDIT-001 is product-blocked by AUDIT-002.** Subscription-tier
-  perks can't launch until the rate card is ratified, even though
-  the code is done.
-- **AUDIT-009/012 are product-blocked by AUDIT-013** (same reason).
+- **AUDIT-001 was product-blocked by AUDIT-002**, then both
+  collapsed by the 2026-04-27 premium-tier removal. AUDIT-001 is
+  SUPERSEDED, AUDIT-002 is COLLAPSED to "is 15 % the right number?"
+- **AUDIT-009/012 are MERGED but product-gated by AUDIT-013** for
+  full activation — surfaced values are pre-ratification defaults
+  until the tier decision lands.
+- **FIND-18 cross-references AUDIT-021 + FIND-11.** All three
+  touch the payout pipeline. AUDIT-021 (reconciliation cron) and
+  FIND-18 (tip transfer) MERGED; FIND-11 (duplicate webhook routes)
+  still OPEN.
+- **FIND-22 is the codemod follow-up to FIND-1/2/3.** The Prisma
+  rename codemod didn't touch raw-SQL queries; FIND-22 cleaned
+  those up the same evening.
+- **FIND-23 cross-references FIND-10.** FIND-23's seed of 112
+  availability sentinel rows ensures FIND-10's empty-seed waitlist
+  CTA doesn't fire for new artists. FIND-10 itself (the cron
+  always returning null) is still OPEN.
 
 ## Escalations
 
 | Id | Decision needed | Blocking | Escalated | Owner |
 |---|---|---|---|---|
-| AUDIT-002 | Commission rate schedule + T&Cs disclosure + notice window | AUDIT-001 in-code implementation; tier perks | 2026-04-21 (`ESCALATIONS.md`) | Legal + Finance + Product |
+| AUDIT-002 | Is single flat 15 % the right commission rate? (collapsed scope after premium-tier removal) | Future commission ratification | 2026-04-21; collapsed 2026-04-27 (`Decisions log`) | Legal + Finance |
 | AUDIT-003 | Merchant-of-record vs conduit for GST | AUDIT-008 receipt content; FIND-9 tiebreak; Stripe Tax enablement; `Booking.gstAmount` schema | 2026-04-21 | Finance + Legal |
 | AUDIT-010 | Strict vs soft-launch KYC gate + hold-timer length | First-booking provider flow; AUSTRAC posture | 2026-04-21 | Compliance + Product |
-| AUDIT-013 | Ratify 6/24/48h tiers, or add NO_REFUND/CUSTOM | FIND-7 refund enforcement; AUDIT-009/012 merges | 2026-04-21 | Ops + Legal |
+| AUDIT-013 | Ratify 6/24/48h tiers, or add NO_REFUND/CUSTOM | FIND-7 refund enforcement; AUDIT-009/012 full activation | 2026-04-21 | Ops + Legal |
 | AUDIT-015 | Dispute SLA + escalation cutoffs | Auto-escalate cron; T&S headcount | 2026-04-21 | Ops lead |
 | AUDIT-016 | Review takedown bar + appeal path | Review moderation UI; audit-log fields | 2026-04-21 | T&S + Legal |
 | AUDIT-020 | Pricing-transparency level | Booking-confirm + receipt layout; ACL s.48 | 2026-04-21 | Legal + Product |
 | AUDIT-036 | Data retention matrix (hard vs soft; 2y/7y timers) | FIND-5 | 2026-04-21 | Legal + Privacy |
-| FIND-4 | ToS consent fields + version gate on existing users | Launch | 2026-04-21 (`READINESS_OUTPUT.md`) | Legal + Product |
+| FIND-4 | Published ToS text + existing-user re-prompt strategy (engineering MERGED 2026-04-22; placeholder version `v1-placeholder` still in code) | Launch | 2026-04-21 (`READINESS_OUTPUT.md`) | Legal + Product |
 | FIND-5 | Deletion UX and retention (overlaps AUDIT-036) | Launch; APP 11.2 | 2026-04-21 | Legal + Privacy |
-| FIND-6 | Email categories + unsubscribe SLA | Launch; Spam Act 2003 | 2026-04-21 | Legal + Marketing |
+| FIND-6 | Narrow transactional-list legal review + bounce SLA (engineering MERGED 2026-04-22; 5 helpers tagged transactional, all others marketing) | Launch; Spam Act 2003 | 2026-04-21 | Legal + Marketing |
 | — | Rebase / combined-PR strategy for stacked audit branches | Merges from `fix/audit-*` | 2026-04-22 (this brief) | Engineering (decided — see Decisions log) |
 | — | Prisma schema-drift commit vs revert | All merges | 2026-04-22 | Engineering (decided — see Decisions log) |
 
@@ -612,6 +768,37 @@ original ids (10-13). READINESS definitions renumbered to 14-17.*
   Branches in this brief labelled `IN_REVIEW` reflect this
   workflow — they have a committed branch awaiting human local
   merge rather than an open GitHub PR.
+- **2026-04-22 (afternoon) — Audit + FIND merge cascade.** Ten
+  audit branches landed on this date as the post-recovery batch:
+  AUDIT-001 / 004 / 005 / 006 / 007 / 009 / 012 / 014 / 017 / 021,
+  plus AUDIT-011 in two parts (lib partial + UI integration) and
+  AUDIT-037 hand-authored variant. Plus the FIND queue:
+  FIND-1/2/3 unification (`98a7cb5`), FIND-4 ToS consent
+  (`cb92a7b`), FIND-6 email unsubscribe (`3613a13`). Mid-batch
+  quality patches FIND-25 (booking time canonicalisation, ex-QA-001)
+  and FIND-26 (artist upgrade JWT, ex-QA-002) also landed. Same
+  evening the FIND-1/2/3 codemod surfaced a raw-SQL regression
+  (homepage / nearby / search 500); FIND-22 (`3f96e74`) cleaned it
+  up. AUDIT-002 noted as not-yet-actioned; AUDIT-013 / 015 / 016 /
+  020 / 036 still escalated.
+- **2026-04-24 — Booking flow & availability fixes (Batch B).**
+  FIND-23 (availability profile↔booking-wizard mismatch + empty-seed
+  waitlist coverage) and FIND-24 (address validation, structural —
+  no Places SDK) merged. Batch A items 1, 2, 7 from the same
+  planning round remain unmerged on their branches:
+  `fix/booking-hide-past-time-slots` (hide past time slots),
+  `fix/booking-lead-time-by-policy-tier` (per-artist lead time),
+  `fix/remove-provider-profile-calendar` (remove inline calendar
+  from profile). Status pending.
+- **2026-04-25 — CI infrastructure landed.** GitHub Actions
+  workflow at `.github/workflows/ci.yml` with 4 jobs (typecheck,
+  build, test, lint). Lint uses `continue-on-error: true` due to
+  65 pre-existing errors documented in STATE_OF_REPO.md. The 55
+  pre-existing failing tests at the time of CI setup were wrapped
+  in `it.failing()` / `test.failing()` so the test job runs green
+  (jest 29's `test.failing` semantics: "test passes when it fails"
+  — silent fixes break CI, forcing un-`.failing`-ing). Merged via
+  `f16cd40`. Future cleanup: drop `continue-on-error` on lint.
 - **2026-04-27 — Premium tiers removed.** Customer PREMIUM
   membership and artist NEWCOMER/RISING/TRUSTED/PRO/ELITE tiers
   were removed in their entirety on `feat/remove-premium-tiers`
@@ -627,3 +814,28 @@ original ids (10-13). READINESS definitions renumbered to 14-17.*
   Stripe Dashboard cleanup checklist (archive Products/Prices,
   cancel test-mode subscriptions) handed off to the human
   manually — no programmatic equivalent.
+- **2026-04-28 — Launch prep batch 2 shipped.** Three independent
+  changes on `feat/launch-prep-batch-2` (merged via `ff71436`):
+  FIND-19 (provider bio field removed), FIND-20 (ServiceCategory
+  restricted to NAILS / LASHES / MAKEUP, with 3 MAKEUP providers
+  seeded for parity), FIND-21 (h1–h4 headings normalised to Title
+  Case across 34 files with brand/acronym exemptions).
+- **2026-04-28 — FIND-18 tip payout fix shipped.** Pre-existing P0
+  caught during Item 6a investigation a week earlier (tips were
+  captured from customers but never transferred to artists at any
+  of four completion paths). Fix sat on `fix/find-18-tip-payout`
+  for several days before merging via `81a691e`. The 2026-04-28
+  brief refresh recorded the merge after the fact (the original
+  FIND-18 branch's brief edits hit a merge conflict; resolved by
+  taking main's version, with the Phase 2 brief refresh adding
+  FIND-18 to the brief properly).
+- **2026-04-28 — Brief refresh.** This file refreshed against
+  current main state. Items reconciled from `IN_REVIEW` →
+  `MERGED` based on actual merge SHAs; FIND-18 through FIND-26
+  added (8 new FIND entries — FIND-18 tip payout, FIND-19/20/21
+  launch-prep batch 2, FIND-22 codemod follow-up, FIND-23/24
+  Batch B, FIND-25/26 ex-QA-001/002). "Notes on the queue"
+  rewritten — the stale "main has only Initial commit" claim
+  replaced with current state. Cross-references updated. Decisions
+  log appended. Escalations table updated (AUDIT-002 collapse,
+  FIND-4 / FIND-6 partial completion).
