@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Sparq — Redesign Workspace</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- ─── Sparq design tokens (Direction A · Refined) ─── -->
+<link rel="stylesheet" href="sparq-tokens.css" />
+<link rel="stylesheet" href="sparq-workspace.css" />
+</head>
+<body>
+
+<!-- ─── Workspace shell ─── -->
+<aside class="ws-sidebar">
+  <div class="ws-brand">
+    <span class="ws-logo-dot"></span>
+    <span class="ws-logo-name">Sparq</span>
+    <span class="ws-logo-sub">· redesign</span>
+  </div>
+
+  <nav class="ws-nav" id="ws-nav">
+    <p class="ws-nav-label">Screens</p>
+    <a href="#home" class="ws-nav-link"><span class="num">01</span> Home &amp; landing</a>
+    <a href="#search" class="ws-nav-link"><span class="num">02</span> Search &amp; discovery</a>
+    <a href="#profile" class="ws-nav-link"><span class="num">03</span> Artist profile</a>
+    <a href="#booking" class="ws-nav-link"><span class="num">04</span> Booking flow</a>
+    <a href="#customer" class="ws-nav-link"><span class="num">05</span> Customer dashboard</a>
+    <a href="#artist" class="ws-nav-link"><span class="num">06</span> Artist dashboard</a>
+    <a href="#messages" class="ws-nav-link"><span class="num">07</span> Messages</a>
+    <a href="#onboarding" class="ws-nav-link"><span class="num">08</span> Sign up &amp; onboarding</a>
+
+    <p class="ws-nav-label" style="margin-top: 28px;">Reference</p>
+    <a href="design-system.html" class="ws-nav-link ws-nav-link--muted"><span class="num">→</span> Design system</a>
+  </nav>
+
+  <div class="ws-foot">
+    <p class="ws-foot-title">Direction A · Refined</p>
+    <p class="ws-foot-sub">Coral · Noto Serif · Jakarta · Cream</p>
+  </div>
+</aside>
+
+<main class="ws-main" id="ws-main">
+
+  <!-- ─── Intro ─── -->
+  <section class="ws-intro">
+    <div>
+      <p class="ws-kicker">Sparq · Redesign · Direction A</p>
+      <h1 class="ws-h1">Every screen, <em>side&nbsp;by&nbsp;side.</em></h1>
+      <p class="ws-lead">Each screen below shows the redesign at desktop and mobile widths simultaneously. Everything's built on the refined system: coral <code>#E96B56</code>, Noto Serif headlines, Plus Jakarta body, warm-neutral surfaces.</p>
+    </div>
+    <div class="ws-intro-meta">
+      <div class="ws-meta-line"><span>Spec</span><span>Direction A</span></div>
+      <div class="ws-meta-line"><span>Device</span><span>Desktop · Mobile</span></div>
+      <div class="ws-meta-line"><span>Fidelity</span><span>Hi-fi · coded</span></div>
+      <div class="ws-meta-line"><span>Status</span><span>For review</span></div>
+    </div>
+  </section>
+
+  <!-- ─── 01. HOME ─── -->
+  <section class="ws-screen" id="home" data-screen-label="01 Home">
+    <header class="ws-screen-head">
+      <div>
+        <p class="ws-kicker">01 · Home &amp; landing</p>
+        <h2 class="ws-h2">Search-first, photo-led.</h2>
+      </div>
+      <p class="ws-screen-notes">Keeps the search-first hero as requested. Adds an editorial "what's in season" strip and a <em>proof</em> rail with recent bookings to build live-marketplace feel. Imagery uses the existing portfolio aspect ratios.</p>
+    </header>
+
+    <div class="ws-devices">
+      <!-- Desktop -->
+      <figure class="ws-device ws-device--desktop">
+        <figcaption class="ws-device-cap">
+          <span class="dot"></span> Desktop · 1440
+        </figcaption>
+        <div class="ws-device-frame">
+          <iframe src="screens/home-desktop.html" loading="lazy" title="Home desktop"></iframe>
+        </div>
+      </figure>
+      <!-- Mobile -->
+      <figure class="ws-device ws-device--mobile">
+        <figcaption class="ws-device-cap">
+          <span class="dot"></span> Mobile · 390
+        </figcaption>
+        <div class="ws-device-frame">
+          <iframe src="screens/home-mobile.html" loading="lazy" title="Home mobile"></iframe>
+        </div>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ─── 02. SEARCH ─── -->
+  <section class="ws-screen" id="search" data-screen-label="02 Search">
+    <header class="ws-screen-head">
+      <div>
+        <p class="ws-kicker">02 · Search &amp; discovery</p>
+        <h2 class="ws-h2">Explore — not just filter.</h2>
+      </div>
+      <p class="ws-screen-notes">Keeps the horizontal category rails (they work). Cleans up the filter bar: collapses secondary filters behind one "All filters" drawer so the grid breathes. Map toggle moves to the top-right so it feels like a first-class view.</p>
+    </header>
+
+    <div class="ws-devices">
+      <figure class="ws-device ws-device--desktop">
+        <figcaption class="ws-device-cap"><span class="dot"></span> Desktop · 1440</figcaption>
+        <div class="ws-device-frame">
+          <iframe src="screens/search-desktop.html" loading="lazy" title="Search desktop"></iframe>
+        </div>
+      </figure>
+      <figure class="ws-device ws-device--mobile">
+        <figcaption class="ws-device-cap"><span class="dot"></span> Mobile · 390</figcaption>
+        <div class="ws-device-frame">
+          <iframe src="screens/search-mobile.html" loading="lazy" title="Search mobile"></iframe>
+        </div>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ─── 03. PROFILE ─── -->
+  <section class="ws-screen" id="profile" data-screen-label="03 Profile">
+    <header class="ws-screen-head">
+      <div>
+        <p class="ws-kicker">03 · Artist profile</p>
+        <h2 class="ws-h2">One page, three questions answered.</h2>
+      </div>
+      <p class="ws-screen-notes">The profile already answers "is this good?" (reviews) and "what do they do?" (portfolio). The redesign foregrounds <em>"can I book this now?"</em> — sticky booking card on desktop, sticky bottom bar on mobile, and real availability baked into the hero.</p>
+    </header>
+
+    <div class="ws-devices">
+      <figure class="ws-device ws-device--desktop">
+        <figcaption class="ws-device-cap"><span class="dot"></span> Desktop · 1440</figcaption>
+        <div class="ws-device-frame">
+          <iframe src="screens/profile-desktop.html" loading="lazy" title="Profile desktop"></iframe>
+        </div>
+      </figure>
+      <figure class="ws-device ws-device--mobile">
+        <figcaption class="ws-device-cap"><span class="dot"></span> Mobile · 390</figcaption>
+        <div class="ws-device-frame">
+          <iframe src="screens/profile-mobile.html" loading="lazy" title="Profile mobile"></iframe>
+        </div>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ─── 04. BOOKING ─── -->
+  <section class="ws-screen" id="booking" data-screen-label="04 Booking">
+    <header class="ws-screen-head">
+      <div>
+        <p class="ws-kicker">04 · Booking flow</p>
+        <h2 class="ws-h2">Service → time → checkout → confirm.</h2>
+      </div>
+      <p class="ws-screen-notes">Four steps, one visual language. Sidebar summary that updates in-place on desktop; collapsible summary sheet on mobile. Stripe Payment Element embedded with Apple Pay / Google Pay up top — no surprises.</p>
+    </header>
+
+    <div class="ws-devices ws-devices--stack">
+      <figure class="ws-device ws-device--desktop">
+        <figcaption class="ws-device-cap"><span class="dot"></span> Step 1 · Service</figcaption>
+        <div class="ws-device-frame"><iframe src="screens/booking-1-service.html" loading="lazy" title="Booking 1"></iframe></div>
+      </figure>
+      <figure class="ws-device ws-device--desktop">
+        <figcaption class="ws-device-cap"><span class="dot"></span> Step 2 · Time</figcaption>
+        <div class="ws-device-frame"><iframe src="screens/booking-2-time.html" loading="lazy" title="Booking 2"></iframe></div>
+      </figure>
+      <figure class="ws-device ws-device--desktop">
+        <figcaption class="ws-device-cap"><span class="dot"></span> Step 3 · Checkout</figcaption>
+        <div class="ws-device-frame"><iframe src="screens/booking-3-checkout.html" loading="lazy" title="Booking 3"></iframe></div>
+      </figure>
+      <figure class="ws-device ws-device--desktop">
+        <figcaption class="ws-device-cap"><span class="dot"></span> Step 4 · Confirmed</figcaption>
+        <div class="ws-device-frame"><iframe src="screens/booking-4-confirm.html" loading="lazy" title="Booking 4"></iframe></div>
+      </figure>
+    </div>
+
+    <div class="ws-devices" style="margin-top: 24px;">
+      <figure class="ws-device ws-device--mobile">
+        <figcaption class="ws-device-cap"><span class="dot"></span> Mobile · Step 2</figcaption>
+        <div class="ws-device-frame"><iframe src="screens/booking-mobile.html" loading="lazy" title="Booking mobile"></iframe></div>
+      </figure>
+      <div class="ws-note">
+        <p class="ws-kicker">Mobile behaviour</p>
+        <p>On mobile the four steps share one scrollable surface with a sticky progress bar up top and sticky CTA at bottom — common in booking flows (OpenTable, Fresha). The summary collapses to a tappable line ("$120 · 1hr · Sat 14 Dec") that expands over the page.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── 05. CUSTOMER DASHBOARD ─── -->
+  <section class="ws-screen" id="customer" data-screen-label="05 Customer dashboard">
+    <header class="ws-screen-head">
+      <div>
+        <p class="ws-kicker">05 · Customer dashboard</p>
+        <h2 class="ws-h2">Your Sparq, at a glance.</h2>
+      </div>
+      <p class="ws-screen-notes">Three pillars: <em>next visit</em> (most urgent), <em>saved artists</em> (rebook quickly), <em>get things done</em> (review pending bookings, redeem credit). Cuts cold-start admin panel feel the current dashboard has.</p>
+    </header>
+
+    <div class="ws-devices">
+      <figure class="ws-device ws-device--desktop">
+        <figcaption class="ws-device-cap"><span class="dot"></span> Desktop · 1440</figcaption>
+        <div class="ws-device-frame"><iframe src="screens/dashboard-customer.html" loading="lazy" title="Customer desktop"></iframe></div>
+      </figure>
+      <figure class="ws-device ws-device--mobile">
+        <figcaption class="ws-device-cap"><span class="dot"></span> Mobile · 390</figcaption>
+        <div class="ws-device-frame"><iframe src="screens/dashboard-customer.html" loading="lazy" title="Customer mobile"></iframe></div>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ─── 06. ARTIST DASHBOARD ─── -->
+  <section class="ws-screen" id="artist" data-screen-label="06 Artist dashboard">
+    <header class="ws-screen-head">
+      <div>
+        <p class="ws-kicker">06 · Artist dashboard</p>
+        <h2 class="ws-h2">Today, then this week.</h2>
+      </div>
+      <p class="ws-screen-notes">Artists open the dashboard 10x a day — so it's built for glance-speed, not depth. Today's schedule dominates the view; earnings, new enquiries, and growth nudges sit in secondary columns. Left nav is the existing Studio nav.</p>
+    </header>
+
+    <div class="ws-devices">
+      <figure class="ws-device ws-device--desktop">
+        <figcaption class="ws-device-cap"><span class="dot"></span> Desktop · 1440</figcaption>
+        <div class="ws-device-frame"><iframe src="screens/dashboard-artist.html" loading="lazy" title="Artist desktop"></iframe></div>
+      </figure>
+      <figure class="ws-device ws-device--mobile">
+        <figcaption class="ws-device-cap"><span class="dot"></span> Mobile · 390</figcaption>
+        <div class="ws-device-frame"><iframe src="screens/dashboard-artist.html" loading="lazy" title="Artist mobile"></iframe></div>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ─── 07. MESSAGES ─── -->
+  <section class="ws-screen" id="messages" data-screen-label="07 Messages">
+    <header class="ws-screen-head">
+      <div>
+        <p class="ws-kicker">07 · Messages</p>
+        <h2 class="ws-h2">Thread-first, with booking context always visible.</h2>
+      </div>
+      <p class="ws-screen-notes">Three-pane desktop (list · thread · booking context). Context panel shows service, time, location, total — so artists can answer "what did I book?" without leaving. Mobile collapses to a two-step list-then-thread flow.</p>
+    </header>
+
+    <div class="ws-devices">
+      <figure class="ws-device ws-device--desktop">
+        <figcaption class="ws-device-cap"><span class="dot"></span> Desktop · 1440</figcaption>
+        <div class="ws-device-frame"><iframe src="screens/messages.html" loading="lazy" title="Messages desktop"></iframe></div>
+      </figure>
+      <figure class="ws-device ws-device--mobile">
+        <figcaption class="ws-device-cap"><span class="dot"></span> Mobile · 390</figcaption>
+        <div class="ws-device-frame"><iframe src="screens/messages.html" loading="lazy" title="Messages mobile"></iframe></div>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ─── 08. ONBOARDING ─── -->
+  <section class="ws-screen" id="onboarding" data-screen-label="08 Onboarding">
+    <header class="ws-screen-head">
+      <div>
+        <p class="ws-kicker">08 · Sign up &amp; onboarding</p>
+        <h2 class="ws-h2">Two paths. One tone.</h2>
+      </div>
+      <p class="ws-screen-notes">Client onboarding is a single step (email + password + location). Artist onboarding is 4 steps — identity, services, availability, payouts — with a hero image rail on the side showing what "done" looks like (finished portfolio). Both live at the same two URLs as today.</p>
+    </header>
+
+    <div class="ws-devices ws-devices--stack">
+      <figure class="ws-device ws-device--desktop">
+        <figcaption class="ws-device-cap"><span class="dot"></span> Sign up · client</figcaption>
+        <div class="ws-device-frame"><iframe src="screens/onboarding.html" loading="lazy" title="Onboard client"></iframe></div>
+      </figure>
+      <figure class="ws-device ws-device--desktop">
+        <figcaption class="ws-device-cap"><span class="dot"></span> Sign up · artist (step 2 of 4)</figcaption>
+        <div class="ws-device-frame"><iframe src="screens/onboarding.html" loading="lazy" title="Onboard artist"></iframe></div>
+      </figure>
+    </div>
+  </section>
+
+  <footer class="ws-footer">
+    <p class="ws-kicker">End of workspace</p>
+    <p class="ws-lead" style="max-width: 640px;">Everything's built with Sparq's existing tokens so porting is a matter of matching class names, not rebuilding. Ping me for a specific screen deep-dive, copy revisions, or Tweaks on palette/type.</p>
+  </footer>
+
+</main>
+
+<!-- ─── Scroll-spy for nav ─── -->
+<script>
+  const links = document.querySelectorAll('#ws-nav .ws-nav-link[href^="#"]');
+  const sections = [...links].map(l => document.querySelector(l.getAttribute('href')));
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        links.forEach(l => {
+          l.classList.toggle('is-active', l.getAttribute('href') === '#' + id);
+        });
+      }
+    });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  sections.forEach(s => s && io.observe(s));
+</script>
+
+<!-- ─── Tweaks ─── -->
+<script>
+  const TWEAKS = /*EDITMODE-BEGIN*/{
+    "primaryColor": "#E96B56",
+    "accentDark": "#A63A29",
+    "ink": "#1A1A1A",
+    "cream": "#FDFBF7",
+    "serifFont": "Lora",
+    "sansFont": "Plus Jakarta Sans",
+    "showMobile": true,
+    "frameHeight": 880
+  }/*EDITMODE-END*/;
+
+  function applyTweaks(t) {
+    const root = document.documentElement.style;
+    root.setProperty('--coral', t.primaryColor);
+    root.setProperty('--coral-dark', t.accentDark);
+    root.setProperty('--ink', t.ink);
+    root.setProperty('--cream', t.cream);
+    root.setProperty('--serif', `'${t.serifFont}', Georgia, serif`);
+    root.setProperty('--sans', `'${t.sansFont}', -apple-system, sans-serif`);
+    document.querySelectorAll('.ws-device--mobile').forEach(el => el.style.display = t.showMobile ? '' : 'none');
+    document.querySelectorAll('.ws-device--desktop .ws-device-frame iframe').forEach(el => { el.style.height = t.frameHeight + 'px'; });
+    // Push tokens into iframes
+    document.querySelectorAll('iframe').forEach(f => {
+      try {
+        const doc = f.contentDocument; if (!doc) return;
+        const s = doc.documentElement.style;
+        s.setProperty('--coral', t.primaryColor);
+        s.setProperty('--coral-dark', t.accentDark);
+        s.setProperty('--ink', t.ink);
+        s.setProperty('--cream', t.cream);
+        s.setProperty('--serif', `'${t.serifFont}', Georgia, serif`);
+        s.setProperty('--sans', `'${t.sansFont}', sans-serif`);
+      } catch(e) {}
+    });
+  }
+
+  // Apply once on load and whenever iframes load
+  window.addEventListener('load', () => applyTweaks(TWEAKS));
+  document.querySelectorAll('iframe').forEach(f => f.addEventListener('load', () => applyTweaks(TWEAKS)));
+
+  // Tweaks panel UI
+  const panel = document.createElement('div');
+  panel.id = 'tweaks-panel';
+  panel.innerHTML = `
+    <div class="tw-hd"><span class="tw-dot"></span><strong>Tweaks</strong><button class="tw-close" aria-label="Close">×</button></div>
+    <div class="tw-body">
+      <label><span>Primary color</span><input type="color" data-k="primaryColor" value="${TWEAKS.primaryColor}"/></label>
+      <label><span>Accent dark</span><input type="color" data-k="accentDark" value="${TWEAKS.accentDark}"/></label>
+      <label><span>Ink</span><input type="color" data-k="ink" value="${TWEAKS.ink}"/></label>
+      <label><span>Cream</span><input type="color" data-k="cream" value="${TWEAKS.cream}"/></label>
+      <label><span>Serif font</span>
+        <select data-k="serifFont">
+          <option>Noto Serif</option><option>Fraunces</option><option>Playfair Display</option>
+          <option>DM Serif Display</option><option>Instrument Serif</option><option>Lora</option>
+        </select>
+      </label>
+      <label><span>Sans font</span>
+        <select data-k="sansFont">
+          <option>Plus Jakarta Sans</option><option>Inter</option><option>DM Sans</option>
+          <option>Geist</option><option>Space Grotesk</option><option>Manrope</option>
+        </select>
+      </label>
+      <label class="tw-range"><span>Desktop frame height <em id="fh-v">${TWEAKS.frameHeight}</em>px</span>
+        <input type="range" data-k="frameHeight" min="520" max="1200" step="20" value="${TWEAKS.frameHeight}"/>
+      </label>
+      <label class="tw-check"><input type="checkbox" data-k="showMobile" ${TWEAKS.showMobile ? 'checked' : ''}/><span>Show mobile frames</span></label>
+      <button class="tw-reset">Reset</button>
+    </div>
+  `;
+  const style = document.createElement('style');
+  style.textContent = `
+    #tweaks-panel { position: fixed; bottom: 20px; right: 20px; width: 280px; background: #fff; border: 1px solid rgba(0,0,0,.1); border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); z-index: 1000; font-family: var(--sans); display: none; overflow: hidden; }
+    #tweaks-panel.on { display: block; }
+    #tweaks-panel .tw-hd { display: flex; gap: 8px; align-items: center; padding: 12px 14px; border-bottom: 1px solid rgba(0,0,0,.08); font-family: var(--serif); font-size: 15px; }
+    #tweaks-panel .tw-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--coral); }
+    #tweaks-panel .tw-close { margin-left: auto; width: 24px; height: 24px; border-radius: 50%; border: 1px solid rgba(0,0,0,.1); background: #fff; font-size: 16px; line-height: 1; cursor: pointer; }
+    #tweaks-panel .tw-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+    #tweaks-panel label { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 12px; color: var(--ink-mid); }
+    #tweaks-panel label span { flex: 1; }
+    #tweaks-panel label em { font-family: var(--mono); font-style: normal; color: var(--ink); }
+    #tweaks-panel input[type="color"] { width: 36px; height: 28px; border: 1px solid rgba(0,0,0,.1); border-radius: 6px; background: transparent; cursor: pointer; padding: 0; }
+    #tweaks-panel select { padding: 6px 8px; border: 1px solid rgba(0,0,0,.12); border-radius: 6px; background: #fff; font-size: 12px; font-family: var(--sans); max-width: 150px; }
+    #tweaks-panel .tw-range { flex-direction: column; align-items: stretch; gap: 4px; }
+    #tweaks-panel .tw-range input { width: 100%; }
+    #tweaks-panel .tw-check { flex-direction: row-reverse; justify-content: flex-end; }
+    #tweaks-panel .tw-reset { margin-top: 4px; padding: 8px; border-radius: 8px; border: 1px solid rgba(0,0,0,.12); background: #fff; font-size: 12px; font-weight: 600; cursor: pointer; }
+  `;
+  document.head.appendChild(style);
+  document.body.appendChild(panel);
+
+  function setKey(k, v) {
+    TWEAKS[k] = v;
+    applyTweaks(TWEAKS);
+    try { window.parent.postMessage({type: '__edit_mode_set_keys', edits: {[k]: v}}, '*'); } catch(e) {}
+  }
+
+  panel.querySelectorAll('[data-k]').forEach(el => {
+    el.addEventListener('input', (e) => {
+      const k = el.dataset.k;
+      let v = el.type === 'checkbox' ? el.checked : el.type === 'range' ? +el.value : el.value;
+      if (k === 'frameHeight') document.getElementById('fh-v').textContent = v;
+      setKey(k, v);
+    });
+  });
+  panel.querySelector('.tw-close').addEventListener('click', () => panel.classList.remove('on'));
+  panel.querySelector('.tw-reset').addEventListener('click', () => location.reload());
+
+  window.addEventListener('message', (e) => {
+    if (!e.data || typeof e.data !== 'object') return;
+    if (e.data.type === '__activate_edit_mode') panel.classList.add('on');
+    if (e.data.type === '__deactivate_edit_mode') panel.classList.remove('on');
+  });
+  try { window.parent.postMessage({type: '__edit_mode_available'}, '*'); } catch(e) {}
+</script>
+</body>
+</html>

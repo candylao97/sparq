@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Booking · Step 1 Service</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../sparq-tokens.css" />
+<style>
+  body { background: var(--cream); font-size: 13px; }
+  .pg { width: 1200px; margin: 0 auto; }
+  .tb { display: flex; justify-content: space-between; align-items: center; padding: 14px 32px; border-bottom: 1px solid var(--line); }
+  .tb-l { display: flex; gap: 8px; align-items: center; }
+  .tb-l .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--coral); }
+  .tb-l span { font-family: var(--serif); font-size: 22px; letter-spacing: -0.02em; }
+  .close { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); display: flex; align-items: center; justify-content: center; }
+  .stp { display: flex; padding: 18px 32px; border-bottom: 1px solid var(--line); align-items: center; gap: 14px; }
+  .s { display: flex; gap: 10px; align-items: center; font-size: 12px; color: var(--ink-muted); font-weight: 500; }
+  .s .n { width: 22px; height: 22px; border-radius: 50%; background: var(--warm-2); color: var(--ink-muted); display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 11px; font-weight: 600; }
+  .s.act { color: var(--ink); font-weight: 600; } .s.act .n { background: var(--coral); color: #fff; }
+  .s.done { color: var(--ink); } .s.done .n { background: var(--ink); color: #fff; }
+  .ln { flex: 0 0 40px; height: 1px; background: var(--line); }
+  .ct { display: grid; grid-template-columns: 1fr 340px; gap: 32px; padding: 32px; min-height: 600px; }
+  .eb { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--coral-dark); margin-bottom: 14px; font-weight: 500; }
+  .h { font-family: var(--serif); font-weight: 400; font-size: 34px; letter-spacing: -0.025em; margin-bottom: 6px; }
+  .h em { color: var(--coral); font-style: italic; }
+  .sub { color: var(--ink-mid); font-size: 14px; margin-bottom: 22px; }
+  .svc { display: grid; grid-template-columns: 22px 1fr auto auto; gap: 14px; align-items: center; padding: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; cursor: pointer; margin-bottom: 8px; }
+  .svc.sel { border-color: var(--coral); background: var(--coral-light); }
+  .rad { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--line); display: flex; align-items: center; justify-content: center; }
+  .svc.sel .rad { border-color: var(--coral); background: var(--coral); }
+  .svc.sel .rad::after { content: ''; width: 6px; height: 6px; background: #fff; border-radius: 50%; }
+  .nm { font-weight: 600; font-size: 13.5px; display: flex; gap: 6px; align-items: center; }
+  .ds { font-size: 11.5px; color: var(--ink-soft); margin-top: 2px; }
+  .du { font-family: var(--mono); font-size: 10px; color: var(--ink-muted); letter-spacing: 0.08em; text-transform: uppercase; }
+  .pr { font-family: var(--serif); font-size: 16px; font-weight: 500; }
+  .ad { margin-top: 24px; }
+  .ad h3 { font-family: var(--serif); font-size: 18px; font-weight: 400; margin-bottom: 10px; }
+  .aw { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; margin-bottom: 6px; cursor: pointer; }
+  .aw.on { border-color: var(--ink); }
+  .cb { width: 18px; height: 18px; border: 1.5px solid var(--line); border-radius: 4px; margin-right: 10px; display: inline-block; vertical-align: -4px; position: relative; }
+  .aw.on .cb { background: var(--ink); border-color: var(--ink); }
+  .aw.on .cb::after { content: '✓'; position: absolute; inset: 0; color: #fff; font-size: 12px; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+  .sm { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 20px; align-self: start; position: sticky; top: 20px; }
+  .sm-a { display: flex; gap: 12px; align-items: center; padding-bottom: 14px; border-bottom: 1px solid var(--line-soft); margin-bottom: 14px; }
+  .sm-av { width: 44px; height: 44px; border-radius: 50%; overflow: hidden; }
+  .sm-nm { font-family: var(--serif); font-size: 16px; font-weight: 500; }
+  .sm-mt { font-size: 11px; color: var(--ink-soft); }
+  .sm-r { display: flex; justify-content: space-between; padding: 6px 0; font-size: 12.5px; }
+  .sm-r .l { color: var(--ink-soft); } .sm-r .v { font-weight: 500; }
+  .sm-r.mu .v { color: var(--ink-muted); font-weight: 400; }
+  .sm-dv { border-top: 1px solid var(--line-soft); margin: 10px 0; }
+  .sm-t { display: flex; justify-content: space-between; padding: 10px 0; font-size: 14px; font-weight: 600; align-items: baseline; }
+  .sm-t .num { font-family: var(--serif); font-size: 22px; font-weight: 500; }
+  .bb { display: flex; justify-content: space-between; padding: 18px 32px; border-top: 1px solid var(--line); }
+  .bb .bk { padding: 12px 18px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); font-size: 13px; font-weight: 600; }
+  .bb .nx { padding: 12px 22px; border-radius: 10px; background: var(--coral); color: #fff; border: none; font-size: 13px; font-weight: 600; box-shadow: var(--shadow-coral); display: flex; gap: 6px; align-items: center; }
+</style>
+</head>
+<body>
+<div class="pg">
+  <div class="tb"><div class="tb-l"><span class="dot"></span><span>Sparq</span></div><button class="close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+  <div class="stp">
+    <div class="s act"><div class="n">1</div>Service</div><div class="ln"></div>
+    <div class="s"><div class="n">2</div>Date &amp; time</div><div class="ln"></div>
+    <div class="s"><div class="n">3</div>Checkout</div><div class="ln"></div>
+    <div class="s"><div class="n">4</div>Confirm</div>
+  </div>
+  <div class="ct">
+    <div>
+      <p class="eb">Step 1 of 4</p>
+      <h1 class="h">Pick a <em>service</em>.</h1>
+      <p class="sub">What are we booking with Maya today? You can add extras after.</p>
+
+      <div class="svc sel"><div class="rad"></div><div><div class="nm">Gel manicure <span class="sparq-badge sparq-badge--neutral" style="font-size:9px;padding:2px 6px;">Top pick</span></div><p class="ds">Prep, shape, cuticle care, base + gel color. 20+ colors.</p></div><div class="du">1 HR</div><div class="pr">$65</div></div>
+      <div class="svc"><div class="rad"></div><div><div class="nm">Chrome gel manicure</div><p class="ds">Chrome powder in any tone — Maya's specialty.</p></div><div class="du">1 HR 15</div><div class="pr">$80</div></div>
+      <div class="svc"><div class="rad"></div><div><div class="nm">Soft gel extensions</div><p class="ds">Light-weight extensions with soft gel tips.</p></div><div class="du">1 HR 30</div><div class="pr">$95</div></div>
+      <div class="svc"><div class="rad"></div><div><div class="nm">Mani + pedi combo</div><p class="ds">Save $15 vs booking separately.</p></div><div class="du">1 HR 45</div><div class="pr">$115</div></div>
+
+      <div class="ad">
+        <h3>Add-ons</h3>
+        <div class="aw on"><span><span class="cb"></span>Nail art · 1 accent finger</span><strong>+ $15</strong></div>
+        <div class="aw"><span><span class="cb"></span>Paraffin hand treatment</span><strong>+ $12</strong></div>
+        <div class="aw"><span><span class="cb"></span>Gel soak-off (existing set)</span><strong>+ $10</strong></div>
+      </div>
+    </div>
+
+    <aside class="sm">
+      <div class="sm-a"><div class="sm-av sparq-img" data-tone="2"></div><div><div class="sm-nm">Maya Rivera</div><div class="sm-mt">Williamsburg · 4.96 ★</div></div></div>
+      <div class="sm-r"><span class="l">Service</span><span class="v">Gel manicure</span></div>
+      <div class="sm-r"><span class="l">Add-on</span><span class="v">Nail art</span></div>
+      <div class="sm-r mu"><span class="l">Date &amp; time</span><span class="v">— select —</span></div>
+      <div class="sm-dv"></div>
+      <div class="sm-r"><span class="l">Service</span><span class="v">$65</span></div>
+      <div class="sm-r"><span class="l">Add-on</span><span class="v">$15</span></div>
+      <div class="sm-r"><span class="l">Booking fee</span><span class="v">$2</span></div>
+      <div class="sm-dv"></div>
+      <div class="sm-t"><span>Total</span><span class="num">$82</span></div>
+    </aside>
+  </div>
+  <div class="bb"><button class="bk">← Back</button><button class="nx">Continue to time <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></button></div>
+</div>
+</body>
+</html>

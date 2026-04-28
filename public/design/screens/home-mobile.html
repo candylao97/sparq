@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Home · Mobile</title>
+<meta name="viewport" content="width=390" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../sparq-tokens.css" />
+<style>
+  body { background: var(--cream); font-size: 14px; }
+  .page { width: 390px; margin: 0 auto; min-height: 100vh; padding-bottom: 100px; }
+
+  /* Status bar */
+  .status {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 24px 4px; font-size: 14px; font-weight: 600;
+  }
+  .status-right { display: flex; gap: 6px; align-items: center; }
+
+  /* Nav */
+  .m-nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 20px;
+  }
+  .m-brand { display: flex; align-items: center; gap: 8px; }
+  .m-brand-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--coral); }
+  .m-brand-name { font-family: var(--serif); font-size: 24px; color: var(--ink); letter-spacing: -0.02em; }
+  .m-nav-right { display: flex; gap: 12px; }
+  .m-icon-btn {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: transparent; border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--ink);
+  }
+
+  /* Hero */
+  .m-hero { padding: 12px 20px 24px; }
+  .m-eyebrow {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--coral-dark);
+    margin-bottom: 12px; font-weight: 500;
+  }
+  .m-hero h1 {
+    font-family: var(--serif); font-weight: 400;
+    font-size: 42px; line-height: 1.0; letter-spacing: -0.025em;
+    color: var(--ink); margin-bottom: 16px;
+  }
+  .m-hero h1 em { color: var(--coral); font-style: italic; }
+  .m-hero p {
+    color: var(--ink-mid); font-size: 14px; line-height: 1.55;
+    margin-bottom: 20px;
+  }
+
+  /* Search */
+  .m-search {
+    display: flex; align-items: center;
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 14px; padding: 4px 4px 4px 16px;
+    box-shadow: 0 2px 8px rgba(26,26,26,0.04);
+    margin-bottom: 16px;
+  }
+  .m-search svg { color: var(--ink-muted); }
+  .m-search-input {
+    border: none; background: transparent; flex: 1;
+    padding: 14px 12px; font-size: 14px; color: var(--ink);
+    min-width: 0;
+  }
+  .m-search-input::placeholder { color: var(--ink-muted); }
+  .m-search-btn {
+    width: 44px; height: 44px; border-radius: 10px;
+    background: var(--coral); color: #fff; border: none;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-coral);
+  }
+
+  .m-chips {
+    display: flex; gap: 8px; overflow-x: auto;
+    padding: 4px 20px; margin: 0 -20px;
+  }
+  .m-chips::-webkit-scrollbar { display: none; }
+  .m-chip {
+    padding: 7px 14px; border: 1px solid var(--line); border-radius: 999px;
+    font-size: 12.5px; font-weight: 500; color: var(--ink-mid);
+    white-space: nowrap; background: transparent;
+  }
+
+  .m-ticker {
+    display: flex; align-items: center; gap: 10px;
+    margin-top: 16px; padding: 10px 14px;
+    background: rgba(26,26,26,0.04);
+    border-radius: 999px;
+    font-size: 12px; color: var(--ink-mid);
+  }
+  .m-ticker-pulse {
+    position: relative; width: 7px; height: 7px; border-radius: 50%;
+    background: var(--success); flex-shrink: 0;
+  }
+  .m-ticker-pulse::before {
+    content: ''; position: absolute; inset: -4px; border-radius: 50%;
+    background: var(--success); opacity: 0.3;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 0.3; }
+    50% { transform: scale(1.6); opacity: 0; }
+  }
+  .m-ticker strong { color: var(--ink); font-weight: 600; }
+
+  /* Sections */
+  .m-section { padding: 32px 0 16px; }
+  .m-section-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px; margin-bottom: 16px;
+  }
+  .m-section-head h2 {
+    font-family: var(--serif); font-weight: 400;
+    font-size: 26px; letter-spacing: -0.02em;
+  }
+  .m-section-head h2 em { color: var(--coral); font-style: italic; }
+  .m-section-link {
+    font-size: 12px; color: var(--ink); font-weight: 600;
+    display: flex; align-items: center; gap: 4px;
+  }
+
+  /* Category rail (scroll) */
+  .m-cat-rail {
+    display: flex; gap: 10px; overflow-x: auto;
+    padding: 0 20px 4px;
+  }
+  .m-cat-rail::-webkit-scrollbar { display: none; }
+  .m-cat-card {
+    flex-shrink: 0; width: 120px; aspect-ratio: 1 / 1.25;
+    border-radius: 14px; overflow: hidden; position: relative;
+  }
+  .m-cat-card::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.55) 100%);
+  }
+  .m-cat-label {
+    position: absolute; left: 12px; bottom: 10px; z-index: 1;
+    color: #fff; font-family: var(--serif); font-size: 17px;
+  }
+  .m-cat-count {
+    position: absolute; right: 10px; top: 10px; z-index: 1;
+    font-family: var(--mono); font-size: 9px; letter-spacing: 0.08em;
+    color: rgba(255,255,255,0.85);
+    background: rgba(0,0,0,0.3); backdrop-filter: blur(4px);
+    padding: 3px 6px; border-radius: 999px;
+  }
+
+  /* Artist cards (scroll) */
+  .m-artist-rail {
+    display: flex; gap: 14px; overflow-x: auto;
+    padding: 0 20px 8px;
+  }
+  .m-artist-rail::-webkit-scrollbar { display: none; }
+  .m-artist-card {
+    flex-shrink: 0; width: 220px;
+  }
+  .m-artist-photo {
+    aspect-ratio: 4 / 5; border-radius: 14px; overflow: hidden;
+    position: relative; margin-bottom: 12px;
+  }
+  .m-artist-photo .bookmark {
+    position: absolute; right: 8px; top: 8px;
+    width: 30px; height: 30px; border-radius: 50%;
+    background: rgba(255,255,255,0.95); backdrop-filter: blur(6px);
+    display: flex; align-items: center; justify-content: center;
+    border: none;
+  }
+  .m-artist-photo .chip {
+    position: absolute; left: 8px; bottom: 8px;
+    background: var(--ink); color: #fff;
+    padding: 4px 9px; border-radius: 999px;
+    font-size: 10px; font-weight: 500;
+  }
+  .m-artist-name { font-family: var(--serif); font-size: 16px; color: var(--ink); font-weight: 500; margin-bottom: 2px; }
+  .m-artist-meta { font-size: 12px; color: var(--ink-soft); margin-bottom: 6px; }
+  .m-artist-foot { display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+  .m-artist-foot .price { color: var(--ink); font-weight: 600; }
+  .m-artist-foot .rating { display: flex; align-items: center; gap: 3px; color: var(--ink); }
+  .m-artist-foot .rating span { color: var(--ink-muted); }
+
+  /* Editorial card */
+  .m-editorial {
+    margin: 32px 20px; background: var(--warm-1);
+    border-radius: 20px; padding: 28px; overflow: hidden; position: relative;
+  }
+  .m-editorial .sparq-kicker { margin-bottom: 12px; display: block; }
+  .m-editorial h2 {
+    font-family: var(--serif); font-style: italic; font-weight: 400;
+    font-size: 32px; line-height: 1.05; letter-spacing: -0.02em;
+    margin-bottom: 14px;
+  }
+  .m-editorial h2 em { color: var(--coral); }
+  .m-editorial p { color: var(--ink-mid); font-size: 13px; line-height: 1.55; margin-bottom: 20px; }
+  .m-editorial-imgs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; height: 100px; margin-bottom: 20px; }
+  .m-editorial-imgs > div { border-radius: 8px; overflow: hidden; }
+
+  /* Proof rail */
+  .m-proof { padding: 0 20px; margin-bottom: 24px; }
+  .m-proof-card {
+    display: flex; gap: 12px; align-items: center;
+    padding: 12px 0; border-bottom: 1px solid var(--line-soft);
+  }
+  .m-proof-card:last-child { border-bottom: none; }
+  .m-proof-avatar { width: 40px; height: 40px; border-radius: 50%; overflow: hidden; flex-shrink: 0; }
+  .m-proof-line { font-size: 13px; color: var(--ink); font-weight: 500; margin-bottom: 2px; }
+  .m-proof-line em { color: var(--coral-dark); font-style: normal; font-weight: 600; }
+  .m-proof-sub { font-size: 10.5px; color: var(--ink-muted); font-family: var(--mono); letter-spacing: 0.04em; }
+
+  /* Artist CTA */
+  .m-artist-cta {
+    margin: 16px 20px 24px; background: var(--ink); color: #fff;
+    border-radius: 22px; padding: 28px; position: relative; overflow: hidden;
+  }
+  .m-artist-cta::before {
+    content: ''; position: absolute; right: -40px; top: -40px; width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(233,107,86,0.5) 0%, transparent 70%);
+  }
+  .m-artist-cta .sparq-kicker { color: var(--coral); margin-bottom: 10px; display: block; }
+  .m-artist-cta h2 {
+    font-family: var(--serif); font-weight: 400; color: #fff;
+    font-size: 26px; line-height: 1.1; letter-spacing: -0.02em;
+    margin-bottom: 20px;
+    position: relative;
+  }
+  .m-artist-cta h2 em { color: var(--coral); font-style: italic; }
+
+  /* Bottom tab bar */
+  .m-tabs {
+    position: fixed; left: 50%; bottom: 0; transform: translateX(-50%);
+    width: 390px;
+    display: flex; justify-content: space-around;
+    padding: 12px 0 28px;
+    background: rgba(253, 251, 247, 0.92);
+    border-top: 1px solid var(--line);
+    backdrop-filter: blur(12px);
+    z-index: 5;
+  }
+  .m-tab {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    font-size: 10px; font-weight: 500; color: var(--ink-muted);
+    background: none; border: none;
+  }
+  .m-tab.active { color: var(--coral); }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="status">
+    <span>9:41</span>
+    <div class="status-right">
+      <svg width="16" height="10" viewBox="0 0 16 10" fill="currentColor"><rect y="6" width="3" height="4" rx="0.5"/><rect x="4" y="4" width="3" height="6" rx="0.5"/><rect x="8" y="2" width="3" height="8" rx="0.5"/><rect x="12" width="3" height="10" rx="0.5"/></svg>
+      <svg width="22" height="11" viewBox="0 0 22 11" fill="none"><rect x="0.5" y="0.5" width="18" height="10" rx="2.5" stroke="currentColor" stroke-opacity="0.4"/><rect x="2" y="2" width="14" height="7" rx="1.5" fill="currentColor"/><rect x="19.5" y="4" width="2" height="3" rx="1" fill="currentColor" fill-opacity="0.5"/></svg>
+    </div>
+  </div>
+
+  <nav class="m-nav">
+    <a href="#" class="m-brand">
+      <span class="m-brand-dot"></span>
+      <span class="m-brand-name">Sparq</span>
+    </a>
+    <div class="m-nav-right">
+      <button class="m-icon-btn" aria-label="Notifications">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+      </button>
+      <button class="m-icon-btn" aria-label="Account">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+      </button>
+    </div>
+  </nav>
+
+  <section class="m-hero">
+    <p class="m-eyebrow">— The beauty marketplace</p>
+    <h1>Beauty done on <em>your</em> terms.</h1>
+
+    <div class="m-search">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input class="m-search-input" placeholder="Service, artist, or vibe…" value="" />
+      <button class="m-search-btn" aria-label="Search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14m-5-5 5 5-5 5"/></svg>
+      </button>
+    </div>
+
+    <div class="m-chips">
+      <button class="m-chip" style="background: var(--ink); color: #fff; border-color: var(--ink);">Near me</button>
+      <button class="m-chip">Gel manicure</button>
+      <button class="m-chip">Lash set</button>
+      <button class="m-chip">Balayage</button>
+      <button class="m-chip">Brows</button>
+    </div>
+
+    <div class="m-ticker">
+      <span class="m-ticker-pulse"></span>
+      <span><strong>28 artists</strong> booking in Brooklyn right now</span>
+    </div>
+  </section>
+
+  <!-- Categories -->
+  <section class="m-section">
+    <div class="m-section-head">
+      <h2>By <em>service</em></h2>
+      <a href="#" class="m-section-link">All →</a>
+    </div>
+    <div class="m-cat-rail">
+      <div class="m-cat-card sparq-img" data-tone="1"><span class="m-cat-count">412</span><span class="m-cat-label">Nails</span></div>
+      <div class="m-cat-card sparq-img" data-tone="8"><span class="m-cat-count">289</span><span class="m-cat-label">Lashes</span></div>
+      <div class="m-cat-card sparq-img" data-tone="5"><span class="m-cat-count">224</span><span class="m-cat-label">Hair</span></div>
+      <div class="m-cat-card sparq-img" data-tone="4"><span class="m-cat-count">186</span><span class="m-cat-label">Brows</span></div>
+      <div class="m-cat-card sparq-img" data-tone="6"><span class="m-cat-count">138</span><span class="m-cat-label">Makeup</span></div>
+    </div>
+  </section>
+
+  <!-- Top near you -->
+  <section class="m-section">
+    <div class="m-section-head">
+      <h2>Top-rated <em>near you</em></h2>
+      <a href="#" class="m-section-link">See all →</a>
+    </div>
+    <div class="m-artist-rail">
+
+      <div class="m-artist-card">
+        <div class="m-artist-photo sparq-img" data-tone="2">
+          <button class="bookmark"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16l7-4 7 4z"/></svg></button>
+          <span class="chip">Opens Sat 10am</span>
+        </div>
+        <div class="m-artist-name">Maya Rivera</div>
+        <div class="m-artist-meta">Nails · Williamsburg</div>
+        <div class="m-artist-foot">
+          <span class="price">$65 / set</span>
+          <span class="rating"><span class="sparq-star sparq-star--coral sparq-star--sm"></span> 4.96 <span>(218)</span></span>
+        </div>
+      </div>
+
+      <div class="m-artist-card">
+        <div class="m-artist-photo sparq-img" data-tone="3">
+          <button class="bookmark"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16l7-4 7 4z"/></svg></button>
+          <span class="chip">2 slots today</span>
+        </div>
+        <div class="m-artist-name">Noor El-Amin</div>
+        <div class="m-artist-meta">Lashes · Bed-Stuy</div>
+        <div class="m-artist-foot">
+          <span class="price">$140 / set</span>
+          <span class="rating"><span class="sparq-star sparq-star--coral sparq-star--sm"></span> 4.99 <span>(342)</span></span>
+        </div>
+      </div>
+
+      <div class="m-artist-card">
+        <div class="m-artist-photo sparq-img" data-tone="5">
+          <button class="bookmark"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16l7-4 7 4z"/></svg></button>
+        </div>
+        <div class="m-artist-name">Jules Okafor</div>
+        <div class="m-artist-meta">Hair · Fort Greene</div>
+        <div class="m-artist-foot">
+          <span class="price">$280 / session</span>
+          <span class="rating"><span class="sparq-star sparq-star--coral sparq-star--sm"></span> 4.94 <span>(96)</span></span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Editorial -->
+  <section class="m-editorial">
+    <span class="sparq-kicker">This month · December</span>
+    <h2>What's in <em>season</em>.</h2>
+    <div class="m-editorial-imgs">
+      <div class="sparq-img" data-tone="7"></div>
+      <div class="sparq-img" data-tone="2"></div>
+      <div class="sparq-img" data-tone="3"></div>
+    </div>
+    <p>24 holiday looks — chrome nails, cinnamon balayage, the new French. Editor picks, all bookable.</p>
+    <button class="sparq-btn sparq-btn--dark sparq-btn--sm">Read the edit</button>
+  </section>
+
+  <!-- Proof -->
+  <section class="m-section" style="padding-top: 8px;">
+    <div class="m-section-head">
+      <h2>Booked <em>just now</em></h2>
+      <span class="sparq-eyebrow" style="font-size: 9px;">Live</span>
+    </div>
+    <div class="m-proof">
+      <div class="m-proof-card">
+        <div class="m-proof-avatar sparq-img" data-tone="2"></div>
+        <div>
+          <div class="m-proof-line"><em>Gel manicure</em> with Maya R.</div>
+          <div class="m-proof-sub">BROOKLYN · 2 MIN AGO</div>
+        </div>
+      </div>
+      <div class="m-proof-card">
+        <div class="m-proof-avatar sparq-img" data-tone="3"></div>
+        <div>
+          <div class="m-proof-line"><em>Hybrid lash set</em> with Noor E.</div>
+          <div class="m-proof-sub">BED-STUY · 14 MIN AGO</div>
+        </div>
+      </div>
+      <div class="m-proof-card">
+        <div class="m-proof-avatar sparq-img" data-tone="4"></div>
+        <div>
+          <div class="m-proof-line"><em>Brow lamination</em> with Priya S.</div>
+          <div class="m-proof-sub">PARK SLOPE · 31 MIN AGO</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tab bar -->
+  <nav class="m-tabs">
+    <button class="m-tab active">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+      Discover
+    </button>
+    <button class="m-tab">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      Search
+    </button>
+    <button class="m-tab">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>
+      Bookings
+    </button>
+    <button class="m-tab">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Messages
+    </button>
+    <button class="m-tab">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+      Me
+    </button>
+  </nav>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Artist Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,600;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../sparq-tokens.css" />
+<style>
+  body { background: var(--cream); font-size: 13px; }
+  .app { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+
+  /* Sidebar */
+  .side { background: var(--ink); color: rgba(255,255,255,0.75); padding: 24px 18px; display: flex; flex-direction: column; gap: 4px; }
+  .side .brand { display: flex; gap: 10px; align-items: center; margin-bottom: 24px; padding: 0 6px; }
+  .side .brand .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--coral); }
+  .side .brand span { font-family: var(--serif); font-size: 22px; color: #fff; letter-spacing: -0.02em; }
+  .side .mode { font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em; color: rgba(255,255,255,0.4); text-transform: uppercase; padding: 0 6px; margin-bottom: 14px; }
+  .side a { display: flex; gap: 10px; align-items: center; padding: 9px 10px; border-radius: 8px; font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.75); }
+  .side a svg { width: 15px; height: 15px; }
+  .side a.act { background: rgba(255,255,255,0.08); color: #fff; }
+  .side a:hover:not(.act) { color: #fff; }
+  .side .sep { height: 1px; background: rgba(255,255,255,0.08); margin: 14px 6px; }
+  .side .prof { margin-top: auto; display: flex; gap: 10px; align-items: center; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 10px; }
+  .side .prof-av { width: 34px; height: 34px; border-radius: 50%; overflow: hidden; }
+  .side .prof-n { font-size: 12.5px; font-weight: 600; color: #fff; }
+  .side .prof-m { font-size: 10.5px; color: rgba(255,255,255,0.55); }
+
+  /* Main */
+  .main { padding: 28px 36px 40px; overflow-y: auto; }
+  .pg-hd { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px; }
+  .pg-hd h1 { font-family: var(--serif); font-weight: 400; font-size: 36px; letter-spacing: -0.025em; margin-bottom: 6px; }
+  .pg-hd h1 em { color: var(--coral); font-style: italic; }
+  .pg-hd p { color: var(--ink-soft); font-size: 14px; }
+  .pg-hd .tools { display: flex; gap: 8px; }
+  .tools button { padding: 9px 14px; border-radius: 9px; background: var(--surface); border: 1px solid var(--line); font-size: 12px; font-weight: 600; display: inline-flex; gap: 6px; align-items: center; }
+  .tools button.p { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .tools button .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); display: inline-block; }
+
+  /* KPI */
+  .kpi { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 28px; }
+  .k { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; }
+  .k .lbl { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 10px; font-weight: 500; display: flex; justify-content: space-between; align-items: center; }
+  .k .v { font-family: var(--serif); font-size: 30px; font-weight: 500; line-height: 1; letter-spacing: -0.02em; }
+  .k .d { font-size: 11.5px; margin-top: 8px; display: flex; gap: 4px; align-items: center; color: var(--ink-soft); }
+  .k .d .chg { font-weight: 600; }
+  .k .d .chg.up { color: var(--success); }
+  .k .d .chg.dn { color: var(--error); }
+
+  /* sparkline (pure CSS bars) */
+  .spark { display: flex; align-items: flex-end; gap: 2px; height: 20px; margin-top: 8px; }
+  .spark i { flex: 1; background: var(--coral); border-radius: 1px; opacity: 0.7; }
+  .spark i.h { opacity: 1; }
+
+  /* Layout grid */
+  .lay { display: grid; grid-template-columns: 1.6fr 1fr; gap: 22px; }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 22px; margin-bottom: 22px; }
+  .panel-hd { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+  .panel-hd h2 { font-family: var(--serif); font-size: 20px; font-weight: 500; letter-spacing: -0.015em; }
+  .panel-hd .tabs { display: flex; gap: 4px; background: var(--warm-1); padding: 3px; border-radius: 8px; }
+  .panel-hd .tabs button { padding: 6px 12px; border-radius: 6px; border: none; background: transparent; font-size: 11.5px; font-weight: 600; color: var(--ink-soft); }
+  .panel-hd .tabs button.on { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+
+  /* Today agenda */
+  .tl { position: relative; padding-left: 64px; }
+  .tl::before { content: ''; position: absolute; left: 54px; top: 6px; bottom: 6px; width: 1px; background: var(--line); }
+  .tl-itm { position: relative; margin-bottom: 12px; }
+  .tl-itm .time { position: absolute; left: -64px; top: 14px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; color: var(--ink-muted); font-weight: 500; width: 48px; text-align: right; }
+  .tl-itm .dot { position: absolute; left: -14px; top: 20px; width: 10px; height: 10px; border-radius: 50%; background: var(--surface); border: 2px solid var(--line); }
+  .tl-itm.now .dot { background: var(--coral); border-color: var(--coral); box-shadow: 0 0 0 4px var(--coral-glow); }
+  .tl-itm.done .dot { background: var(--ink); border-color: var(--ink); }
+  .tl-card { background: var(--warm-1); border-radius: 12px; padding: 12px 14px; display: flex; gap: 12px; align-items: center; }
+  .tl-itm.now .tl-card { background: var(--coral-light); border: 1px solid var(--coral); }
+  .tl-itm.done .tl-card { opacity: 0.55; }
+  .tl-av { width: 38px; height: 38px; border-radius: 50%; overflow: hidden; flex-shrink: 0; }
+  .tl-info { flex: 1; }
+  .tl-info .n { font-weight: 600; font-size: 13px; }
+  .tl-info .s { font-size: 11.5px; color: var(--ink-soft); margin-top: 1px; }
+  .tl-info .s .tag { display: inline-block; background: var(--warm-3); padding: 1px 6px; border-radius: 4px; font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.05em; color: var(--ink-mid); margin-left: 4px; }
+  .tl-actions { display: flex; gap: 6px; }
+  .tl-actions button { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); display: inline-flex; align-items: center; justify-content: center; }
+  .tl-price { font-family: var(--serif); font-size: 16px; font-weight: 500; }
+
+  .tl-gap { position: relative; margin-bottom: 12px; padding: 8px 14px 8px 0; display: flex; align-items: center; gap: 10px; }
+  .tl-gap::before { content: ''; position: absolute; left: -9px; top: 50%; width: 0; height: 0; border-top: 4px dashed var(--line); transform: translateY(-50%); }
+  .tl-gap .gap-pill { background: var(--warm-2); color: var(--ink-soft); padding: 6px 10px; border-radius: 100px; font-size: 11px; font-weight: 500; border: 1px dashed var(--line); }
+
+  /* Right column widgets */
+  .earn { background: linear-gradient(180deg, var(--ink) 0%, #2a2a2a 100%); color: #fff; border-radius: 16px; padding: 22px; margin-bottom: 20px; }
+  .earn .lbl { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; color: rgba(255,255,255,0.55); text-transform: uppercase; margin-bottom: 8px; }
+  .earn .amt { font-family: var(--serif); font-size: 38px; font-weight: 500; letter-spacing: -0.02em; line-height: 1; }
+  .earn .sub { font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 6px; margin-bottom: 14px; }
+  .earn .bar { height: 6px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; margin-bottom: 8px; }
+  .earn .bar > div { height: 100%; background: var(--coral); border-radius: 4px; width: 68%; }
+  .earn .meta { display: flex; justify-content: space-between; font-size: 11px; color: rgba(255,255,255,0.55); font-family: var(--mono); letter-spacing: 0.06em; }
+  .earn .payout { margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; }
+  .earn .payout .l { font-size: 12px; color: rgba(255,255,255,0.7); }
+  .earn .payout .v { font-family: var(--serif); font-size: 16px; font-weight: 500; }
+
+  .mini-sec { display: flex; gap: 12px; margin-bottom: 14px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line-soft); }
+  .mini-sec:last-child { border-bottom: 0; }
+  .mini-sec .av { width: 36px; height: 36px; border-radius: 50%; overflow: hidden; flex-shrink: 0; }
+  .mini-sec .info { flex: 1; }
+  .mini-sec .n { font-weight: 600; font-size: 13px; }
+  .mini-sec .m { font-size: 11.5px; color: var(--ink-soft); margin-top: 1px; }
+  .mini-sec .cta { font-size: 11px; font-weight: 600; color: var(--coral-dark); }
+
+  /* Requests */
+  .req { background: var(--warm-1); border-radius: 12px; padding: 14px; margin-bottom: 8px; }
+  .req-hd { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
+  .req-av { width: 32px; height: 32px; border-radius: 50%; overflow: hidden; }
+  .req-n { font-weight: 600; font-size: 13px; }
+  .req-t { font-size: 11px; color: var(--ink-soft); margin-left: auto; font-family: var(--mono); letter-spacing: 0.06em; }
+  .req p { font-size: 12px; color: var(--ink-mid); margin-bottom: 10px; line-height: 1.45; }
+  .req p strong { color: var(--ink); }
+  .req-actions { display: flex; gap: 6px; }
+  .req-actions button { flex: 1; padding: 7px; border-radius: 8px; font-size: 11.5px; font-weight: 600; border: 1px solid var(--line); background: var(--surface); }
+  .req-actions button.y { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+  /* Reviews */
+  .rv { padding: 14px 0; border-bottom: 1px solid var(--line-soft); }
+  .rv:last-child { border-bottom: 0; }
+  .rv-hd { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .rv-n { font-weight: 600; font-size: 13px; }
+  .rv-s { color: var(--coral); font-size: 12px; }
+  .rv p { font-size: 12px; color: var(--ink-mid); line-height: 1.5; }
+
+  /* Alert banner */
+  .banner { background: var(--coral-light); border: 1px solid var(--coral); border-radius: 14px; padding: 14px 18px; margin-bottom: 22px; display: flex; gap: 12px; align-items: center; }
+  .banner svg { color: var(--coral-dark); flex-shrink: 0; }
+  .banner strong { color: var(--coral-dark); }
+  .banner .push { margin-left: auto; font-weight: 600; color: var(--coral-dark); font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand"><span class="dot"></span><span>Sparq</span></div>
+    <div class="mode">Artist studio</div>
+    <a href="#" class="act"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Today</a>
+    <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>Calendar</a>
+    <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Messages <span style="margin-left:auto;background:var(--coral);color:#fff;font-size:10px;padding:2px 7px;border-radius:10px;font-weight:700;">3</span></a>
+    <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/></svg>Clients</a>
+    <div class="sep"></div>
+    <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Services &amp; prices</a>
+    <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>Portfolio</a>
+    <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Earnings</a>
+    <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m7 14 4-4 4 4 5-5"/></svg>Insights</a>
+    <div class="sep"></div>
+    <div class="prof">
+      <div class="prof-av sparq-img" data-tone="2"></div>
+      <div><div class="prof-n">Maya Rivera</div><div class="prof-m">Nails · 4.96 ★</div></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="pg-hd">
+      <div>
+        <h1>Good morning, <em>Maya</em>.</h1>
+        <p>5 appointments today · $420 booked · You're on a 12-week streak.</p>
+      </div>
+      <div class="tools">
+        <button><span class="dot"></span>Accepting bookings</button>
+        <button>+ Block time</button>
+        <button class="p">+ New booking</button>
+      </div>
+    </div>
+
+    <div class="banner">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0M12 9v4M12 17h.01"/></svg>
+      <div>
+        <strong>Hannah L.</strong> just booked your 11:00 slot (Gel mani + nail art). Her first time with you — <strong>welcome message?</strong>
+      </div>
+      <a href="#" class="push">Send hello →</a>
+    </div>
+
+    <div class="kpi">
+      <div class="k">
+        <div class="lbl"><span>This week</span><span style="color:var(--ink-soft)">Dec 14–20</span></div>
+        <div class="v">$1,840</div>
+        <div class="d"><span class="chg up">↑ 12%</span> vs last week</div>
+        <div class="spark"><i style="height:40%"></i><i style="height:55%"></i><i style="height:35%"></i><i style="height:70%"></i><i class="h" style="height:85%"></i><i style="height:60%"></i><i style="height:50%"></i></div>
+      </div>
+      <div class="k">
+        <div class="lbl"><span>Bookings</span></div>
+        <div class="v">28</div>
+        <div class="d">Week · 12 repeat · 16 new</div>
+        <div class="spark"><i style="height:60%"></i><i style="height:40%"></i><i style="height:55%"></i><i style="height:80%"></i><i style="height:70%"></i><i style="height:90%"></i><i style="height:65%"></i></div>
+      </div>
+      <div class="k">
+        <div class="lbl"><span>Utilization</span></div>
+        <div class="v">84%</div>
+        <div class="d"><span class="chg up">↑ 6pt</span> vs avg</div>
+        <div class="spark"><i style="height:70%"></i><i style="height:72%"></i><i style="height:68%"></i><i style="height:80%"></i><i style="height:82%"></i><i style="height:84%"></i><i class="h" style="height:84%"></i></div>
+      </div>
+      <div class="k">
+        <div class="lbl"><span>Rating</span></div>
+        <div class="v">4.96 ★</div>
+        <div class="d">From 387 reviews · <span class="chg up">+3 this wk</span></div>
+        <div class="spark"><i style="height:88%"></i><i style="height:92%"></i><i style="height:96%"></i><i style="height:94%"></i><i style="height:98%"></i><i style="height:96%"></i><i style="height:99%"></i></div>
+      </div>
+    </div>
+
+    <div class="lay">
+      <div>
+        <div class="panel">
+          <div class="panel-hd">
+            <h2>Today — Tuesday, Dec 15</h2>
+            <div class="tabs"><button class="on">Day</button><button>Week</button><button>Month</button></div>
+          </div>
+          <div class="tl">
+            <div class="tl-itm done">
+              <span class="time">09:30</span><span class="dot"></span>
+              <div class="tl-card">
+                <div class="tl-av sparq-img" data-tone="3"></div>
+                <div class="tl-info"><div class="n">Jade K. · Chrome gel mani</div><div class="s">Completed · tipped $15 <span class="tag">REPEAT</span></div></div>
+                <div class="tl-price">$80</div>
+              </div>
+            </div>
+            <div class="tl-itm now">
+              <span class="time">11:00</span><span class="dot"></span>
+              <div class="tl-card">
+                <div class="tl-av sparq-img" data-tone="1"></div>
+                <div class="tl-info"><div class="n">Hannah L. · Gel mani + nail art</div><div class="s">Starts now · 1hr <span class="tag">NEW CLIENT</span></div></div>
+                <div class="tl-actions">
+                  <button title="Message"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>
+                  <button title="Check in"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg></button>
+                </div>
+                <div class="tl-price">$82</div>
+              </div>
+            </div>
+            <div class="tl-gap"><span class="gap-pill">45 min gap · lunch break</span></div>
+            <div class="tl-itm">
+              <span class="time">13:00</span><span class="dot"></span>
+              <div class="tl-card">
+                <div class="tl-av sparq-img" data-tone="4"></div>
+                <div class="tl-info"><div class="n">Priya S. · Soft gel extensions</div><div class="s">1hr 30 · fill-in set <span class="tag">REPEAT</span></div></div>
+                <div class="tl-price">$95</div>
+              </div>
+            </div>
+            <div class="tl-itm">
+              <span class="time">15:00</span><span class="dot"></span>
+              <div class="tl-card">
+                <div class="tl-av sparq-img" data-tone="5"></div>
+                <div class="tl-info"><div class="n">Sofia M. · Gel mani + paraffin</div><div class="s">1hr 15 <span class="tag">VIP · 8 visits</span></div></div>
+                <div class="tl-price">$92</div>
+              </div>
+            </div>
+            <div class="tl-itm">
+              <span class="time">17:00</span><span class="dot"></span>
+              <div class="tl-card">
+                <div class="tl-av sparq-img" data-tone="6"></div>
+                <div class="tl-info"><div class="n">Amara O. · Chrome mani</div><div class="s">1hr 15 <span class="tag">NEW CLIENT</span></div></div>
+                <div class="tl-price">$80</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-hd">
+            <h2>Recent reviews</h2>
+            <a href="#" style="font-size:12px;color:var(--coral-dark);font-weight:600;">See all 387 →</a>
+          </div>
+          <div class="rv">
+            <div class="rv-hd"><span class="rv-n">Zoe T. · yesterday</span><span class="rv-s">★★★★★</span></div>
+            <p>Maya's chrome work is unreal — lasted 3 weeks without a chip and she remembered exactly how I like my shape. Already rebooked.</p>
+          </div>
+          <div class="rv">
+            <div class="rv-hd"><span class="rv-n">Lena M. · 3 days ago</span><span class="rv-s">★★★★★</span></div>
+            <p>The vibe in her studio is so calm. She's quick but not rushed. Obsessed.</p>
+          </div>
+          <div class="rv">
+            <div class="rv-hd"><span class="rv-n">Frida B. · 5 days ago</span><span class="rv-s">★★★★☆</span></div>
+            <p>Great nails, only 4 stars because I had to wait 10 min. Would go back though!</p>
+          </div>
+        </div>
+      </div>
+
+      <aside>
+        <div class="earn">
+          <div class="lbl">Next payout · Friday Dec 18</div>
+          <div class="amt">$2,184.00</div>
+          <div class="sub">Incl. $240 tips · payout weekly to ••• 4242</div>
+          <div class="bar"><div></div></div>
+          <div class="meta"><span>$8,400 OF $12,350 MONTHLY</span><span>DEC GOAL</span></div>
+          <div class="payout">
+            <div class="l">Available now</div>
+            <div class="v">$384 · <a href="#" style="color:var(--coral);font-size:12px;">Cash out →</a></div>
+          </div>
+        </div>
+
+        <div class="panel" style="padding:18px 20px;">
+          <div class="panel-hd" style="margin-bottom:10px;"><h2 style="font-size:16px;">Pending requests</h2><span style="font-family:var(--mono);font-size:10px;color:var(--ink-muted);">2 NEW</span></div>
+          <div class="req">
+            <div class="req-hd"><div class="req-av sparq-img" data-tone="7"></div><div><div class="req-n">Kira V.</div></div><span class="req-t">3 min ago</span></div>
+            <p>Hi Maya! Can I do <strong>chrome gel mani + 1 accent</strong> this Sat 2pm? Happy to come to your studio.</p>
+            <div class="req-actions"><button>Decline</button><button class="y">Accept $82</button></div>
+          </div>
+          <div class="req">
+            <div class="req-hd"><div class="req-av sparq-img" data-tone="8"></div><div><div class="req-n">Noor R.</div></div><span class="req-t">28 min ago</span></div>
+            <p>Would love to get <strong>soft gel extensions</strong> for a wedding on the 22nd. Any time that week?</p>
+            <div class="req-actions"><button>Decline</button><button class="y">Suggest time</button></div>
+          </div>
+        </div>
+
+        <div class="panel" style="padding:18px 20px;">
+          <div class="panel-hd" style="margin-bottom:6px;"><h2 style="font-size:16px;">Clients to rebook</h2><a href="#" style="font-size:11px;color:var(--coral-dark);font-weight:600;">All →</a></div>
+          <div class="mini-sec"><div class="av sparq-img" data-tone="3"></div><div class="info"><div class="n">Jade Kim</div><div class="m">Last visit 3 weeks ago · due for fill</div></div><span class="cta">Nudge →</span></div>
+          <div class="mini-sec"><div class="av sparq-img" data-tone="5"></div><div class="info"><div class="n">Sofia Martinez</div><div class="m">Last visit 4 weeks ago</div></div><span class="cta">Nudge →</span></div>
+          <div class="mini-sec"><div class="av sparq-img" data-tone="7"></div><div class="info"><div class="n">Elena V.</div><div class="m">Last visit 6 weeks ago</div></div><span class="cta">Nudge →</span></div>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>
+</body>
+</html>

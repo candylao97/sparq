@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Booking · Step 4 Confirm</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../sparq-tokens.css" />
+<style>
+  body { background: var(--cream); font-size: 13px; }
+  .pg { width: 1200px; margin: 0 auto; }
+  .tb { display: flex; justify-content: space-between; padding: 14px 32px; border-bottom: 1px solid var(--line); align-items: center; }
+  .tb-l { display: flex; gap: 8px; align-items: center; }
+  .tb-l .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--coral); }
+  .tb-l span { font-family: var(--serif); font-size: 22px; letter-spacing: -0.02em; }
+  .stp { display: flex; padding: 18px 32px; border-bottom: 1px solid var(--line); align-items: center; gap: 14px; }
+  .s { display: flex; gap: 10px; align-items: center; font-size: 12px; color: var(--ink-muted); font-weight: 500; }
+  .s .n { width: 22px; height: 22px; border-radius: 50%; background: var(--warm-2); color: var(--ink-muted); display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 11px; font-weight: 600; }
+  .s.act { color: var(--ink); font-weight: 600; } .s.act .n { background: var(--coral); color: #fff; }
+  .s.done { color: var(--ink); } .s.done .n { background: var(--ink); color: #fff; }
+  .ln { flex: 0 0 40px; height: 1px; background: var(--line); }
+
+  .hero { text-align: center; padding: 50px 32px 20px; }
+  .ck { width: 76px; height: 76px; border-radius: 50%; background: var(--success-bg); color: var(--success); display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; }
+  .h1 { font-family: var(--serif); font-weight: 400; font-size: 48px; letter-spacing: -0.025em; margin-bottom: 12px; }
+  .h1 em { color: var(--coral); font-style: italic; }
+  .lead { color: var(--ink-mid); font-size: 15px; max-width: 480px; margin: 0 auto 40px; line-height: 1.6; }
+  .lead strong { color: var(--ink); }
+
+  .tk { background: var(--ink); color: #fff; border-radius: 20px; padding: 28px 32px; max-width: 560px; margin: 0 auto; position: relative; }
+  .tk::before, .tk::after { content: ''; position: absolute; width: 22px; height: 22px; background: var(--cream); border-radius: 50%; top: 50%; transform: translateY(-50%); }
+  .tk::before { left: -11px; } .tk::after { right: -11px; }
+  .tk-hd { display: flex; gap: 14px; align-items: center; padding-bottom: 18px; border-bottom: 1px dashed rgba(255,255,255,0.18); margin-bottom: 18px; }
+  .tk-av { width: 52px; height: 52px; border-radius: 50%; overflow: hidden; flex-shrink: 0; }
+  .tk-nm { font-family: var(--serif); font-size: 22px; font-weight: 500; }
+  .tk-lb { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.55); margin-top: 4px; }
+  .tk-r { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; }
+  .tk-r .l { color: rgba(255,255,255,0.55); font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; }
+  .tk-r .v { font-weight: 500; }
+  .tk-g { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px 28px; margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px dashed rgba(255,255,255,0.18); }
+  .tk-ft { font-family: var(--mono); font-size: 10.5px; color: rgba(255,255,255,0.55); letter-spacing: 0.14em; text-align: center; padding-top: 6px; }
+
+  .next { max-width: 560px; margin: 32px auto 0; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .nx-btn { padding: 14px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 11.5px; font-weight: 600; color: var(--ink); text-align: center; }
+  .nx-btn svg { color: var(--coral-dark); }
+
+  .xtra { max-width: 560px; margin: 32px auto 60px; padding: 20px; background: var(--warm-1); border-radius: 14px; display: flex; gap: 14px; align-items: center; }
+  .xtra-img { width: 56px; height: 56px; border-radius: 50%; overflow: hidden; flex-shrink: 0; }
+  .xtra-t { flex: 1; }
+  .xtra-t h3 { font-family: var(--serif); font-size: 16px; font-weight: 500; margin-bottom: 2px; }
+  .xtra-t p { font-size: 12px; color: var(--ink-soft); }
+  .xtra .cta { padding: 10px 16px; border-radius: 10px; background: var(--ink); color: #fff; border: none; font-size: 12px; font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="pg">
+  <div class="tb"><div class="tb-l"><span class="dot"></span><span>Sparq</span></div></div>
+  <div class="stp">
+    <div class="s done"><div class="n">✓</div>Service</div><div class="ln"></div>
+    <div class="s done"><div class="n">✓</div>Date &amp; time</div><div class="ln"></div>
+    <div class="s done"><div class="n">✓</div>Checkout</div><div class="ln"></div>
+    <div class="s act"><div class="n">✓</div>Confirmed</div>
+  </div>
+
+  <div class="hero">
+    <div class="ck"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg></div>
+    <h1 class="h1">You're <em>booked</em>.</h1>
+    <p class="lead">Confirmation sent to <strong>hannah@example.com</strong>. Maya will text you <strong>10 minutes before</strong> your appointment.</p>
+  </div>
+
+  <div class="tk">
+    <div class="tk-hd">
+      <div class="tk-av sparq-img" data-tone="2"></div>
+      <div>
+        <div class="tk-nm">Maya Rivera</div>
+        <div class="tk-lb">GEL MANICURE · WILLIAMSBURG</div>
+      </div>
+    </div>
+    <div class="tk-g">
+      <div><div class="tk-r"><span class="l">When</span></div><div class="tk-r"><span class="v" style="font-family: var(--serif); font-size: 18px;">Tue · 15 Dec · 11:00</span></div></div>
+      <div><div class="tk-r"><span class="l">Duration</span></div><div class="tk-r"><span class="v" style="font-family: var(--serif); font-size: 18px;">1 hour</span></div></div>
+      <div><div class="tk-r"><span class="l">Where</span></div><div class="tk-r"><span class="v">187 N 4th St · Apt 2R</span></div></div>
+      <div><div class="tk-r"><span class="l">Paid</span></div><div class="tk-r"><span class="v">$82 · Visa •• 4242</span></div></div>
+    </div>
+    <div class="tk-ft">BOOKING #SPARQ-28471-HL</div>
+  </div>
+
+  <div class="next">
+    <button class="nx-btn">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>
+      Add to calendar
+    </button>
+    <button class="nx-btn">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Message Maya
+    </button>
+    <button class="nx-btn">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+      Get directions
+    </button>
+  </div>
+
+  <div class="xtra">
+    <div class="xtra-img sparq-img" data-tone="4"></div>
+    <div class="xtra-t">
+      <h3>Pair it with a pedi?</h3>
+      <p>Priya S. has a 13:00 slot the same day, 2 blocks away — 20% off when booked together.</p>
+    </div>
+    <button class="cta">See offer →</button>
+  </div>
+
+</div>
+</body>
+</html>

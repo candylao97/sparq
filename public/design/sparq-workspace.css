@@ -1,0 +1,204 @@
+/* ─────────────────────────────────────────────────────────
+   Workspace shell — the frame around the iframes.
+   Not shipped; only used by index.html.
+   ───────────────────────────────────────────────────────── */
+
+body {
+  background: #F3EEE8;
+  color: var(--ink);
+  font-family: var(--sans);
+  margin: 0;
+}
+
+/* ─── Sidebar ─── */
+.ws-sidebar {
+  position: fixed; top: 0; left: 0; bottom: 0;
+  width: 240px; z-index: 20;
+  background: #1A1A1A; color: rgba(255,255,255,0.85);
+  display: flex; flex-direction: column;
+  padding: 24px 20px 20px;
+  border-right: 1px solid rgba(0,0,0,0.08);
+}
+.ws-brand {
+  display: flex; align-items: baseline; gap: 7px;
+  padding: 4px 4px 24px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  margin-bottom: 20px;
+}
+.ws-logo-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--coral); align-self: center; }
+.ws-logo-name { font-family: var(--serif); font-size: 22px; color: #fff; letter-spacing: -0.02em; }
+.ws-logo-sub { font-family: var(--mono); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.4); }
+
+.ws-nav { flex: 1; overflow-y: auto; padding-right: 4px; }
+.ws-nav::-webkit-scrollbar { width: 4px; }
+.ws-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); }
+
+.ws-nav-label {
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.2em;
+  text-transform: uppercase; color: rgba(255,255,255,0.4);
+  margin: 0 0 10px 8px;
+}
+.ws-nav-link {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px; margin-bottom: 2px;
+  color: rgba(255,255,255,0.7);
+  font-size: 13px; font-weight: 500;
+  border-radius: 8px;
+  transition: background .15s, color .15s;
+}
+.ws-nav-link .num {
+  font-family: var(--mono); font-size: 10px;
+  color: rgba(255,255,255,0.35);
+  letter-spacing: 0.06em; flex-shrink: 0; width: 18px;
+}
+.ws-nav-link:hover { background: rgba(255,255,255,0.05); color: #fff; }
+.ws-nav-link.is-active {
+  background: rgba(233,107,86,0.12); color: #fff;
+}
+.ws-nav-link.is-active .num { color: var(--coral); }
+.ws-nav-link--muted { color: rgba(255,255,255,0.45); }
+.ws-nav-link--muted:hover { color: rgba(255,255,255,0.8); }
+
+.ws-foot {
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding: 16px 8px 4px;
+  margin-top: 16px;
+}
+.ws-foot-title {
+  font-family: var(--serif); font-size: 14px;
+  color: #fff; margin: 0 0 4px;
+}
+.ws-foot-sub {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em;
+  color: rgba(255,255,255,0.4); margin: 0;
+}
+
+/* ─── Main area ─── */
+.ws-main {
+  margin-left: 240px;
+  padding: 40px 48px 120px;
+  max-width: 1720px;
+}
+
+/* Intro */
+.ws-intro {
+  display: grid; grid-template-columns: 1fr 280px; gap: 60px;
+  align-items: end; padding-bottom: 40px;
+  border-bottom: 1px solid rgba(26,26,26,0.08);
+  margin-bottom: 48px;
+}
+.ws-kicker {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--coral-dark);
+  margin: 0 0 14px; font-weight: 500;
+}
+.ws-h1 {
+  font-family: var(--serif); font-weight: 400;
+  font-size: 64px; line-height: 1.0; letter-spacing: -0.025em;
+  color: var(--ink); margin: 0 0 20px;
+}
+.ws-h1 em { color: var(--coral); font-style: italic; }
+.ws-lead {
+  color: var(--ink-mid); font-size: 16px; line-height: 1.65;
+  max-width: 580px; margin: 0;
+}
+.ws-lead code { font-family: var(--mono); font-size: 13px; background: rgba(26,26,26,0.06); padding: 2px 6px; border-radius: 4px; color: var(--ink); }
+
+.ws-intro-meta {
+  background: #fff; border: 1px solid var(--line);
+  border-radius: 14px; padding: 18px 22px;
+}
+.ws-meta-line {
+  display: flex; justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px dashed rgba(26,26,26,0.1);
+  font-family: var(--mono); font-size: 11px;
+  letter-spacing: 0.04em;
+}
+.ws-meta-line:last-child { border-bottom: none; }
+.ws-meta-line span:first-child { color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.16em; }
+.ws-meta-line span:last-child { color: var(--ink); font-weight: 500; }
+
+/* Screen section */
+.ws-screen {
+  margin-bottom: 80px;
+  scroll-margin-top: 40px;
+}
+.ws-screen-head {
+  display: grid; grid-template-columns: 1fr 480px; gap: 60px;
+  align-items: end; margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(26,26,26,0.08);
+}
+.ws-h2 {
+  font-family: var(--serif); font-weight: 400;
+  font-size: 40px; line-height: 1.05; letter-spacing: -0.02em;
+  color: var(--ink); margin: 0;
+}
+.ws-screen-notes {
+  color: var(--ink-mid); font-size: 14px; line-height: 1.65;
+  max-width: 480px; margin: 0;
+}
+.ws-screen-notes em { color: var(--coral-dark); font-style: italic; font-weight: 600; }
+
+/* Device grid */
+.ws-devices {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 24px;
+  align-items: start;
+}
+.ws-devices--stack {
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+@media (max-width: 1400px) {
+  .ws-devices { grid-template-columns: 1fr; }
+  .ws-devices--stack { grid-template-columns: 1fr 1fr; }
+}
+
+.ws-device { margin: 0; }
+.ws-device-cap {
+  font-family: var(--mono); font-size: 10px;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-muted); margin-bottom: 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+.ws-device-cap .dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--coral);
+}
+
+.ws-device-frame {
+  background: #fff; border: 1px solid rgba(26,26,26,0.1);
+  border-radius: 20px; overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.04);
+  position: relative;
+}
+.ws-device-frame iframe {
+  width: 100%; border: none; display: block; background: #fff;
+}
+.ws-device--desktop .ws-device-frame iframe { height: 820px; }
+.ws-device--mobile .ws-device-frame {
+  max-width: 400px; border-radius: 40px;
+  border: 8px solid #1A1A1A;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+}
+.ws-device--mobile .ws-device-frame iframe { height: 800px; }
+.ws-devices--stack .ws-device--desktop .ws-device-frame iframe { height: 580px; }
+
+/* Note card (sits in device row) */
+.ws-note {
+  background: #fff; border: 1px solid var(--line);
+  border-radius: 16px; padding: 22px 24px;
+  align-self: start;
+}
+.ws-note p:last-child {
+  color: var(--ink-mid); font-size: 13px; line-height: 1.6; margin-top: 10px;
+}
+
+/* Footer */
+.ws-footer {
+  margin-top: 60px; padding: 40px 0 0;
+  border-top: 1px solid rgba(26,26,26,0.08);
+}
