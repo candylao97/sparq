@@ -19,7 +19,8 @@
   /* ── Neutral Palette ────────────────────────────────── */
   --ink:            #1A1A1A;   /* Primary text */
   --ink-mid:        #555555;   /* Body / secondary text */
-  --ink-soft:       #8A8A8A;   /* Tertiary / placeholder */
+  --ink-soft:       #717171;   /* Soft secondary / lead copy */
+  --ink-muted:      #8A8A8A;   /* Tertiary / placeholder */
   --cream:          #FDFBF7;   /* Page background */
   --surface:        #ffffff;   /* Card / input background */
   --surface-warm:   #f9f2ef;   /* Warm container */
@@ -115,6 +116,10 @@ html {
 }
 
 body {
+  /* --mono lives at body scope so the next/font --font-mono variable resolves
+     (next/font injects font CSS vars on the body, not :root). */
+  --mono: var(--font-mono), 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
   color: var(--ink);
   background: var(--cream);
   font-family: var(--font-jakarta), 'Plus Jakarta Sans', var(--font-sans);
