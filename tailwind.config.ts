@@ -82,6 +82,7 @@ const config: Config = {
         serif: ['var(--font-headline)', 'Noto Serif', 'Georgia', 'Times New Roman', 'serif'],
         headline: ['var(--font-headline)', 'Noto Serif', 'Georgia', 'serif'],
         jakarta: ['var(--font-jakarta)', 'Plus Jakarta Sans', '-apple-system', 'sans-serif'],
+        mono: ['var(--font-mono)', 'JetBrains Mono', 'ui-monospace', 'SF Mono', 'Menlo', 'monospace'],
       },
       borderRadius: {
         '2xl': '1rem',
@@ -131,7 +132,7 @@ const config: Config = {
         'card': '0 1px 3px rgba(0, 0, 0, 0.04)',
         'card-hover': '0 12px 40px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04)',
         'elevated': '0 20px 60px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.05)',
-        'primary': '0 4px 14px rgba(212, 130, 10, 0.3)',
+        'coral': '0 4px 14px rgba(233, 107, 86, 0.22)',
         'search': '0 4px 20px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04)',
         'search-focus': '0 8px 32px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.04)',
         'nav': '0 1px 0 rgba(0, 0, 0, 0.04)',

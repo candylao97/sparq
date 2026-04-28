@@ -1,0 +1,651 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Sparq — Design System Directions</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Inter:wght@400;500;600;700&family=DM+Serif+Display&family=Manrope:wght@400;500;600;700&family=GT+Sectra&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --page-bg: #F3EEE8;
+    --ink: #1A1A1A;
+    --ink-soft: #6B5A4E;
+    --ink-muted: #A89786;
+    --chrome: #FFFFFF;
+    --chrome-line: #E8E1DE;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--page-bg);
+    color: var(--ink);
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; }
+
+  /* ─── Page chrome ─── */
+  .page {
+    max-width: 1800px; margin: 0 auto; padding: 48px 40px 120px;
+  }
+  .page-head {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    gap: 40px; margin-bottom: 48px; padding-bottom: 32px;
+    border-bottom: 1px solid rgba(26,26,26,0.08);
+  }
+  .page-head h1 {
+    font-family: 'Fraunces', 'Noto Serif', serif;
+    font-weight: 400; font-size: 56px; line-height: 1.02;
+    letter-spacing: -0.025em; margin: 0 0 12px; color: var(--ink);
+  }
+  .page-head h1 em { font-style: italic; color: #B54826; }
+  .kicker {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--ink-muted); margin-bottom: 14px;
+  }
+  .page-head p {
+    max-width: 440px; color: var(--ink-soft); font-size: 15px;
+    line-height: 1.6; margin: 0;
+  }
+
+  /* ─── Three-column canvas ─── */
+  .canvas {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  @media (max-width: 1400px) { .canvas { grid-template-columns: 1fr; } }
+
+  .col {
+    background: var(--chrome);
+    border-radius: 28px;
+    overflow: hidden;
+    border: 1px solid var(--chrome-line);
+    display: flex; flex-direction: column;
+  }
+  .col-head {
+    padding: 24px 28px 22px;
+    border-bottom: 1px solid var(--chrome-line);
+  }
+  .col-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--ink-muted); margin-bottom: 10px;
+  }
+  .col-badge .dot {
+    width: 8px; height: 8px; border-radius: 50%; display: inline-block;
+  }
+  .col-title {
+    font-weight: 400; font-size: 28px; line-height: 1.05; margin: 0 0 6px;
+    letter-spacing: -0.01em;
+  }
+  .col-sub { color: var(--ink-soft); font-size: 13px; line-height: 1.55; margin: 0; }
+
+  .col-body { padding: 0; }
+
+  /* ─── Shared module — sub-section titling inside a column ─── */
+  .module { padding: 24px 28px; border-top: 1px solid var(--chrome-line); }
+  .module:first-child { border-top: none; }
+  .module-label {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--ink-muted); margin: 0 0 14px;
+  }
+
+  /* Swatches */
+  .swatches {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;
+  }
+  .swatch {
+    aspect-ratio: 1; border-radius: 10px; position: relative;
+    border: 1px solid rgba(26,26,26,0.06);
+    display: flex; align-items: flex-end; padding: 8px;
+  }
+  .swatch .code {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 9px; letter-spacing: 0.04em;
+    color: var(--ink); opacity: 0.7;
+  }
+  .swatch.dark .code { color: #fff; opacity: 0.85; }
+  .swatch-row-labels {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;
+    margin-top: 8px;
+  }
+  .swatch-row-labels span {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--ink-muted); text-align: center;
+  }
+
+  /* Type specimen */
+  .specimen-h1 { margin: 4px 0 6px; line-height: 0.95; letter-spacing: -0.025em; }
+  .specimen-body { margin: 10px 0 0; color: var(--ink-soft); font-size: 13px; line-height: 1.6; }
+  .specimen-mini {
+    display: flex; justify-content: space-between; font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px; letter-spacing: 0.08em; color: var(--ink-muted);
+    border-top: 1px dashed rgba(26,26,26,0.1); padding-top: 10px; margin-top: 14px;
+  }
+
+  /* Component previews */
+  .preview {
+    border-radius: 16px; padding: 20px; margin-bottom: 14px;
+    border: 1px solid rgba(26,26,26,0.06);
+    background: #FBF8F4;
+    position: relative;
+  }
+  .preview-label {
+    position: absolute; top: 10px; right: 12px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+
+  /* Buttons */
+  .btn-row { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  /* ─────────────────────────────────────────────────────────
+     Direction A · REFINED — current brand, tightened
+     ───────────────────────────────────────────────────────── */
+  .dirA { --a-bg: #FDFBF7; --a-accent: #E96B56; --a-ink: #1A1A1A; }
+  .dirA .col-head { background: #FDFBF7; }
+  .dirA .col-badge .dot { background: #E96B56; }
+  .dirA .col-title { font-family: 'Noto Serif', serif; color: #1A1A1A; }
+
+  .dirA .specimen-h1 {
+    font-family: 'Noto Serif', serif; font-weight: 600;
+    font-size: 46px; color: #1A1A1A;
+  }
+  .dirA .specimen-body { font-family: 'Plus Jakarta Sans', sans-serif; }
+
+  .dirA .mock-card {
+    background: #fff; border: 1px solid #E8E1DE; border-radius: 16px; overflow: hidden;
+  }
+  .dirA .mock-img {
+    aspect-ratio: 3/4; background: linear-gradient(135deg, #F4C9B1 0%, #E96B56 100%);
+    position: relative;
+  }
+  .dirA .btn-p {
+    background: #E96B56; color: #fff; border: none; border-radius: 999px;
+    padding: 11px 18px; font-size: 13px; font-weight: 600;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    box-shadow: 0 4px 14px rgba(233,107,86,0.22);
+  }
+  .dirA .btn-s {
+    background: #fff; color: #1A1A1A; border: 1px solid #E8E1DE; border-radius: 999px;
+    padding: 11px 18px; font-size: 13px; font-weight: 600;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+  .dirA .btn-g {
+    background: transparent; color: #1A1A1A; border: none; border-radius: 999px;
+    padding: 11px 14px; font-size: 13px; font-weight: 600;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  /* ─────────────────────────────────────────────────────────
+     Direction B · EDITORIAL — magazine, bigger type, warmer
+     ───────────────────────────────────────────────────────── */
+  .dirB { --b-bg: #F7F1E8; --b-accent: #B54826; --b-ink: #1C140F; }
+  .dirB .col-head { background: #F7F1E8; }
+  .dirB .col-badge .dot { background: #B54826; }
+  .dirB .col-title {
+    font-family: 'Fraunces', serif; font-style: italic; font-weight: 400; color: #1C140F;
+  }
+
+  .dirB .specimen-h1 {
+    font-family: 'Fraunces', serif; font-weight: 400;
+    font-size: 56px; color: #1C140F; letter-spacing: -0.03em;
+  }
+  .dirB .specimen-h1 em { font-style: italic; color: #B54826; }
+  .dirB .specimen-body { font-family: 'Manrope', sans-serif; }
+
+  .dirB .mock-card {
+    background: #FBF6EE; border: 1px solid #EADFCC; border-radius: 24px; overflow: hidden;
+  }
+  .dirB .mock-img {
+    aspect-ratio: 3/4; background: linear-gradient(135deg, #E0B89A 0%, #8C4A2E 100%);
+    position: relative;
+  }
+  .dirB .btn-p {
+    background: #1C140F; color: #FBF6EE; border: none; border-radius: 4px;
+    padding: 13px 22px; font-size: 12px; font-weight: 600;
+    font-family: 'Manrope', sans-serif;
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .dirB .btn-s {
+    background: transparent; color: #1C140F; border: 1px solid #1C140F; border-radius: 4px;
+    padding: 13px 22px; font-size: 12px; font-weight: 600;
+    font-family: 'Manrope', sans-serif;
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .dirB .btn-g {
+    background: transparent; color: #B54826; border: none; border-bottom: 1px solid #B54826;
+    padding: 10px 2px; border-radius: 0; font-size: 13px; font-weight: 600;
+    font-family: 'Manrope', sans-serif;
+  }
+
+  /* ─────────────────────────────────────────────────────────
+     Direction C · BOLD — high contrast, confident, surprising
+     ───────────────────────────────────────────────────────── */
+  .dirC { --c-bg: #0F0E0C; --c-accent: #FF5B2E; --c-ink: #FBF8F3; }
+  .dirC .col-head {
+    background: #0F0E0C; color: #FBF8F3;
+    border-bottom-color: rgba(255,255,255,0.08);
+  }
+  .dirC .col-head .col-sub { color: rgba(251,248,243,0.6); }
+  .dirC .col-head .col-badge { color: rgba(251,248,243,0.5); }
+  .dirC .col-badge .dot { background: #FF5B2E; }
+  .dirC .col-title { font-family: 'DM Serif Display', serif; color: #FBF8F3; }
+
+  .dirC .module-dark {
+    background: #0F0E0C; color: #FBF8F3;
+    border-color: rgba(255,255,255,0.08);
+  }
+  .dirC .module-dark .module-label { color: rgba(251,248,243,0.5); }
+
+  .dirC .specimen-h1 {
+    font-family: 'DM Serif Display', serif; font-weight: 400;
+    font-size: 54px; color: #0F0E0C; letter-spacing: -0.02em;
+  }
+  .dirC .specimen-body { font-family: 'Inter', sans-serif; }
+
+  .dirC .mock-card {
+    background: #0F0E0C; color: #FBF8F3; border: none; border-radius: 20px; overflow: hidden;
+    position: relative;
+  }
+  .dirC .mock-img {
+    aspect-ratio: 3/4; background: linear-gradient(135deg, #FF5B2E 0%, #9A2A12 100%);
+    position: relative;
+  }
+  .dirC .btn-p {
+    background: #FF5B2E; color: #0F0E0C; border: none; border-radius: 999px;
+    padding: 13px 22px; font-size: 13px; font-weight: 700;
+    font-family: 'Inter', sans-serif;
+  }
+  .dirC .btn-s {
+    background: #0F0E0C; color: #FBF8F3; border: 1px solid #0F0E0C; border-radius: 999px;
+    padding: 13px 22px; font-size: 13px; font-weight: 700;
+    font-family: 'Inter', sans-serif;
+  }
+  .dirC .btn-g {
+    background: transparent; color: #0F0E0C; border: none; border-radius: 999px;
+    padding: 11px 14px; font-size: 13px; font-weight: 600;
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* Artist-card mock (shared structure, varied style) */
+  .artist-card { position: relative; }
+  .artist-card .tag {
+    position: absolute; top: 12px; left: 12px; z-index: 2;
+    padding: 4px 10px; border-radius: 999px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600;
+  }
+  .artist-card .heart {
+    position: absolute; top: 12px; right: 12px; z-index: 2;
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.92);
+  }
+  .artist-card .rating-pill {
+    position: absolute; bottom: 12px; right: 12px; z-index: 2;
+    padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,0.96);
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; font-weight: 600;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .artist-card .meta { padding: 14px 16px 16px; }
+  .artist-card .meta .name { font-weight: 600; font-size: 15px; margin: 0 0 4px; }
+  .artist-card .meta .loc { font-size: 12px; color: var(--ink-muted); margin: 0 0 8px; }
+  .artist-card .meta .price { font-size: 13px; font-weight: 600; }
+
+  .dirB .artist-card .meta .name { font-family: 'Fraunces', serif; font-style: italic; font-size: 20px; font-weight: 400; }
+  .dirC .artist-card .meta .name { color: #FBF8F3; }
+  .dirC .artist-card .meta .loc { color: rgba(251,248,243,0.55); }
+  .dirC .artist-card .meta .price { color: #FBF8F3; }
+
+  /* Inputs */
+  .input-row { display: flex; align-items: center; gap: 8px; }
+  .input-a {
+    flex: 1; background: #fff; border: 1px solid #E8E1DE; border-radius: 999px;
+    padding: 12px 18px; font-size: 13px; font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+  .input-b {
+    flex: 1; background: transparent; border: none; border-bottom: 1px solid #1C140F;
+    padding: 12px 2px; font-size: 14px; font-family: 'Fraunces', serif; border-radius: 0;
+  }
+  .input-c {
+    flex: 1; background: #0F0E0C; color: #FBF8F3; border: 1px solid #0F0E0C; border-radius: 12px;
+    padding: 12px 16px; font-size: 13px; font-family: 'Inter', sans-serif;
+  }
+  .input-c::placeholder { color: rgba(251,248,243,0.5); }
+
+  /* Badges */
+  .badges { display: flex; flex-wrap: wrap; gap: 6px; }
+  .b-a-coral { background: #F9EDE9; color: #A63A29; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; font-family: 'Plus Jakarta Sans', sans-serif; }
+  .b-a-dark { background: #1A1A1A; color: #fff; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; font-family: 'Plus Jakarta Sans', sans-serif; }
+  .b-a-neutral { background: #F3ECE9; color: #555; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; font-family: 'Plus Jakarta Sans', sans-serif; }
+
+  .b-b-serif { background: transparent; color: #B54826; border: 1px solid #B54826; padding: 3px 10px; border-radius: 4px; font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; font-family: 'Manrope', sans-serif; }
+  .b-b-solid { background: #1C140F; color: #FBF6EE; padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; font-family: 'Manrope', sans-serif; }
+  .b-b-tint { background: #F4E6D4; color: #1C140F; padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; font-family: 'Manrope', sans-serif; }
+
+  .b-c-accent { background: #FF5B2E; color: #0F0E0C; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; font-family: 'Inter', sans-serif; }
+  .b-c-ink { background: #0F0E0C; color: #FBF8F3; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; font-family: 'Inter', sans-serif; }
+  .b-c-outline { background: transparent; color: #0F0E0C; border: 1px solid #0F0E0C; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; font-family: 'Inter', sans-serif; }
+
+  /* Mini artist image placeholders — three treatments */
+  .mock-img.a {
+    background:
+      radial-gradient(circle at 30% 20%, rgba(255,255,255,0.25) 0%, transparent 50%),
+      linear-gradient(135deg, #F4C9B1 0%, #E96B56 100%);
+  }
+  .mock-img.b {
+    background:
+      linear-gradient(180deg, rgba(0,0,0,0.15), transparent 40%),
+      linear-gradient(135deg, #E0B89A 0%, #8C4A2E 100%);
+  }
+  .mock-img.c {
+    background:
+      linear-gradient(180deg, rgba(0,0,0,0.25), transparent 50%),
+      linear-gradient(135deg, #FF5B2E 0%, #9A2A12 100%);
+  }
+
+  /* Type scale row */
+  .type-scale > div + div { margin-top: 10px; }
+  .type-size-label {
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 10px;
+    letter-spacing: 0.12em; color: var(--ink-muted); text-transform: uppercase;
+  }
+
+  /* Decision footer */
+  .decision {
+    margin-top: 40px; padding: 28px 32px;
+    background: #FBF8F4; border: 1px dashed rgba(26,26,26,0.2);
+    border-radius: 20px;
+    display: flex; justify-content: space-between; align-items: center; gap: 24px;
+  }
+  .decision p { margin: 0; color: var(--ink-soft); font-size: 14px; max-width: 540px; line-height: 1.6; }
+  .decision strong { color: var(--ink); font-weight: 600; }
+
+  /* Accent notes */
+  .accent-dot {
+    display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px;
+    vertical-align: -1px;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="page-head">
+    <div>
+      <p class="kicker">Sparq · Redesign · Step 01</p>
+      <h1>Three <em>directions</em>,<br>one decision.</h1>
+      <p>Sparq's existing system is already well-defined — premium, coral, serif-led. This page sets up three ways to push it. Pick one, or mix attributes across directions.</p>
+    </div>
+    <div style="text-align: right; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: var(--ink-muted); letter-spacing: 0.1em;">
+      <div>01&nbsp;·&nbsp;DESIGN&nbsp;SYSTEM</div>
+      <div style="margin-top: 4px;">Next: Home &rarr; Search &rarr; Profile</div>
+    </div>
+  </header>
+
+  <div class="canvas">
+
+    <!-- ═══════════════════════════════════════════════════
+         Direction A — REFINED
+         ═══════════════════════════════════════════════════ -->
+    <section class="col dirA">
+      <div class="col-head">
+        <div class="col-badge"><span class="dot"></span> Direction&nbsp;A · Refined</div>
+        <h2 class="col-title">Your brand, tightened.</h2>
+        <p class="col-sub">Stays on current palette and type. Fixes density, spacing rhythm, and component consistency. Lowest-risk — ships fast.</p>
+      </div>
+
+      <div class="module">
+        <p class="module-label">Palette</p>
+        <div class="swatches">
+          <div class="swatch" style="background:#FDFBF7"><span class="code">#FDFBF7</span></div>
+          <div class="swatch dark" style="background:#E96B56"><span class="code">#E96B56</span></div>
+          <div class="swatch dark" style="background:#A63A29"><span class="code">#A63A29</span></div>
+          <div class="swatch dark" style="background:#1A1A1A"><span class="code">#1A1A1A</span></div>
+          <div class="swatch" style="background:#F3ECE9"><span class="code">#F3ECE9</span></div>
+        </div>
+        <div class="swatch-row-labels">
+          <span>cream</span><span>coral</span><span>deep</span><span>ink</span><span>tint</span>
+        </div>
+      </div>
+
+      <div class="module">
+        <p class="module-label">Type · Noto Serif + Jakarta</p>
+        <div class="type-scale">
+          <div>
+            <div class="type-size-label">Display · 56 / 1.05 / tight</div>
+            <h3 class="specimen-h1">Book lash &amp; nail artists near you.</h3>
+          </div>
+          <div>
+            <div class="type-size-label">Body · Jakarta 15 / 1.6</div>
+            <p class="specimen-body">Browse real portfolios, read verified reviews, and book visits that fit your week. Payments held until the appointment is done.</p>
+          </div>
+        </div>
+        <div class="specimen-mini">
+          <span>Aa Bb Cc 1234</span><span>serif + sans</span>
+        </div>
+      </div>
+
+      <div class="module">
+        <p class="module-label">Buttons</p>
+        <div class="btn-row">
+          <button class="btn-p">Book now</button>
+          <button class="btn-s">See profile</button>
+          <button class="btn-g">Save &rarr;</button>
+        </div>
+      </div>
+
+      <div class="module">
+        <p class="module-label">Badges · Input</p>
+        <div class="badges" style="margin-bottom: 14px;">
+          <span class="b-a-dark">Sparq Elite</span>
+          <span class="b-a-coral">⚡ Instant Book</span>
+          <span class="b-a-neutral">Mobile</span>
+        </div>
+        <div class="input-row">
+          <input class="input-a" placeholder="Gel nails, lashes, nail art…" />
+        </div>
+      </div>
+
+      <div class="module">
+        <p class="module-label">Artist card</p>
+        <div class="mock-card artist-card">
+          <div class="mock-img a">
+            <span class="tag" style="background:#1A1A1A;color:#fff;">Sparq&nbsp;Elite</span>
+            <span class="heart">♡</span>
+            <span class="rating-pill">★ 4.9</span>
+          </div>
+          <div class="meta">
+            <p class="name">Amara Collective</p>
+            <p class="loc">Surry Hills · Mobile &amp; studio</p>
+            <p class="price">From <strong>$95</strong> / visit</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════
+         Direction B — EDITORIAL
+         ═══════════════════════════════════════════════════ -->
+    <section class="col dirB">
+      <div class="col-head">
+        <div class="col-badge"><span class="dot"></span> Direction&nbsp;B · Editorial</div>
+        <h2 class="col-title">Magazine, not marketplace.</h2>
+        <p class="col-sub">Warmer palette, bigger italic serif, generous whitespace, squared accents. Feels closer to Aesop or Net-a-Porter than Fresha.</p>
+      </div>
+
+      <div class="module">
+        <p class="module-label">Palette</p>
+        <div class="swatches">
+          <div class="swatch" style="background:#F7F1E8"><span class="code">#F7F1E8</span></div>
+          <div class="swatch dark" style="background:#B54826"><span class="code">#B54826</span></div>
+          <div class="swatch dark" style="background:#1C140F"><span class="code">#1C140F</span></div>
+          <div class="swatch" style="background:#F4E6D4"><span class="code">#F4E6D4</span></div>
+          <div class="swatch" style="background:#EADFCC"><span class="code">#EADFCC</span></div>
+        </div>
+        <div class="swatch-row-labels">
+          <span>sand</span><span>terra</span><span>ink</span><span>cream</span><span>line</span>
+        </div>
+      </div>
+
+      <div class="module">
+        <p class="module-label">Type · Fraunces + Manrope</p>
+        <div class="type-scale">
+          <div>
+            <div class="type-size-label">Display italic · 64 / 1.0 / -3%</div>
+            <h3 class="specimen-h1">Book lash &amp; nail artists <em>near you.</em></h3>
+          </div>
+          <div>
+            <div class="type-size-label">Body · Manrope 15 / 1.65</div>
+            <p class="specimen-body">Browse real portfolios, read verified reviews, and book visits that fit your week. Payments held until the appointment is done.</p>
+          </div>
+        </div>
+        <div class="specimen-mini">
+          <span>Aa Bb Cc 1234</span><span>italic-leading serif</span>
+        </div>
+      </div>
+
+      <div class="module">
+        <p class="module-label">Buttons</p>
+        <div class="btn-row">
+          <button class="btn-p">Book&nbsp;now</button>
+          <button class="btn-s">See&nbsp;profile</button>
+          <button class="btn-g">Save artist</button>
+        </div>
+      </div>
+
+      <div class="module">
+        <p class="module-label">Badges · Input</p>
+        <div class="badges" style="margin-bottom: 14px;">
+          <span class="b-b-solid">Sparq&nbsp;Elite</span>
+          <span class="b-b-serif">Instant&nbsp;Book</span>
+          <span class="b-b-tint">Mobile</span>
+        </div>
+        <div class="input-row">
+          <input class="input-b" placeholder="Gel nails, lashes, nail art…" />
+        </div>
+      </div>
+
+      <div class="module">
+        <p class="module-label">Artist card</p>
+        <div class="mock-card artist-card">
+          <div class="mock-img b">
+            <span class="tag" style="background:#FBF6EE;color:#1C140F;">Sparq&nbsp;Elite</span>
+            <span class="heart">♡</span>
+            <span class="rating-pill">★ 4.9</span>
+          </div>
+          <div class="meta">
+            <p class="name">Amara Collective</p>
+            <p class="loc">Surry Hills · Mobile &amp; studio</p>
+            <p class="price">From <strong>$95</strong> / visit</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════
+         Direction C — BOLD
+         ═══════════════════════════════════════════════════ -->
+    <section class="col dirC">
+      <div class="col-head">
+        <div class="col-badge"><span class="dot"></span> Direction&nbsp;C · Bold</div>
+        <h2 class="col-title">Confident &amp; contemporary.</h2>
+        <p class="col-sub">Ink-first canvas, a single sharp accent, oversized display serif against tight sans. Feels owned, not templated.</p>
+      </div>
+
+      <div class="module module-dark">
+        <p class="module-label">Palette</p>
+        <div class="swatches">
+          <div class="swatch dark" style="background:#0F0E0C"><span class="code">#0F0E0C</span></div>
+          <div class="swatch dark" style="background:#FF5B2E"><span class="code">#FF5B2E</span></div>
+          <div class="swatch" style="background:#FBF8F3"><span class="code">#FBF8F3</span></div>
+          <div class="swatch" style="background:#E9DFCF"><span class="code">#E9DFCF</span></div>
+          <div class="swatch dark" style="background:#9A2A12"><span class="code">#9A2A12</span></div>
+        </div>
+        <div class="swatch-row-labels" style="color: rgba(251,248,243,0.5);">
+          <span>ink</span><span>flare</span><span>bone</span><span>paper</span><span>deep</span>
+        </div>
+      </div>
+
+      <div class="module">
+        <p class="module-label">Type · DM Serif Display + Inter</p>
+        <div class="type-scale">
+          <div>
+            <div class="type-size-label">Display · 60 / 0.95 / -2%</div>
+            <h3 class="specimen-h1">Book lash &amp; nail artists near you.</h3>
+          </div>
+          <div>
+            <div class="type-size-label">Body · Inter 14 / 1.55</div>
+            <p class="specimen-body">Browse real portfolios, read verified reviews, and book visits that fit your week. Payments held until the appointment is done.</p>
+          </div>
+        </div>
+        <div class="specimen-mini">
+          <span>Aa Bb Cc 1234</span><span>heavy serif + geometric</span>
+        </div>
+      </div>
+
+      <div class="module">
+        <p class="module-label">Buttons</p>
+        <div class="btn-row">
+          <button class="btn-p">Book now</button>
+          <button class="btn-s">See profile</button>
+          <button class="btn-g">Save &rarr;</button>
+        </div>
+      </div>
+
+      <div class="module module-dark">
+        <p class="module-label">Badges · Input</p>
+        <div class="badges" style="margin-bottom: 14px;">
+          <span class="b-c-accent">Sparq&nbsp;Elite</span>
+          <span class="b-c-ink" style="background:rgba(255,255,255,0.08); color:#FBF8F3;">⚡ Instant Book</span>
+          <span class="b-c-outline" style="color:#FBF8F3; border-color: rgba(255,255,255,0.3);">Mobile</span>
+        </div>
+        <div class="input-row">
+          <input class="input-c" placeholder="Gel nails, lashes, nail art…" />
+        </div>
+      </div>
+
+      <div class="module">
+        <p class="module-label">Artist card</p>
+        <div class="mock-card artist-card">
+          <div class="mock-img c">
+            <span class="tag" style="background:#FF5B2E;color:#0F0E0C;">Sparq&nbsp;Elite</span>
+            <span class="heart" style="background:rgba(15,14,12,0.7); color:#FBF8F3;">♡</span>
+            <span class="rating-pill" style="background:#0F0E0C; color:#FBF8F3;">★ 4.9</span>
+          </div>
+          <div class="meta">
+            <p class="name">Amara Collective</p>
+            <p class="loc">Surry Hills · Mobile &amp; studio</p>
+            <p class="price">From <strong>$95</strong> / visit</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="decision">
+    <div>
+      <p style="margin-bottom:6px;"><strong>Which direction wins?</strong></p>
+      <p>My pick: <strong>Direction B — Editorial</strong>. It owns "premium beauty" in a way the current design hints at but doesn't commit to. Direction A is safe but won't move the brand. Direction C is striking but may feel at odds with the warm/trust-first marketplace promise.</p>
+    </div>
+    <div style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: var(--ink-muted); letter-spacing: 0.12em; text-transform: uppercase; text-align: right;">
+      <div>→ Tell me your pick</div>
+      <div style="margin-top:4px;">or "mix A palette + B type"</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

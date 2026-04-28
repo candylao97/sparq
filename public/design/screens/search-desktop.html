@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Search · Desktop</title>
+<meta name="viewport" content="width=1440" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../sparq-tokens.css" />
+<style>
+  body { background: var(--cream); }
+  .page { width: 1440px; margin: 0 auto; }
+
+  .nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 40px; border-bottom: 1px solid var(--line);
+    background: var(--cream);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .nav-brand { display: flex; align-items: center; gap: 10px; }
+  .nav-brand-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--coral); }
+  .nav-brand-name { font-family: var(--serif); font-size: 24px; letter-spacing: -0.02em; }
+
+  .search-pill {
+    display: flex; align-items: center;
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 999px; padding: 4px 4px 4px 20px;
+    box-shadow: 0 1px 3px rgba(26,26,26,0.04);
+    min-width: 520px;
+  }
+  .search-pill-cell { padding: 8px 16px; border-right: 1px solid var(--line-soft); min-width: 0; }
+  .search-pill-cell:last-of-type { border-right: none; }
+  .search-pill-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-muted); }
+  .search-pill-value { font-size: 13px; font-weight: 500; color: var(--ink); white-space: nowrap; }
+  .search-pill-btn {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--coral); color: #fff; border: none;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: var(--shadow-coral);
+  }
+  .nav-right { display: flex; gap: 10px; align-items: center; }
+
+  /* Breadcrumb + filter bar */
+  .fbar {
+    padding: 24px 40px 0;
+  }
+  .crumbs { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; color: var(--ink-muted); text-transform: uppercase; }
+  .crumbs a { color: var(--ink-muted); }
+  .crumbs span { margin: 0 10px; opacity: 0.5; }
+  .crumbs strong { color: var(--ink); font-weight: 600; }
+
+  .head {
+    display: flex; align-items: end; justify-content: space-between;
+    padding: 16px 0 20px;
+  }
+  .head h1 {
+    font-family: var(--serif); font-weight: 400;
+    font-size: 48px; letter-spacing: -0.025em;
+  }
+  .head h1 em { color: var(--coral); font-style: italic; }
+  .head-sub { color: var(--ink-mid); font-size: 15px; margin-top: 6px; }
+  .head-sub strong { color: var(--ink); font-weight: 600; }
+  .head-right { display: flex; gap: 10px; align-items: center; }
+  .view-toggle {
+    display: flex; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 3px;
+  }
+  .view-toggle button {
+    padding: 7px 16px; border-radius: 999px; border: none; background: transparent;
+    font-size: 12.5px; font-weight: 600; color: var(--ink-mid);
+  }
+  .view-toggle button.active { background: var(--ink); color: #fff; }
+
+  /* Filter pills row */
+  .filter-row {
+    display: flex; gap: 8px; padding: 12px 40px 20px;
+    border-bottom: 1px solid var(--line);
+    overflow-x: auto;
+  }
+  .filter-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 14px; background: var(--surface);
+    border: 1px solid var(--line); border-radius: 999px;
+    font-size: 13px; font-weight: 500; color: var(--ink);
+    white-space: nowrap; cursor: pointer;
+  }
+  .filter-pill.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .filter-pill svg { color: currentColor; }
+  .filter-divider { width: 1px; background: var(--line); margin: 0 6px; flex-shrink: 0; }
+
+  /* Main grid with map */
+  .main {
+    display: grid; grid-template-columns: 1fr 540px;
+    gap: 0;
+  }
+  .results { padding: 28px 40px 80px; }
+  .result-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px 16px;
+  }
+  .result-card { cursor: pointer; }
+  .result-photo {
+    aspect-ratio: 4 / 4.4; border-radius: 14px; overflow: hidden; position: relative; margin-bottom: 12px;
+  }
+  .result-photo .bookmark {
+    position: absolute; right: 10px; top: 10px;
+    width: 32px; height: 32px; border-radius: 50%;
+    background: rgba(255,255,255,0.95); backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: center; border: none;
+  }
+  .result-photo .chip {
+    position: absolute; left: 10px; bottom: 10px;
+    padding: 5px 9px; border-radius: 999px;
+    background: rgba(255,255,255,0.95); backdrop-filter: blur(6px);
+    font-size: 11px; font-weight: 600; color: var(--ink);
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .result-photo .chip::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
+  .result-photo .chip.coral::before { background: var(--coral); }
+  .result-name { font-family: var(--serif); font-size: 18px; color: var(--ink); font-weight: 500; margin-bottom: 2px; display: flex; justify-content: space-between; }
+  .result-rating { font-size: 13px; color: var(--ink); display: inline-flex; align-items: center; gap: 3px; font-family: var(--sans); font-weight: 500; }
+  .result-meta { font-size: 13px; color: var(--ink-soft); margin-bottom: 6px; }
+  .result-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 6px; }
+  .result-tag { font-size: 10.5px; padding: 3px 8px; background: var(--warm-2); border-radius: 999px; color: var(--ink-mid); font-weight: 500; }
+  .result-price { font-size: 14px; color: var(--ink); font-weight: 600; margin-top: 4px; }
+  .result-price span { color: var(--ink-muted); font-weight: 400; }
+
+  /* Map pane */
+  .mappane {
+    position: sticky; top: 84px; height: calc(100vh - 84px);
+    min-height: 780px;
+    border-left: 1px solid var(--line);
+    background:
+      linear-gradient(135deg, #F1EAE4 0%, #E8DED7 100%);
+    position: relative; overflow: hidden;
+  }
+  /* Fake street grid */
+  .mappane::before {
+    content: ''; position: absolute; inset: 0;
+    background:
+      linear-gradient(0deg, transparent 49.5%, rgba(255,255,255,0.6) 49.5%, rgba(255,255,255,0.6) 50.5%, transparent 50.5%) 0 0 / 100% 120px,
+      linear-gradient(90deg, transparent 49.5%, rgba(255,255,255,0.6) 49.5%, rgba(255,255,255,0.6) 50.5%, transparent 50.5%) 0 0 / 140px 100%,
+      linear-gradient(45deg, transparent 49.7%, rgba(255,255,255,0.4) 49.7%, rgba(255,255,255,0.4) 50.3%, transparent 50.3%);
+    opacity: 0.6;
+  }
+  .mappane::after {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% 40%, transparent 30%, rgba(241,234,228,0.5) 70%);
+  }
+  .map-park {
+    position: absolute; left: 8%; top: 14%; width: 140px; height: 190px;
+    background: #C8D4C0; border-radius: 40% 60% 50% 50%;
+    opacity: 0.7;
+  }
+  .map-water {
+    position: absolute; right: -20px; bottom: 15%; width: 280px; height: 260px;
+    background: linear-gradient(135deg, #C8D8DE 0%, #A8BDC7 100%);
+    border-radius: 50% 30% 60% 40%;
+  }
+
+  .map-pin {
+    position: absolute;
+    padding: 6px 10px; border-radius: 999px;
+    background: var(--surface); color: var(--ink);
+    font-size: 13px; font-weight: 700;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.05);
+    cursor: pointer; transition: transform .2s;
+    z-index: 2;
+  }
+  .map-pin:hover { transform: scale(1.1); }
+  .map-pin.active {
+    background: var(--ink); color: #fff;
+    transform: scale(1.15);
+  }
+  .map-pin.coral { background: var(--coral); color: #fff; }
+
+  .map-ctrl {
+    position: absolute; right: 16px; top: 16px;
+    display: flex; flex-direction: column; gap: 8px; z-index: 3;
+  }
+  .map-ctrl button {
+    width: 38px; height: 38px; border-radius: 10px;
+    background: var(--surface); border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: var(--shadow-card);
+  }
+  .map-here {
+    position: absolute; left: 16px; top: 16px; z-index: 3;
+    display: inline-flex; gap: 8px; align-items: center;
+    padding: 8px 12px; border-radius: 999px;
+    background: var(--surface); border: 1px solid var(--line);
+    font-size: 12px; font-weight: 600; color: var(--ink);
+    box-shadow: var(--shadow-card);
+  }
+  .map-here::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--coral); }
+
+  /* Hovering card over map */
+  .map-hover-card {
+    position: absolute; left: 20px; bottom: 20px; right: 20px;
+    background: var(--surface); border-radius: 16px;
+    padding: 14px; display: flex; gap: 14px; align-items: center;
+    box-shadow: var(--shadow-float);
+    z-index: 4;
+  }
+  .map-hover-img { width: 80px; height: 80px; border-radius: 12px; flex-shrink: 0; overflow: hidden; }
+  .map-hover-name { font-family: var(--serif); font-size: 17px; font-weight: 500; margin-bottom: 2px; }
+  .map-hover-meta { font-size: 12px; color: var(--ink-soft); margin-bottom: 6px; }
+  .map-hover-foot { display: flex; justify-content: space-between; align-items: center; }
+  .map-hover-price { font-size: 13px; font-weight: 600; }
+  .map-hover-btn {
+    padding: 7px 12px; border-radius: 999px; background: var(--coral);
+    color: #fff; border: none; font-size: 12px; font-weight: 600;
+    box-shadow: var(--shadow-coral);
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<nav class="nav">
+  <div style="display:flex; align-items:center; gap:32px;">
+    <a href="#" class="nav-brand">
+      <span class="nav-brand-dot"></span>
+      <span class="nav-brand-name">Sparq</span>
+    </a>
+    <div class="search-pill">
+      <div class="search-pill-cell">
+        <div class="search-pill-label">Service</div>
+        <div class="search-pill-value">Gel manicure</div>
+      </div>
+      <div class="search-pill-cell">
+        <div class="search-pill-label">Where</div>
+        <div class="search-pill-value">Brooklyn</div>
+      </div>
+      <div class="search-pill-cell">
+        <div class="search-pill-label">When</div>
+        <div class="search-pill-value" style="color: var(--ink-muted); font-weight: 400;">Any time</div>
+      </div>
+      <button class="search-pill-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="nav-right">
+    <button class="sparq-btn sparq-btn--ghost sparq-btn--sm">Log in</button>
+    <button class="sparq-btn sparq-btn--primary sparq-btn--sm">Sign up</button>
+  </div>
+</nav>
+
+<div class="fbar">
+  <p class="crumbs"><a href="#">Discover</a> <span>/</span> <a href="#">Nails</a> <span>/</span> <strong>Gel manicure</strong></p>
+  <div class="head">
+    <div>
+      <h1>Gel manicure in <em>Brooklyn</em>.</h1>
+      <p class="head-sub"><strong>184 artists</strong> available · prices from $45 · sorted by <strong>best match</strong></p>
+    </div>
+    <div class="head-right">
+      <div class="view-toggle">
+        <button class="active">List + map</button>
+        <button>Grid</button>
+        <button>Map only</button>
+      </div>
+      <button class="sparq-btn sparq-btn--secondary sparq-btn--sm">
+        Sort: Best match
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="filter-row">
+  <button class="filter-pill active">
+    Available this week
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+  </button>
+  <button class="filter-pill">$ – $$</button>
+  <button class="filter-pill">4.8+ stars</button>
+  <button class="filter-pill">Extensions</button>
+  <button class="filter-pill">Instant book</button>
+  <button class="filter-pill">Home visits</button>
+  <span class="filter-divider"></span>
+  <button class="filter-pill">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+    All filters
+  </button>
+</div>
+
+<div class="main">
+  <div class="results">
+    <div class="result-grid">
+
+      <article class="result-card">
+        <div class="result-photo sparq-img" data-tone="2">
+          <span class="chip coral">Instant book</span>
+          <button class="bookmark"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16l7-4 7 4z"/></svg></button>
+        </div>
+        <div class="result-name">Maya Rivera <span class="result-rating"><span class="sparq-star sparq-star--coral sparq-star--sm"></span> 4.96</span></div>
+        <div class="result-meta">Williamsburg · 1.2 mi</div>
+        <div class="result-tags"><span class="result-tag">Gel</span><span class="result-tag">Extensions</span><span class="result-tag">Chrome</span></div>
+        <div class="result-price">$65 <span>/ full set · 1hr</span></div>
+      </article>
+
+      <article class="result-card">
+        <div class="result-photo sparq-img" data-tone="9">
+          <span class="chip">Opens in 2h</span>
+          <button class="bookmark"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16l7-4 7 4z"/></svg></button>
+        </div>
+        <div class="result-name">Sana Ito <span class="result-rating"><span class="sparq-star sparq-star--coral sparq-star--sm"></span> 4.98</span></div>
+        <div class="result-meta">DUMBO · 0.8 mi</div>
+        <div class="result-tags"><span class="result-tag">Japanese gel</span><span class="result-tag">Nail art</span></div>
+        <div class="result-price">$85 <span>/ set · 1.5hr</span></div>
+      </article>
+
+      <article class="result-card">
+        <div class="result-photo sparq-img" data-tone="7">
+          <span class="chip coral">Instant book</span>
+          <button class="bookmark"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16l7-4 7 4z"/></svg></button>
+        </div>
+        <div class="result-name">Devon Clarke <span class="result-rating"><span class="sparq-star sparq-star--coral sparq-star--sm"></span> 4.89</span></div>
+        <div class="result-meta">Greenpoint · 1.9 mi</div>
+        <div class="result-tags"><span class="result-tag">Gel</span><span class="result-tag">Quick</span></div>
+        <div class="result-price">$45 <span>/ set · 45min</span></div>
+      </article>
+
+      <article class="result-card">
+        <div class="result-photo sparq-img" data-tone="4">
+          <button class="bookmark"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16l7-4 7 4z"/></svg></button>
+        </div>
+        <div class="result-name">Priya Shah <span class="result-rating"><span class="sparq-star sparq-star--coral sparq-star--sm"></span> 4.98</span></div>
+        <div class="result-meta">Park Slope · 2.3 mi</div>
+        <div class="result-tags"><span class="result-tag">Gel</span><span class="result-tag">Pedi combo</span></div>
+        <div class="result-price">$70 <span>/ set · 1hr</span></div>
+      </article>
+
+      <article class="result-card">
+        <div class="result-photo sparq-img" data-tone="1">
+          <span class="chip">3 slots today</span>
+          <button class="bookmark"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16l7-4 7 4z"/></svg></button>
+        </div>
+        <div class="result-name">Leigh Bautista <span class="result-rating"><span class="sparq-star sparq-star--coral sparq-star--sm"></span> 4.92</span></div>
+        <div class="result-meta">Bed-Stuy · 1.5 mi</div>
+        <div class="result-tags"><span class="result-tag">Gel</span><span class="result-tag">Extensions</span></div>
+        <div class="result-price">$60 <span>/ set · 1hr</span></div>
+      </article>
+
+      <article class="result-card">
+        <div class="result-photo sparq-img" data-tone="5">
+          <button class="bookmark"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16l7-4 7 4z"/></svg></button>
+        </div>
+        <div class="result-name">Elena Vasquez <span class="result-rating"><span class="sparq-star sparq-star--coral sparq-star--sm"></span> 4.95</span></div>
+        <div class="result-meta">Carroll Gardens · 2.8 mi</div>
+        <div class="result-tags"><span class="result-tag">Gel</span><span class="result-tag">French</span><span class="result-tag">Chrome</span></div>
+        <div class="result-price">$75 <span>/ set · 1hr</span></div>
+      </article>
+
+    </div>
+
+    <div style="text-align: center; margin-top: 48px;">
+      <button class="sparq-btn sparq-btn--secondary">Load more artists</button>
+    </div>
+  </div>
+
+  <!-- Map pane -->
+  <div class="mappane">
+    <div class="map-park"></div>
+    <div class="map-water"></div>
+
+    <div class="map-here">You're here · Brooklyn</div>
+
+    <div class="map-ctrl">
+      <button aria-label="Zoom in"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></button>
+      <button aria-label="Zoom out"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg></button>
+      <button aria-label="Locate"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
+    </div>
+
+    <!-- Map pins scattered -->
+    <div class="map-pin" style="left: 22%; top: 18%;">$85</div>
+    <div class="map-pin active" style="left: 42%; top: 30%;">$65</div>
+    <div class="map-pin" style="left: 65%; top: 22%;">$45</div>
+    <div class="map-pin coral" style="left: 30%; top: 46%;">$60</div>
+    <div class="map-pin" style="left: 55%; top: 50%;">$70</div>
+    <div class="map-pin" style="left: 68%; top: 60%;">$75</div>
+    <div class="map-pin" style="left: 38%; top: 64%;">$90</div>
+    <div class="map-pin" style="left: 22%; top: 70%;">$55</div>
+
+    <div class="map-hover-card">
+      <div class="map-hover-img sparq-img" data-tone="2"></div>
+      <div style="flex:1;">
+        <div class="map-hover-name">Maya Rivera</div>
+        <div class="map-hover-meta"><span class="sparq-star sparq-star--coral sparq-star--sm"></span> 4.96 · Williamsburg · 1.2 mi</div>
+        <div class="map-hover-foot">
+          <span class="map-hover-price">$65 · 1hr</span>
+          <button class="map-hover-btn">Book →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,218 @@
+/* ─────────────────────────────────────────────────────────
+   Sparq · Direction A — Refined
+   Shared design tokens used by every screen iframe.
+   ───────────────────────────────────────────────────────── */
+
+:root {
+  /* Brand */
+  --coral:       #E96B56;
+  --coral-dark:  #A63A29;
+  --coral-light: #F9EDE9;
+  --coral-glow:  rgba(233, 107, 86, 0.18);
+
+  /* Ink */
+  --ink:         #1A1A1A;
+  --ink-mid:     #555555;
+  --ink-soft:    #717171;
+  --ink-muted:   #8A8A8A;
+
+  /* Surfaces */
+  --cream:       #FDFBF7;
+  --surface:     #FFFFFF;
+  --warm-1:      #F9F2EF;
+  --warm-2:      #F3ECE9;
+  --warm-3:      #E8E1DE;
+
+  /* Lines */
+  --line:        #E8E1DE;
+  --line-soft:   rgba(26,26,26,0.06);
+
+  /* Status */
+  --success:     #1A9E6F;
+  --success-bg:  #EDFAF4;
+  --warning:     #C08000;
+  --error:       #C0392B;
+
+  /* Shadows */
+  --shadow-card:    0 1px 3px rgba(0,0,0,0.04);
+  --shadow-hover:   0 12px 40px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04);
+  --shadow-float:   0 20px 60px rgba(0,0,0,0.1), 0 4px 12px rgba(0,0,0,0.05);
+  --shadow-coral:   0 4px 14px rgba(233,107,86,0.22);
+
+  /* Type */
+  --serif: 'Noto Serif', Georgia, serif;
+  --sans:  'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono:  'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+
+  /* Radius */
+  --r-sm:   8px;
+  --r-md:   12px;
+  --r-lg:   16px;
+  --r-xl:   24px;
+  --r-pill: 9999px;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  background: var(--cream);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.6;
+  letter-spacing: -0.005em;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.08;
+  color: var(--ink);
+}
+
+p { margin: 0; color: var(--ink-soft); }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; cursor: pointer; }
+input, textarea, select { font: inherit; }
+
+::selection { background: var(--coral-glow); }
+
+/* ─── Utility atoms ─── */
+.sparq-kicker {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--coral-dark);
+  font-weight: 500;
+}
+.sparq-eyebrow {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  font-weight: 500;
+}
+
+/* ─── Buttons ─── */
+.sparq-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 13px 22px; border-radius: var(--r-pill);
+  font-family: var(--sans); font-size: 14px; font-weight: 600;
+  border: 1px solid transparent; transition: all .25s ease;
+  white-space: nowrap;
+}
+.sparq-btn--primary {
+  background: var(--coral); color: #fff; border-color: var(--coral);
+  box-shadow: var(--shadow-coral);
+}
+.sparq-btn--primary:hover { background: var(--coral-dark); border-color: var(--coral-dark); }
+.sparq-btn--secondary {
+  background: var(--surface); color: var(--ink); border-color: var(--line);
+}
+.sparq-btn--secondary:hover { border-color: var(--ink); }
+.sparq-btn--dark {
+  background: var(--ink); color: #fff; border-color: var(--ink);
+}
+.sparq-btn--ghost {
+  background: transparent; color: var(--ink); border-color: transparent;
+  padding: 10px 14px;
+}
+.sparq-btn--ghost:hover { background: var(--warm-1); }
+.sparq-btn--sm { padding: 9px 16px; font-size: 13px; }
+
+/* ─── Card ─── */
+.sparq-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
+.sparq-card--elevated {
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-card), var(--shadow-hover);
+}
+
+/* ─── Input ─── */
+.sparq-input {
+  width: 100%; height: 48px; padding: 0 18px;
+  background: var(--surface); color: var(--ink);
+  border: 1px solid var(--line); border-radius: var(--r-md);
+  font-size: 14px;
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+.sparq-input::placeholder { color: var(--ink-muted); }
+.sparq-input:focus {
+  outline: none; border-color: var(--coral);
+  box-shadow: 0 0 0 3px var(--coral-glow);
+}
+
+/* ─── Badges ─── */
+.sparq-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 10px; border-radius: var(--r-pill);
+  font-size: 11px; font-weight: 600; line-height: 1.3;
+}
+.sparq-badge--coral { background: var(--coral-light); color: var(--coral-dark); }
+.sparq-badge--dark  { background: var(--ink); color: #fff; }
+.sparq-badge--neutral { background: var(--warm-2); color: var(--ink-mid); }
+.sparq-badge--success { background: var(--success-bg); color: var(--success); }
+.sparq-badge--outline { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+
+/* Star used in many places */
+.sparq-star {
+  display: inline-block; width: 12px; height: 12px;
+  background: var(--ink);
+  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+  vertical-align: -1px;
+}
+.sparq-star--coral { background: var(--coral); }
+.sparq-star--sm { width: 10px; height: 10px; }
+
+/* ─── Image placeholders (stand-in portfolio tiles) ─── */
+.sparq-img {
+  background-color: var(--warm-2);
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+/* Portfolio tones — approximating polished nail/lash photography */
+.sparq-img[data-tone="1"] { background-image: linear-gradient(135deg, #E8C3A6 0%, #B87759 100%); }
+.sparq-img[data-tone="2"] { background-image: linear-gradient(140deg, #F4D5C4 0%, #D88368 100%); }
+.sparq-img[data-tone="3"] { background-image: linear-gradient(135deg, #9A4B2F 0%, #3D1E14 100%); }
+.sparq-img[data-tone="4"] { background-image: linear-gradient(145deg, #F3E2D0 0%, #C49878 100%); }
+.sparq-img[data-tone="5"] { background-image: linear-gradient(135deg, #E2A487 0%, #A03A1E 100%); }
+.sparq-img[data-tone="6"] { background-image: linear-gradient(140deg, #D8B89F 0%, #8C5A3E 100%); }
+.sparq-img[data-tone="7"] { background-image: linear-gradient(135deg, #F8E0D0 0%, #BC7850 100%); }
+.sparq-img[data-tone="8"] { background-image: linear-gradient(135deg, #5C362A 0%, #1F1108 100%); }
+.sparq-img[data-tone="9"] { background-image: linear-gradient(135deg, #F2CCB6 0%, #E96B56 100%); }
+
+/* Subtle texture overlay so they don't look like pure gradients */
+.sparq-img::after {
+  content: ''; position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse at 30% 25%, rgba(255,255,255,0.22) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 80%, rgba(0,0,0,0.15) 0%, transparent 55%);
+  pointer-events: none;
+}
+
+/* Initials placeholder if we really need text */
+.sparq-img-initial {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--serif); font-size: 44px; color: rgba(255,255,255,0.35);
+  font-weight: 400;
+}
+
+/* ─── Scrollbar hide helper ─── */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Tiny inline SVG icons can inherit color via currentColor */
+svg.icon { display: inline-block; vertical-align: -2px; }

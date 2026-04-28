@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Artist Profile · Mobile</title>
+<meta name="viewport" content="width=390" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../sparq-tokens.css" />
+<style>
+  body { background: var(--cream); font-size: 14px; }
+  .page { width: 390px; margin: 0 auto; padding-bottom: 100px; position: relative; }
+
+  .status { display: flex; justify-content: space-between; padding: 16px 24px 4px; font-size: 14px; font-weight: 600; }
+
+  /* Hero photo */
+  .m-hero {
+    position: relative;
+    aspect-ratio: 1 / 1.1;
+    overflow: hidden;
+  }
+  .m-hero-nav {
+    position: absolute; left: 0; right: 0; top: 0; z-index: 3;
+    padding: 16px 16px 0;
+    display: flex; justify-content: space-between;
+  }
+  .m-hero-nav-btn {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: rgba(255,255,255,0.95); backdrop-filter: blur(8px);
+    border: none; display: flex; align-items: center; justify-content: center;
+  }
+  .m-hero-nav-group { display: flex; gap: 8px; }
+
+  .m-hero-dots {
+    position: absolute; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 3;
+    display: flex; gap: 4px;
+    background: rgba(0,0,0,0.5); backdrop-filter: blur(6px);
+    padding: 6px 10px; border-radius: 999px;
+    font-family: var(--mono); font-size: 10px; color: #fff; font-weight: 500;
+    letter-spacing: 0.06em;
+  }
+
+  /* Identity */
+  .m-id {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid var(--line);
+  }
+  .m-id h1 { font-family: var(--serif); font-weight: 400; font-size: 32px; letter-spacing: -0.02em; line-height: 1.05; }
+  .m-id h1 em { color: var(--coral); font-style: italic; }
+  .m-id-badges { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+  .m-id-meta {
+    display: flex; gap: 10px; align-items: center;
+    font-size: 12.5px; color: var(--ink-mid);
+    margin-top: 10px; flex-wrap: wrap;
+  }
+  .m-id-meta strong { color: var(--ink); }
+  .m-id-meta .sep { width: 3px; height: 3px; background: var(--ink-muted); border-radius: 50%; }
+
+  /* Tab strip */
+  .m-tabs-strip {
+    display: flex; gap: 20px; padding: 0 20px;
+    border-bottom: 1px solid var(--line);
+    overflow-x: auto;
+  }
+  .m-tabs-strip::-webkit-scrollbar { display: none; }
+  .m-tab-btn {
+    padding: 12px 0; font-size: 13px; font-weight: 500; color: var(--ink-muted);
+    background: none; border: none; border-bottom: 2px solid transparent;
+    white-space: nowrap;
+  }
+  .m-tab-btn.active { color: var(--ink); border-bottom-color: var(--coral); font-weight: 600; }
+
+  /* Content sections */
+  .m-sec { padding: 24px 20px; border-bottom: 1px solid var(--line); }
+  .m-sec h2 { font-family: var(--serif); font-size: 22px; font-weight: 400; margin-bottom: 12px; letter-spacing: -0.02em; }
+  .m-sec p { font-size: 14px; color: var(--ink-mid); line-height: 1.6; }
+
+  .m-specs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 16px; }
+  .m-spec {
+    padding: 12px; background: var(--surface); border: 1px solid var(--line);
+    border-radius: 10px; text-align: center;
+  }
+  .m-spec-ico {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--coral-light); color: var(--coral-dark);
+    margin: 0 auto 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--serif); font-size: 12px; font-weight: 600;
+  }
+  .m-spec-title { font-size: 12px; font-weight: 600; color: var(--ink); }
+  .m-spec-sub { font-size: 10.5px; color: var(--ink-soft); }
+
+  /* Services */
+  .m-svc {
+    display: flex; gap: 12px; align-items: start;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .m-svc:last-child { border-bottom: none; }
+  .m-svc-body { flex: 1; min-width: 0; }
+  .m-svc-title { font-size: 14px; font-weight: 600; margin-bottom: 2px; display: flex; gap: 6px; align-items: center; }
+  .m-svc-desc { font-size: 12px; color: var(--ink-soft); line-height: 1.5; }
+  .m-svc-dur { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; color: var(--ink-muted); margin-top: 4px; }
+  .m-svc-right { text-align: right; flex-shrink: 0; }
+  .m-svc-price { font-family: var(--serif); font-size: 17px; font-weight: 500; color: var(--ink); }
+  .m-svc-add {
+    margin-top: 6px; padding: 6px 10px; border-radius: 999px;
+    background: var(--ink); color: #fff; border: none;
+    font-size: 11px; font-weight: 600;
+  }
+
+  /* Gallery */
+  .m-gallery {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px;
+    margin-top: 14px;
+  }
+  .m-gallery > div { aspect-ratio: 1; border-radius: 6px; overflow: hidden; position: relative; }
+  .m-gallery .more {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.45); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--serif); font-size: 18px; font-weight: 500;
+  }
+
+  /* Reviews summary */
+  .m-rev-sum {
+    display: flex; gap: 14px; align-items: center;
+    padding: 14px; background: var(--surface);
+    border: 1px solid var(--line); border-radius: 12px;
+    margin-top: 12px;
+  }
+  .m-rev-num { font-family: var(--serif); font-size: 44px; font-weight: 500; color: var(--ink); line-height: 1; }
+  .m-rev-detail { flex: 1; }
+  .m-rev-stars { display: flex; gap: 2px; margin-bottom: 4px; }
+  .m-rev-count { font-size: 12px; color: var(--ink-soft); }
+  .m-rev-count strong { color: var(--ink); }
+
+  .m-rev-card {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .m-rev-card:last-child { border-bottom: none; }
+  .m-rev-head { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
+  .m-rev-avatar { width: 30px; height: 30px; border-radius: 50%; overflow: hidden; }
+  .m-rev-name { font-size: 13px; font-weight: 600; }
+  .m-rev-date { font-family: var(--mono); font-size: 10px; color: var(--ink-muted); letter-spacing: 0.06em; }
+  .m-rev-text { font-size: 13px; color: var(--ink-mid); line-height: 1.55; }
+  .m-rev-svc { font-family: var(--mono); font-size: 9.5px; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 6px; }
+
+  /* Sticky bottom CTA */
+  .m-cta {
+    position: fixed; left: 50%; bottom: 0; transform: translateX(-50%);
+    width: 390px;
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+    padding: 12px 16px 28px;
+    display: flex; gap: 12px; align-items: center;
+    box-shadow: 0 -8px 24px rgba(0,0,0,0.06);
+    z-index: 10;
+  }
+  .m-cta-left { flex: 1; min-width: 0; }
+  .m-cta-price { font-family: var(--serif); font-size: 18px; font-weight: 500; display: flex; align-items: baseline; gap: 6px; }
+  .m-cta-price .unit { font-size: 12px; font-family: var(--sans); color: var(--ink-soft); font-weight: 400; }
+  .m-cta-sub { font-size: 11.5px; color: var(--ink-soft); }
+  .m-cta-sub strong { color: var(--ink); }
+  .m-cta-btn {
+    padding: 13px 20px; border-radius: 12px;
+    background: var(--coral); color: #fff; border: none;
+    font-size: 14px; font-weight: 600;
+    box-shadow: var(--shadow-coral);
+    display: flex; align-items: center; gap: 6px;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="status">
+    <span>9:41</span>
+    <svg width="16" height="10" viewBox="0 0 16 10" fill="currentColor"><rect y="6" width="3" height="4" rx="0.5"/><rect x="4" y="4" width="3" height="6" rx="0.5"/><rect x="8" y="2" width="3" height="8" rx="0.5"/><rect x="12" width="3" height="10" rx="0.5"/></svg>
+  </div>
+
+  <div class="m-hero sparq-img" data-tone="2">
+    <div class="m-hero-nav">
+      <button class="m-hero-nav-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 12H5m7-7-7 7 7 7"/></svg></button>
+      <div class="m-hero-nav-group">
+        <button class="m-hero-nav-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg></button>
+        <button class="m-hero-nav-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16l7-4 7 4z"/></svg></button>
+      </div>
+    </div>
+    <span class="m-hero-dots">1 / 42 · SEE ALL</span>
+  </div>
+
+  <div class="m-id">
+    <h1>Maya <em>Rivera</em></h1>
+    <div class="m-id-badges">
+      <span class="sparq-badge sparq-badge--coral">Top 10 Brooklyn</span>
+      <span class="sparq-badge sparq-badge--neutral">Instant book</span>
+    </div>
+    <div class="m-id-meta">
+      <span><span class="sparq-star sparq-star--coral sparq-star--sm"></span> <strong>4.96</strong> (218)</span>
+      <span class="sep"></span>
+      <span>Williamsburg · 1.2 mi</span>
+    </div>
+  </div>
+
+  <div class="m-tabs-strip">
+    <button class="m-tab-btn active">Overview</button>
+    <button class="m-tab-btn">Services</button>
+    <button class="m-tab-btn">Reviews</button>
+    <button class="m-tab-btn">Portfolio</button>
+    <button class="m-tab-btn">Location</button>
+  </div>
+
+  <div class="m-sec">
+    <h2>About Maya</h2>
+    <p>Gel specialist focused on clean, editorial sets — chrome, micro-French, subtle art. Studio off Bedford Ave; light, quiet, scent-free. Usually texts 10 min before your slot.</p>
+    <div class="m-specs">
+      <div class="m-spec">
+        <div class="m-spec-ico">Aa</div>
+        <div class="m-spec-title">Gel &amp; chrome</div>
+        <div class="m-spec-sub">1hr · $65+</div>
+      </div>
+      <div class="m-spec">
+        <div class="m-spec-ico">Ex</div>
+        <div class="m-spec-title">Extensions</div>
+        <div class="m-spec-sub">1.5hr · $95+</div>
+      </div>
+      <div class="m-spec">
+        <div class="m-spec-ico">✦</div>
+        <div class="m-spec-title">Nail art</div>
+        <div class="m-spec-sub">+$15/finger</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="m-sec">
+    <h2>Services</h2>
+    <div class="m-svc">
+      <div class="m-svc-body">
+        <div class="m-svc-title">Gel manicure <span class="sparq-badge sparq-badge--neutral" style="font-size: 9px; padding: 2px 6px;">Top pick</span></div>
+        <p class="m-svc-desc">Prep, shape, cuticle care, base + gel color. 20+ colors available.</p>
+        <div class="m-svc-dur">1 HR</div>
+      </div>
+      <div class="m-svc-right">
+        <div class="m-svc-price">$65</div>
+        <button class="m-svc-add">Select</button>
+      </div>
+    </div>
+    <div class="m-svc">
+      <div class="m-svc-body">
+        <div class="m-svc-title">Chrome gel manicure</div>
+        <p class="m-svc-desc">Chrome powder in any tone. Maya's specialty.</p>
+        <div class="m-svc-dur">1 HR 15</div>
+      </div>
+      <div class="m-svc-right">
+        <div class="m-svc-price">$80</div>
+        <button class="m-svc-add">Select</button>
+      </div>
+    </div>
+    <div class="m-svc">
+      <div class="m-svc-body">
+        <div class="m-svc-title">Soft gel extensions</div>
+        <p class="m-svc-desc">Light-weight extensions with soft gel tips.</p>
+        <div class="m-svc-dur">1 HR 30</div>
+      </div>
+      <div class="m-svc-right">
+        <div class="m-svc-price">$95</div>
+        <button class="m-svc-add">Select</button>
+      </div>
+    </div>
+    <button class="sparq-btn sparq-btn--secondary sparq-btn--sm" style="margin-top: 12px; width: 100%; justify-content: center;">See all 12 services</button>
+  </div>
+
+  <div class="m-sec">
+    <h2>Portfolio</h2>
+    <div class="m-gallery">
+      <div class="sparq-img" data-tone="2"></div>
+      <div class="sparq-img" data-tone="7"></div>
+      <div class="sparq-img" data-tone="9"></div>
+      <div class="sparq-img" data-tone="1"></div>
+      <div class="sparq-img" data-tone="4"></div>
+      <div class="sparq-img" data-tone="5"><div class="more">+36</div></div>
+    </div>
+  </div>
+
+  <div class="m-sec">
+    <h2>Reviews</h2>
+    <div class="m-rev-sum">
+      <div class="m-rev-num">4.96</div>
+      <div class="m-rev-detail">
+        <div class="m-rev-stars">
+          <span class="sparq-star sparq-star--coral sparq-star--sm"></span>
+          <span class="sparq-star sparq-star--coral sparq-star--sm"></span>
+          <span class="sparq-star sparq-star--coral sparq-star--sm"></span>
+          <span class="sparq-star sparq-star--coral sparq-star--sm"></span>
+          <span class="sparq-star sparq-star--coral sparq-star--sm"></span>
+        </div>
+        <div class="m-rev-count"><strong>218 reviews</strong> · 94% 5-star</div>
+      </div>
+    </div>
+
+    <div class="m-rev-card">
+      <div class="m-rev-head">
+        <div class="m-rev-avatar sparq-img" data-tone="4"></div>
+        <div>
+          <div class="m-rev-name">Hannah L.</div>
+          <div class="m-rev-date">3 DAYS AGO</div>
+        </div>
+      </div>
+      <p class="m-rev-text">Maya is the best in Brooklyn — full stop. She listens, her studio is immaculate, and the chrome application on my tips is still perfect three weeks in.</p>
+      <div class="m-rev-svc">CHROME GEL MANICURE</div>
+    </div>
+
+    <div class="m-rev-card">
+      <div class="m-rev-head">
+        <div class="m-rev-avatar sparq-img" data-tone="7"></div>
+        <div>
+          <div class="m-rev-name">Jordan P.</div>
+          <div class="m-rev-date">1 WEEK AGO</div>
+        </div>
+      </div>
+      <p class="m-rev-text">Booked last minute and she squeezed me in. Asked questions, offered a color I hadn't considered, nailed the vibe.</p>
+      <div class="m-rev-svc">GEL MANICURE</div>
+    </div>
+
+    <button class="sparq-btn sparq-btn--secondary sparq-btn--sm" style="margin-top: 12px; width: 100%; justify-content: center;">Show all 218 reviews</button>
+  </div>
+
+  <!-- Sticky bottom booking CTA -->
+  <div class="m-cta">
+    <div class="m-cta-left">
+      <div class="m-cta-price">$65 <span class="unit">· 1hr</span></div>
+      <div class="m-cta-sub">Next slot <strong>Tomorrow 11:00</strong></div>
+    </div>
+    <button class="m-cta-btn">
+      Book now
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14m-5-5 5 5-5 5"/></svg>
+    </button>
+  </div>
+
+</div>
+</body>
+</html>

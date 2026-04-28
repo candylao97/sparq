@@ -17,5 +17,6 @@ Disallow: /account-settings
 Disallow: /bookings
 Disallow: /messages
 Disallow: /notifications
+Disallow: /design/
 
 Sitemap: https://sparq.com.au/sitemap.xml

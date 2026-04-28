@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Noto_Serif, Plus_Jakarta_Sans } from 'next/font/google'
+import { Noto_Serif, Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 import { Providers } from './providers'
 import { Navbar } from '@/components/layout/Navbar'
@@ -23,6 +23,13 @@ const plusJakarta = Plus_Jakarta_Sans({
   display: 'swap',
 })
 
+const jetBrainsMono = JetBrains_Mono({
+  subsets: ['latin'],
+  variable: '--font-mono',
+  weight: ['400', '500'],
+  display: 'swap',
+})
+
 export const metadata: Metadata = {
   title: 'Sparq — Book trusted nail & lash artists near you',
   description: 'Browse real portfolios, read honest reviews, and book in minutes. Verified artists across Australia.',
@@ -37,7 +44,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${notoSerif.variable} ${plusJakarta.variable} font-sans antialiased`}>
+      <body className={`${notoSerif.variable} ${plusJakarta.variable} ${jetBrainsMono.variable} font-sans antialiased`}>
         <Providers>
           <Navbar />
           <MainWrapper>

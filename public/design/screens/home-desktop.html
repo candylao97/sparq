@@ -1,0 +1,593 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Home · Desktop</title>
+<meta name="viewport" content="width=1440" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../sparq-tokens.css" />
+<style>
+  body { background: var(--cream); }
+  .page { width: 1440px; margin: 0 auto; }
+
+  /* ─── Nav ─── */
+  .nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 48px;
+    background: var(--cream);
+    border-bottom: 1px solid var(--line-soft);
+    position: sticky; top: 0; z-index: 10;
+    backdrop-filter: blur(12px);
+  }
+  .nav-brand { display: flex; align-items: center; gap: 10px; }
+  .nav-brand-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--coral); }
+  .nav-brand-name { font-family: var(--serif); font-size: 26px; color: var(--ink); letter-spacing: -0.02em; }
+  .nav-links { display: flex; gap: 6px; }
+  .nav-link { padding: 9px 16px; border-radius: 999px; font-size: 14px; font-weight: 500; color: var(--ink-mid); }
+  .nav-link:hover { background: var(--warm-1); color: var(--ink); }
+  .nav-link.active { color: var(--ink); background: var(--warm-2); }
+  .nav-right { display: flex; align-items: center; gap: 12px; }
+  .nav-city {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 14px; background: var(--surface); border: 1px solid var(--line);
+    border-radius: 999px; font-size: 13px; font-weight: 500;
+  }
+
+  /* ─── Hero ─── */
+  .hero {
+    padding: 80px 48px 64px;
+    display: grid; grid-template-columns: 1.05fr 1fr; gap: 64px;
+    align-items: end;
+  }
+  .hero-eyebrow {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--coral-dark);
+    margin-bottom: 24px; display: flex; align-items: center; gap: 10px;
+  }
+  .hero-eyebrow::before { content: ''; width: 28px; height: 1px; background: var(--coral-dark); }
+  .hero h1 {
+    font-family: var(--serif); font-weight: 400;
+    font-size: 96px; line-height: 0.98; letter-spacing: -0.03em;
+    color: var(--ink); margin-bottom: 28px;
+  }
+  .hero h1 em { color: var(--coral); font-style: italic; font-weight: 400; }
+  .hero-lead {
+    color: var(--ink-mid); font-size: 18px; line-height: 1.55;
+    max-width: 500px; margin-bottom: 40px;
+  }
+
+  /* Search bar — the money element */
+  .search-bar {
+    display: flex; align-items: center;
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 18px; padding: 8px 8px 8px 0;
+    box-shadow: 0 2px 8px rgba(26,26,26,0.03), 0 20px 40px rgba(26,26,26,0.04);
+    width: 100%; max-width: 620px;
+  }
+  .search-cell {
+    padding: 14px 24px; border-right: 1px solid var(--line-soft);
+    flex: 1; min-width: 0;
+  }
+  .search-cell:last-of-type { border-right: none; }
+  .search-cell-label {
+    font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--ink-muted); margin-bottom: 4px;
+    font-weight: 500;
+  }
+  .search-cell-value {
+    font-size: 14px; font-weight: 500; color: var(--ink);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .search-cell-value.placeholder { color: var(--ink-muted); font-weight: 400; }
+  .search-btn {
+    width: 52px; height: 52px; border-radius: 14px;
+    background: var(--coral); color: #fff; border: none;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-coral);
+    transition: background .2s;
+  }
+  .search-btn:hover { background: var(--coral-dark); }
+
+  .hero-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 20px; }
+  .hero-chip {
+    padding: 7px 14px; background: transparent;
+    border: 1px solid var(--line); border-radius: 999px;
+    font-size: 12.5px; font-weight: 500; color: var(--ink-mid);
+    transition: all .15s;
+  }
+  .hero-chip:hover { border-color: var(--ink); color: var(--ink); }
+
+  /* Hero right — featured collage */
+  .hero-collage {
+    display: grid; grid-template-columns: 1.2fr 1fr; grid-template-rows: 180px 180px 180px;
+    gap: 12px; height: 560px;
+  }
+  .collage-tile {
+    border-radius: 16px; overflow: hidden; position: relative;
+  }
+  .collage-tile:nth-child(1) { grid-row: span 2; }
+  .collage-tile:nth-child(2) { grid-row: span 1; }
+  .collage-tile:nth-child(3) { grid-row: span 1; }
+  .collage-tile:nth-child(4) { grid-column: span 2; }
+
+  .collage-badge {
+    position: absolute; left: 14px; bottom: 14px;
+    padding: 6px 11px; border-radius: 999px;
+    background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
+    font-size: 11px; font-weight: 600; color: var(--ink);
+    display: flex; align-items: center; gap: 6px;
+    z-index: 2;
+  }
+  .collage-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
+
+  /* ─── Live marketplace ticker ─── */
+  .ticker {
+    display: flex; align-items: center; gap: 16px;
+    margin-top: 36px; padding: 12px 20px;
+    background: rgba(26,26,26,0.04);
+    border-radius: 999px;
+    width: fit-content;
+  }
+  .ticker-pulse {
+    position: relative; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--success);
+  }
+  .ticker-pulse::before {
+    content: ''; position: absolute; inset: -4px; border-radius: 50%;
+    background: var(--success); opacity: 0.3;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 0.3; }
+    50% { transform: scale(1.6); opacity: 0; }
+  }
+  .ticker-text { font-size: 13px; color: var(--ink-mid); }
+  .ticker-text strong { color: var(--ink); font-weight: 600; }
+
+  /* ─── Section blocks ─── */
+  .section { padding: 80px 48px; }
+  .section-head {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    margin-bottom: 32px;
+  }
+  .section-head h2 {
+    font-family: var(--serif); font-weight: 400;
+    font-size: 40px; line-height: 1.05; letter-spacing: -0.02em;
+  }
+  .section-head h2 em { color: var(--coral); font-style: italic; }
+  .section-head-right { display: flex; align-items: center; gap: 18px; }
+  .section-link {
+    font-size: 13px; font-weight: 600; color: var(--ink);
+    display: flex; align-items: center; gap: 6px;
+    padding-bottom: 2px; border-bottom: 1px solid var(--ink);
+  }
+
+  /* Category rail */
+  .categories {
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px;
+  }
+  .cat-card {
+    aspect-ratio: 1 / 1.15; border-radius: 18px; overflow: hidden; position: relative;
+    cursor: pointer; transition: transform .3s ease;
+  }
+  .cat-card:hover { transform: translateY(-3px); }
+  .cat-card::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(180deg, transparent 45%, rgba(0,0,0,0.6) 100%);
+  }
+  .cat-label {
+    position: absolute; left: 16px; bottom: 14px; z-index: 1;
+    color: #fff; font-family: var(--serif); font-size: 22px; font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+  .cat-count {
+    position: absolute; right: 14px; top: 14px; z-index: 1;
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em;
+    color: rgba(255,255,255,0.85);
+    background: rgba(0,0,0,0.28); backdrop-filter: blur(6px);
+    padding: 4px 8px; border-radius: 999px;
+  }
+
+  /* Artist cards row */
+  .artists-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  .artist-card { background: transparent; border: none; cursor: pointer; text-align: left; padding: 0; }
+  .artist-photo {
+    aspect-ratio: 4 / 5; border-radius: 16px; overflow: hidden; position: relative;
+    margin-bottom: 14px;
+  }
+  .artist-photo .bookmark {
+    position: absolute; right: 10px; top: 10px;
+    width: 34px; height: 34px; border-radius: 50%;
+    background: rgba(255,255,255,0.95); backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: center;
+    border: none; cursor: pointer;
+  }
+  .artist-top-chip {
+    position: absolute; left: 10px; top: 10px;
+    display: flex; align-items: center; gap: 5px;
+    padding: 5px 10px; border-radius: 999px;
+    background: rgba(255,255,255,0.95); backdrop-filter: blur(8px);
+    font-size: 11px; font-weight: 600; color: var(--ink);
+  }
+  .artist-bottom-chip {
+    position: absolute; left: 10px; bottom: 10px;
+    padding: 5px 10px; border-radius: 999px;
+    background: var(--ink); color: #fff;
+    font-size: 11px; font-weight: 500;
+  }
+  .artist-name {
+    font-family: var(--serif); font-size: 19px; font-weight: 500;
+    color: var(--ink); margin-bottom: 2px;
+  }
+  .artist-meta {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; color: var(--ink-soft);
+    margin-bottom: 4px;
+  }
+  .artist-meta .dot { width: 3px; height: 3px; background: var(--ink-muted); border-radius: 50%; }
+  .artist-foot {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 6px;
+  }
+  .artist-price { font-size: 14px; color: var(--ink); font-weight: 600; }
+  .artist-price span { font-weight: 400; color: var(--ink-muted); }
+  .artist-rating {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 13px; color: var(--ink); font-weight: 500;
+  }
+  .artist-rating span { color: var(--ink-muted); font-weight: 400; }
+
+  /* ─── Editorial "in season" strip ─── */
+  .editorial {
+    background: var(--warm-1);
+    padding: 80px 48px;
+    margin: 40px 0 0;
+  }
+  .editorial-grid { display: grid; grid-template-columns: 1fr 1.3fr; gap: 60px; align-items: center; }
+  .editorial h2 {
+    font-family: var(--serif); font-weight: 400; font-style: italic;
+    font-size: 56px; line-height: 1.0; letter-spacing: -0.025em;
+  }
+  .editorial h2 em { color: var(--coral); }
+  .editorial p { color: var(--ink-mid); font-size: 16px; max-width: 440px; margin: 24px 0 32px; line-height: 1.6; }
+  .editorial-imgs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; height: 380px; }
+  .editorial-imgs > div { border-radius: 14px; overflow: hidden; }
+  .editorial-imgs > div:nth-child(1) { margin-top: 40px; }
+  .editorial-imgs > div:nth-child(3) { margin-top: -20px; }
+
+  /* ─── Proof rail ─── */
+  .proof {
+    padding: 60px 48px 80px;
+  }
+  .proof-head h2 { font-size: 32px; }
+  .proof-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 24px; }
+  .proof-card {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 14px; padding: 20px;
+    display: flex; gap: 16px; align-items: center;
+  }
+  .proof-avatar { width: 52px; height: 52px; border-radius: 50%; overflow: hidden; flex-shrink: 0; }
+  .proof-text { flex: 1; min-width: 0; }
+  .proof-line { font-size: 14px; color: var(--ink); font-weight: 500; margin-bottom: 3px; }
+  .proof-line em { color: var(--coral-dark); font-style: normal; font-weight: 600; }
+  .proof-sub { font-size: 12px; color: var(--ink-muted); font-family: var(--mono); letter-spacing: 0.04em; }
+
+  /* ─── Become-an-artist banner ─── */
+  .artist-cta {
+    margin: 40px 48px 80px;
+    background: var(--ink); color: #fff;
+    border-radius: 28px; overflow: hidden;
+    display: grid; grid-template-columns: 1.2fr 1fr;
+    min-height: 360px;
+  }
+  .artist-cta-body { padding: 60px; display: flex; flex-direction: column; justify-content: space-between; }
+  .artist-cta h2 {
+    font-family: var(--serif); font-weight: 400; color: #fff;
+    font-size: 48px; line-height: 1.05; letter-spacing: -0.02em;
+    max-width: 440px;
+  }
+  .artist-cta h2 em { color: var(--coral); font-style: italic; }
+  .artist-cta-foot { display: flex; align-items: center; gap: 20px; }
+  .artist-cta-meta { font-family: var(--mono); font-size: 11px; color: rgba(255,255,255,0.55); letter-spacing: 0.12em; text-transform: uppercase; }
+  .artist-cta-img {
+    background-image: linear-gradient(135deg, #E96B56 0%, #A63A29 100%);
+    position: relative; overflow: hidden;
+  }
+  .artist-cta-img::after {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 30% 30%, rgba(255,255,255,0.3) 0%, transparent 55%);
+  }
+
+  /* Footer */
+  .footer {
+    padding: 60px 48px 40px;
+    border-top: 1px solid var(--line);
+    display: grid; grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 40px;
+  }
+  .footer-col-title {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--ink-muted); margin-bottom: 14px;
+  }
+  .footer-col a { display: block; font-size: 13px; color: var(--ink-mid); padding: 5px 0; }
+  .footer-col a:hover { color: var(--ink); }
+  .footer-tag {
+    font-family: var(--serif); font-size: 28px;
+    color: var(--ink); line-height: 1.1; letter-spacing: -0.02em;
+    max-width: 320px;
+  }
+  .footer-tag em { color: var(--coral); font-style: italic; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- ─── NAV ─── -->
+<nav class="nav">
+  <div style="display:flex; align-items:center; gap: 40px;">
+    <a href="#" class="nav-brand">
+      <span class="nav-brand-dot"></span>
+      <span class="nav-brand-name">Sparq</span>
+    </a>
+    <div class="nav-links">
+      <a href="#" class="nav-link active">Discover</a>
+      <a href="#" class="nav-link">Categories</a>
+    </div>
+  </div>
+  <div class="nav-right">
+    <div class="nav-city">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+      Brooklyn, NY
+    </div>
+    <button class="sparq-btn sparq-btn--ghost sparq-btn--sm">Log in</button>
+    <button class="sparq-btn sparq-btn--primary sparq-btn--sm">Sign up</button>
+  </div>
+</nav>
+
+<!-- ─── HERO ─── -->
+<section class="hero">
+  <div>
+    <p class="hero-eyebrow">The beauty marketplace</p>
+    <h1>Beauty done on <em>your</em> terms.</h1>
+    <p class="hero-lead">Book vetted nail, lash, hair and brow artists near you — instantly, or for whenever you're next free.</p>
+
+    <div class="search-bar">
+      <div class="search-cell">
+        <div class="search-cell-label">Service</div>
+        <div class="search-cell-value">Gel manicure</div>
+      </div>
+      <div class="search-cell">
+        <div class="search-cell-label">Where</div>
+        <div class="search-cell-value">Brooklyn, NY</div>
+      </div>
+      <div class="search-cell">
+        <div class="search-cell-label">When</div>
+        <div class="search-cell-value placeholder">Any time</div>
+      </div>
+      <button class="search-btn" aria-label="Search">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      </button>
+    </div>
+
+    <div class="hero-chips">
+      <button class="hero-chip">Gel manicure</button>
+      <button class="hero-chip">Classic lash set</button>
+      <button class="hero-chip">Balayage</button>
+      <button class="hero-chip">Brow lamination</button>
+      <button class="hero-chip">Bridal</button>
+    </div>
+
+    <div class="ticker">
+      <span class="ticker-pulse"></span>
+      <span class="ticker-text"><strong>28 artists</strong> booking in Brooklyn right now</span>
+    </div>
+  </div>
+
+  <!-- Collage -->
+  <div class="hero-collage">
+    <div class="collage-tile sparq-img" data-tone="2">
+      <span class="collage-badge">Fresha · just now</span>
+    </div>
+    <div class="collage-tile sparq-img" data-tone="3"></div>
+    <div class="collage-tile sparq-img" data-tone="1"></div>
+    <div class="collage-tile sparq-img" data-tone="5">
+      <span class="collage-badge">Opening slot · Sat 2pm</span>
+    </div>
+  </div>
+</section>
+
+<!-- ─── CATEGORIES ─── -->
+<section class="section" style="padding-top: 40px;">
+  <div class="section-head">
+    <h2>Browse by <em>service</em>.</h2>
+    <div class="section-head-right">
+      <a href="#" class="section-link">
+        All categories
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14m-5-5 5 5-5 5"/></svg>
+      </a>
+    </div>
+  </div>
+  <div class="categories">
+    <div class="cat-card sparq-img" data-tone="1"><span class="cat-count">412</span><span class="cat-label">Nails</span></div>
+    <div class="cat-card sparq-img" data-tone="8"><span class="cat-count">289</span><span class="cat-label">Lashes</span></div>
+    <div class="cat-card sparq-img" data-tone="5"><span class="cat-count">224</span><span class="cat-label">Hair</span></div>
+    <div class="cat-card sparq-img" data-tone="4"><span class="cat-count">186</span><span class="cat-label">Brows</span></div>
+    <div class="cat-card sparq-img" data-tone="6"><span class="cat-count">138</span><span class="cat-label">Makeup</span></div>
+    <div class="cat-card sparq-img" data-tone="9"><span class="cat-count">92</span><span class="cat-label">Skin</span></div>
+  </div>
+</section>
+
+<!-- ─── FEATURED ARTISTS ─── -->
+<section class="section" style="padding-top: 20px;">
+  <div class="section-head">
+    <h2>Top-rated <em>near you</em>.</h2>
+    <div class="section-head-right">
+      <button class="sparq-btn sparq-btn--secondary sparq-btn--sm">Filters</button>
+      <a href="#" class="section-link">See all</a>
+    </div>
+  </div>
+  <div class="artists-row">
+
+    <button class="artist-card">
+      <div class="artist-photo sparq-img" data-tone="2">
+        <span class="artist-top-chip"><span class="sparq-star sparq-star--sm"></span> Top 10</span>
+        <button class="bookmark" aria-label="Save">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16l7-4 7 4z"/></svg>
+        </button>
+        <span class="artist-bottom-chip">Opens Sat 10am</span>
+      </div>
+      <div class="artist-name">Maya Rivera</div>
+      <div class="artist-meta">
+        <span>Nails · Gel &amp; extensions</span>
+        <span class="dot"></span>
+        <span>Williamsburg</span>
+      </div>
+      <div class="artist-foot">
+        <div class="artist-price">$65 <span>/ set</span></div>
+        <div class="artist-rating"><span class="sparq-star sparq-star--coral"></span> 4.96 <span>(218)</span></div>
+      </div>
+    </button>
+
+    <button class="artist-card">
+      <div class="artist-photo sparq-img" data-tone="3">
+        <button class="bookmark" aria-label="Save">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16l7-4 7 4z"/></svg>
+        </button>
+        <span class="artist-bottom-chip">2 slots today</span>
+      </div>
+      <div class="artist-name">Noor El-Amin</div>
+      <div class="artist-meta">
+        <span>Lashes · Hybrid sets</span>
+        <span class="dot"></span>
+        <span>Bed-Stuy</span>
+      </div>
+      <div class="artist-foot">
+        <div class="artist-price">$140 <span>/ full set</span></div>
+        <div class="artist-rating"><span class="sparq-star sparq-star--coral"></span> 4.99 <span>(342)</span></div>
+      </div>
+    </button>
+
+    <button class="artist-card">
+      <div class="artist-photo sparq-img" data-tone="5">
+        <span class="artist-top-chip"><span style="color: var(--coral);">●</span> Rising</span>
+        <button class="bookmark" aria-label="Save">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16l7-4 7 4z"/></svg>
+        </button>
+      </div>
+      <div class="artist-name">Jules Okafor</div>
+      <div class="artist-meta">
+        <span>Hair · Color specialist</span>
+        <span class="dot"></span>
+        <span>Fort Greene</span>
+      </div>
+      <div class="artist-foot">
+        <div class="artist-price">$280 <span>/ session</span></div>
+        <div class="artist-rating"><span class="sparq-star sparq-star--coral"></span> 4.94 <span>(96)</span></div>
+      </div>
+    </button>
+
+    <button class="artist-card">
+      <div class="artist-photo sparq-img" data-tone="4">
+        <button class="bookmark" aria-label="Save">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16l7-4 7 4z"/></svg>
+        </button>
+        <span class="artist-bottom-chip">Opens Mon 9am</span>
+      </div>
+      <div class="artist-name">Priya Shah</div>
+      <div class="artist-meta">
+        <span>Brows &amp; Lash lift</span>
+        <span class="dot"></span>
+        <span>Park Slope</span>
+      </div>
+      <div class="artist-foot">
+        <div class="artist-price">$85 <span>/ session</span></div>
+        <div class="artist-rating"><span class="sparq-star sparq-star--coral"></span> 4.98 <span>(451)</span></div>
+      </div>
+    </button>
+
+  </div>
+</section>
+
+<!-- ─── EDITORIAL STRIP ─── -->
+<section class="editorial">
+  <div class="editorial-grid">
+    <div>
+      <p class="sparq-kicker" style="margin-bottom: 18px;">This month · December</p>
+      <h2>What's in <em>season.</em></h2>
+      <p>Chrome nails are back. Soft cinnamon balayage is having a moment. Hand-tied extensions, fuller brows, a French that isn't a French. Our editors gathered 24 looks to book before the holidays.</p>
+      <button class="sparq-btn sparq-btn--dark">Read the edit</button>
+    </div>
+    <div class="editorial-imgs">
+      <div class="sparq-img" data-tone="7"></div>
+      <div class="sparq-img" data-tone="2"></div>
+      <div class="sparq-img" data-tone="3"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── PROOF RAIL ─── -->
+<section class="proof">
+  <div class="section-head proof-head">
+    <h2>Booked in the last <em>hour</em>.</h2>
+    <div class="section-head-right">
+      <span class="sparq-eyebrow">Live · auto-refreshing</span>
+    </div>
+  </div>
+  <div class="proof-grid">
+    <div class="proof-card">
+      <div class="proof-avatar sparq-img" data-tone="2"></div>
+      <div class="proof-text">
+        <div class="proof-line"><em>Gel manicure</em> with Maya R.</div>
+        <div class="proof-sub">BROOKLYN · 2 MIN AGO</div>
+      </div>
+    </div>
+    <div class="proof-card">
+      <div class="proof-avatar sparq-img" data-tone="3"></div>
+      <div class="proof-text">
+        <div class="proof-line"><em>Hybrid lash set</em> with Noor E.</div>
+        <div class="proof-sub">BED-STUY · 14 MIN AGO</div>
+      </div>
+    </div>
+    <div class="proof-card">
+      <div class="proof-avatar sparq-img" data-tone="4"></div>
+      <div class="proof-text">
+        <div class="proof-line"><em>Brow lamination</em> with Priya S.</div>
+        <div class="proof-sub">PARK SLOPE · 31 MIN AGO</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FOOTER ─── -->
+<footer class="footer">
+  <div class="footer-col">
+    <p class="footer-tag">Beauty, booked <em>beautifully</em>.</p>
+    <p style="margin-top: 24px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; color: var(--ink-muted);">© SPARQ 2026</p>
+  </div>
+  <div class="footer-col">
+    <p class="footer-col-title">Explore</p>
+    <a href="#">Nails</a>
+    <a href="#">Lashes</a>
+    <a href="#">Hair</a>
+    <a href="#">Brows</a>
+  </div>
+  <div class="footer-col">
+    <p class="footer-col-title">Sparq</p>
+    <a href="#">About</a>
+    <a href="#">Careers</a>
+    <a href="#">Editorial</a>
+    <a href="#">Press</a>
+  </div>
+  <div class="footer-col">
+    <p class="footer-col-title">Help</p>
+    <a href="#">Support</a>
+    <a href="#">Trust &amp; safety</a>
+    <a href="#">Terms</a>
+    <a href="#">Privacy</a>
+  </div>
+</footer>
+
+</div>
+</body>
+</html>
