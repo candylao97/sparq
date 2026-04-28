@@ -493,15 +493,15 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
             updateData.disputeDeadline = new Date(Date.now() + 48 * 60 * 60 * 1000)
             const providerProfile = booking.provider.providerProfile
             if (providerProfile && booking.totalPrice > 0) {
-              // P0-1: Subtract tip from payout — tip stays with platform until processed separately
-              const providerPayout = booking.totalPrice - booking.platformFee - (booking.tipAmount ?? 0)
+              // P0-1: tip included in artist payout (FIND-18)
+              const providerPayout = booking.totalPrice - booking.platformFee
               // Check no active dispute exists before scheduling payout
               const activeDispute = await prisma.dispute.findUnique({
                 where: { bookingId: booking.id },
               })
               if (!activeDispute || activeDispute.status === 'RESOLVED_NO_REFUND') {
                 try {
-                  await prisma.payout.upsert({
+                  const payoutRow = await prisma.payout.upsert({
                     where: { bookingId: booking.id },
                     create: {
                       bookingId: booking.id,
@@ -515,6 +515,14 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
                       status: 'SCHEDULED',
                       scheduledAt: new Date(Date.now() + 48 * 60 * 60 * 1000),
                     },
+                  })
+                  console.log('[FIND-18] payout scheduled (COMPLETED)', {
+                    payoutId: payoutRow.id,
+                    bookingId: booking.id,
+                    totalPrice: booking.totalPrice,
+                    platformFee: booking.platformFee,
+                    tipAmount: booking.tipAmount ?? 0,
+                    payoutAmount: providerPayout,
                   })
                 } catch (payoutError) {
                   console.error('Failed to schedule payout:', payoutError)
@@ -547,10 +555,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
             const providerProfile = booking.provider.providerProfile
             if (providerProfile && booking.totalPrice > 0 && booking.stripePaymentId) {
               // Payment was already captured (CONFIRMED), so we keep it and pay provider
-              // P0-1: Subtract tip from payout — tip stays with platform until processed separately
-              const providerPayout = booking.totalPrice - booking.platformFee - (booking.tipAmount ?? 0)
+              // P0-1: tip included in artist payout (FIND-18)
+              const providerPayout = booking.totalPrice - booking.platformFee
               try {
-                await prisma.payout.upsert({
+                const payoutRow = await prisma.payout.upsert({
                   where: { bookingId: booking.id },
                   create: {
                     bookingId: booking.id,
@@ -561,6 +569,14 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
                     scheduledAt: new Date(Date.now() + 2 * 60 * 60 * 1000), // 2h delay for no-shows
                   },
                   update: { status: 'SCHEDULED', scheduledAt: new Date(Date.now() + 2 * 60 * 60 * 1000) },
+                })
+                console.log('[FIND-18] payout scheduled (NO_SHOW)', {
+                  payoutId: payoutRow.id,
+                  bookingId: booking.id,
+                  totalPrice: booking.totalPrice,
+                  platformFee: booking.platformFee,
+                  tipAmount: booking.tipAmount ?? 0,
+                  payoutAmount: providerPayout,
                 })
               } catch (payoutError) {
                 console.error('Failed to schedule no-show payout:', payoutError)
@@ -615,15 +631,15 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       updateData.disputeDeadline = new Date(Date.now() + 48 * 60 * 60 * 1000)
       const providerProfile = booking.provider.providerProfile
       if (providerProfile && booking.totalPrice > 0) {
-        // P0-1: Subtract tip from payout — tip stays with platform until processed separately
-        const providerPayout = booking.totalPrice - booking.platformFee - (booking.tipAmount ?? 0)
+        // P0-1: tip included in artist payout (FIND-18)
+        const providerPayout = booking.totalPrice - booking.platformFee
         // Check no active dispute exists before scheduling payout
         const activeDispute = await prisma.dispute.findUnique({
           where: { bookingId: booking.id },
         })
         if (!activeDispute || activeDispute.status === 'RESOLVED_NO_REFUND') {
           try {
-            await prisma.payout.upsert({
+            const payoutRow = await prisma.payout.upsert({
               where: { bookingId: booking.id },
               create: {
                 bookingId: booking.id,
@@ -637,6 +653,14 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
                 status: 'SCHEDULED',
                 scheduledAt: new Date(Date.now() + 48 * 60 * 60 * 1000),
               },
+            })
+            console.log('[FIND-18] payout scheduled (COMPLETED_ZERO_PAYMENT)', {
+              payoutId: payoutRow.id,
+              bookingId: booking.id,
+              totalPrice: booking.totalPrice,
+              platformFee: booking.platformFee,
+              tipAmount: booking.tipAmount ?? 0,
+              payoutAmount: providerPayout,
             })
           } catch (payoutError) {
             console.error('Failed to schedule payout:', payoutError)
