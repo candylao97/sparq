@@ -8,6 +8,8 @@ const FULLSCREEN_ROUTES = ['/book']
 
 export function Footer() {
   const pathname = usePathname()
+  // Home ('/') ships its own page-local footer (redesigned logged-out homepage).
+  if (pathname === '/') return null
   if (AUTH_ROUTES.some(r => pathname === r || pathname.startsWith(r + '/'))) return null
   if (FULLSCREEN_ROUTES.some(r => pathname === r || pathname.startsWith(r + '/'))) return null
   return (
