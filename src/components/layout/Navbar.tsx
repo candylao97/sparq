@@ -199,8 +199,8 @@ export function Navbar() {
   // Close dropdown on route change
   useEffect(() => { setProfileOpen(false) }, [pathname])
 
-  // Home ('/') ships its own page-local nav (redesigned logged-out homepage).
-  if (pathname === '/') return null
+  // Home ('/') and Search ('/search') ship their own page-local nav (redesigned pages).
+  if (pathname === '/' || pathname === '/search') return null
   if (AUTH_ROUTES.some(r => pathname === r || pathname.startsWith(r + '/'))) return null
   if (FULLSCREEN_ROUTES.some(r => pathname === r || pathname.startsWith(r + '/'))) return null
 
