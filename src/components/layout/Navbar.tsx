@@ -200,7 +200,7 @@ export function Navbar() {
   useEffect(() => { setProfileOpen(false) }, [pathname])
 
   // Home ('/') and Search ('/search') ship their own page-local nav (redesigned pages).
-  if (pathname === '/' || pathname === '/search') return null
+  if (pathname === '/' || pathname === '/search' || pathname === '/how-it-works') return null
   if (AUTH_ROUTES.some(r => pathname === r || pathname.startsWith(r + '/'))) return null
   if (FULLSCREEN_ROUTES.some(r => pathname === r || pathname.startsWith(r + '/'))) return null
 
