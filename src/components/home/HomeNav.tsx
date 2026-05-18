@@ -26,11 +26,10 @@ export function HomeNav() {
             </div>
           </div>
           <div className="hidden items-center gap-1.5 lg:flex">
-            <Link href="/login" className="px-3 py-2 text-sm font-medium">Log in</Link>
-            <Link href="/register" className="rounded-[10px] bg-sparq-ink px-4 py-2.5 text-sm font-semibold text-white">Sign up</Link>
+            <Link href="/login" className="rounded-[10px] bg-sparq-ink px-4 py-2.5 text-sm font-semibold text-white">Log in</Link>
           </div>
           <div className="flex items-center gap-2 lg:hidden">
-            <Link href="/register" className="rounded-[10px] bg-sparq-ink px-4 py-2.5 text-sm font-semibold text-white">Sign up</Link>
+            <Link href="/login" className="rounded-[10px] bg-sparq-ink px-4 py-2.5 text-sm font-semibold text-white">Log in</Link>
             <Link href="/login" aria-label="Open menu" className="flex h-9 w-9 items-center justify-center rounded-[10px] text-sparq-ink">
               <Menu className="h-[18px] w-[18px]" />
             </Link>
