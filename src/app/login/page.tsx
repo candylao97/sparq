@@ -4,10 +4,8 @@ import { useState, Suspense } from 'react'
 import { signIn, getSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { Eye, EyeOff, ArrowLeft, Mail } from 'lucide-react'
+import { Eye, EyeOff, ArrowLeft, Mail, ArrowRight } from 'lucide-react'
 import toast from 'react-hot-toast'
-import Image from 'next/image'
-import { LogoFull } from '@/components/ui/Logo'
 
 type Step = 'email' | 'login' | 'signup'
 
@@ -27,7 +25,7 @@ function getRedirectForRole(role?: string) {
 
 function GoogleIcon() {
   return (
-    <svg className="h-5 w-5 flex-shrink-0" viewBox="0 0 24 24">
+    <svg className="h-[18px] w-[18px] flex-shrink-0" viewBox="0 0 24 24">
       <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
       <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
       <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
@@ -41,6 +39,14 @@ function Spinner({ light = false }: { light?: boolean }) {
     <span className={`h-[14px] w-[14px] animate-spin rounded-full border-[1.5px] flex-shrink-0 ${
       light ? 'border-white/30 border-t-white' : 'border-[#1A1A1A]/15 border-t-[#717171]'
     }`} />
+  )
+}
+
+function Brand({ dark = false }: { dark?: boolean }) {
+  return (
+    <span className={`inline-flex items-center gap-1 text-[18px] font-extrabold tracking-[0.18em] ${dark ? 'text-white' : 'text-sparq-ink'}`}>
+      SPARQ<span className="text-sparq-coral">*</span>
+    </span>
   )
 }
 
@@ -176,7 +182,7 @@ function LoginPageInner() {
       })
       const data = await res.json()
       if (!res.ok) {
-        toast.error(data.error || 'Couldn\u2019t create your account. Please try again.')
+        toast.error(data.error || 'Couldn’t create your account. Please try again.')
         return
       }
       // Redirect to verify-email page — user must confirm email before signing in
@@ -197,286 +203,273 @@ function LoginPageInner() {
     setShowPw(false)
   }
 
+  const headline =
+    step === 'login' ? <>Welcome <em className="font-headline italic text-sparq-coral">back</em></>
+    : step === 'signup' ? <>Create your <em className="font-headline italic text-sparq-coral">account</em></>
+    : <>Log in or <em className="font-headline italic text-sparq-coral">sign up</em></>
+
+  const subcopy =
+    step === 'login' ? 'Enter your password to continue.'
+    : step === 'signup' ? 'Choose a password to create your account.'
+    : 'Continue with Google, or use your email address.'
+
   return (
-    <div className="min-h-screen flex">
+    <div className="grid min-h-screen grid-cols-1 bg-sparq-cream text-sparq-ink lg:grid-cols-[1.05fr_1fr]">
 
-      {/* Left: beauty image panel — hidden on mobile */}
-      <div className="relative hidden lg:block lg:w-[52%] xl:w-[58%] flex-shrink-0">
-        <Image
-          src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=900&h=1200&fit=crop&q=85"
-          alt="Beauty service"
-          fill
-          className="object-cover"
-          priority
+      {/* ── Left: editorial brand stage (desktop only) ── */}
+      <aside className="relative hidden flex-col overflow-hidden bg-[#2a2522] p-10 text-white lg:flex">
+        <div
+          className="absolute inset-0"
+          aria-hidden="true"
+          style={{
+            background:
+              'radial-gradient(ellipse 80% 60% at 25% 80%, rgba(255,182,170,0.55) 0%, transparent 60%),' +
+              'radial-gradient(ellipse 70% 50% at 75% 20%, rgba(255,221,206,0.45) 0%, transparent 55%),' +
+              'radial-gradient(ellipse 60% 70% at 80% 95%, rgba(233,107,86,0.55) 0%, transparent 55%),' +
+              'linear-gradient(155deg, #E8C8B4 0%, #C49278 38%, #6B4332 72%, #2A1B12 100%)',
+          }}
         />
-        {/* Dark overlay for depth */}
-        <div className="absolute inset-0 bg-black/20" />
-        {/* Bottom branding */}
-        <div className="absolute bottom-10 left-10 right-10">
-          <p className="font-headline text-4xl text-white leading-[1.1] mb-3">
-            Book beauty,<br /><span className="italic text-[#E96B56]">effortlessly.</span>
-          </p>
-          <p className="text-white/60 text-sm">
-            Australia&apos;s trusted nail &amp; lash marketplace.
-          </p>
+        <div className="relative z-[2]">
+          <Brand dark />
         </div>
-        {/* Right-side fade to form panel */}
-        <div className="absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-white to-transparent" />
-      </div>
+        <div className="relative z-[2] mt-auto flex flex-col gap-7">
+          <div>
+            <div className="mb-4 inline-flex items-center gap-2.5 font-mono text-[10px] uppercase tracking-[0.28em] text-white/70">
+              <span className="inline-block h-px w-6 bg-white/50" />
+              For clients &amp; artists
+            </div>
+            <h2 className="max-w-[11ch] font-headline text-[clamp(40px,4.8vw,72px)] font-normal leading-[1.02] tracking-[-0.02em] text-white">
+              Book beauty,<br />
+              <em className="italic font-normal text-sparq-coral-light">effortlessly<span className="text-sparq-coral">.</span></em>
+            </h2>
+          </div>
+        </div>
+      </aside>
 
-      {/* Right: form panel */}
-      <div className="flex-1 flex items-center justify-center px-6 py-12 bg-white min-h-screen">
-        <div className="w-full max-w-[400px]">
+      {/* ── Right: auth form ── */}
+      <main className="relative flex items-center justify-center bg-sparq-cream px-6 py-12 lg:p-12">
 
-        <div className="bg-white rounded-2xl border border-[#e8e1de] shadow-[0_2px_16px_rgba(0,0,0,0.06)] overflow-hidden">
+        <div className="absolute left-6 right-6 top-6 flex items-center justify-between lg:hidden">
+          <Brand />
+        </div>
 
-          {/* ── Header ── */}
-          <div className="border-b border-[#e8e1de] px-8 pt-7 pb-6">
-            {/* Logo row — back button left, logo centred */}
-            <div className="grid grid-cols-3 items-center mb-5">
-              <div>
-                {step !== 'email' && (
+        <div className="w-full max-w-[420px]">
+
+          {/* email-not-verified banner (TS-2) */}
+          {isEmailNotVerified && (
+            <div className="mb-5 rounded-xl border border-sparq-coral/30 bg-sparq-coral-light px-4 py-3.5">
+              <p className="mb-1 text-sm font-semibold text-sparq-ink">Please verify your email</p>
+              <p className="mb-2 text-xs text-[#717171]">Check your inbox for a verification link before signing in.</p>
+              <button
+                type="button"
+                onClick={handleResendVerification}
+                disabled={resendLoading}
+                className="text-xs font-semibold text-sparq-coral hover:underline disabled:opacity-50"
+              >
+                {resendLoading ? 'Sending…' : 'Resend verification email'}
+              </button>
+            </div>
+          )}
+
+          <div className="mb-3 flex items-center gap-3">
+            {step !== 'email' && (
+              <button
+                type="button"
+                onClick={goBack}
+                aria-label="Back"
+                className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-sparq-surface-warm"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </button>
+            )}
+            <span className="font-mono text-[10px] font-medium uppercase tracking-[0.22em] text-sparq-coral-dark">Welcome</span>
+          </div>
+
+          <h1 className="mb-2.5 font-headline text-[36px] font-normal leading-[1.05] tracking-[-0.02em]">{headline}</h1>
+          <p className="mb-8 max-w-[36ch] text-[15px] text-[#717171]">{subcopy}</p>
+
+          {/* ── STEP 1: email ── */}
+          {step === 'email' && (
+            <div>
+              <button
+                type="button"
+                onClick={handleGoogle}
+                disabled={googleLoading}
+                className="flex h-[50px] w-full items-center justify-center gap-2.5 rounded-[10px] border border-sparq-border bg-white text-sm font-semibold text-sparq-ink transition-colors hover:border-sparq-ink disabled:opacity-50"
+              >
+                {googleLoading ? <Spinner /> : <GoogleIcon />}
+                Continue with Google
+              </button>
+
+              <div className="my-[18px] flex items-center gap-3.5 font-mono text-[10px] uppercase tracking-[0.22em] text-sparq-muted">
+                <span className="h-px flex-1 bg-sparq-border" />
+                or with email
+                <span className="h-px flex-1 bg-sparq-border" />
+              </div>
+
+              <form onSubmit={handleEmailSubmit}>
+                <div className="relative mb-3.5">
+                  <input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    placeholder=" "
+                    autoComplete="email"
+                    autoFocus
+                    required
+                    className="peer h-14 w-full rounded-[10px] border border-sparq-border bg-white px-[18px] pb-2 pt-[22px] text-[15px] text-sparq-ink transition-[border-color,box-shadow] focus:border-sparq-coral focus:shadow-[0_0_0_3px_rgba(233,107,86,0.18)] focus:outline-none"
+                  />
+                  <label
+                    htmlFor="email"
+                    className="pointer-events-none absolute left-[18px] top-[18px] text-[14px] text-sparq-muted transition-all peer-focus:top-2 peer-focus:text-[11px] peer-focus:font-semibold peer-focus:text-[#717171] peer-[:not(:placeholder-shown)]:top-2 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:text-[#717171]"
+                  >
+                    Email address
+                  </label>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="mt-1.5 flex h-[54px] w-full items-center justify-center gap-2 rounded-[10px] bg-sparq-coral text-[15px] font-semibold text-white shadow-[0_4px_14px_rgba(233,107,86,0.22)] transition-colors hover:bg-sparq-coral-dark disabled:opacity-50"
+                >
+                  {loading && <Spinner light />}
+                  Continue
+                  {!loading && <ArrowRight className="h-4 w-4" />}
+                </button>
+              </form>
+
+              <p className="mt-[18px] text-center text-xs leading-[1.55] text-sparq-muted">
+                By continuing you agree to Sparq&apos;s{' '}
+                <Link href="/terms" className="border-b border-sparq-border text-sparq-body hover:border-sparq-ink hover:text-sparq-ink">Terms of Service</Link>
+                {' '}and{' '}
+                <Link href="/privacy" className="border-b border-sparq-border text-sparq-body hover:border-sparq-ink hover:text-sparq-ink">Privacy Policy</Link>.
+              </p>
+            </div>
+          )}
+
+          {/* ── STEP 2: password (login or signup) ── */}
+          {(step === 'login' || step === 'signup') && (
+            <div>
+              <div className="mb-3.5 flex items-center gap-2.5 rounded-[10px] border border-sparq-border bg-sparq-surface-warm px-4 py-3">
+                <Mail className="h-4 w-4 flex-shrink-0 text-[#717171]" />
+                <span className="flex-1 truncate text-sm">{email}</span>
+              </div>
+
+              <form onSubmit={step === 'login' ? handleLogin : handleSignup}>
+                <div className="relative mb-3.5">
+                  <input
+                    id="password"
+                    type={showPw ? 'text' : 'password'}
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder=" "
+                    autoComplete={step === 'login' ? 'current-password' : 'new-password'}
+                    autoFocus
+                    required
+                    minLength={8}
+                    className="peer h-14 w-full rounded-[10px] border border-sparq-border bg-white px-[18px] pb-2 pr-12 pt-[22px] text-[15px] text-sparq-ink transition-[border-color,box-shadow] focus:border-sparq-coral focus:shadow-[0_0_0_3px_rgba(233,107,86,0.18)] focus:outline-none"
+                  />
+                  <label
+                    htmlFor="password"
+                    className="pointer-events-none absolute left-[18px] top-[18px] text-[14px] text-sparq-muted transition-all peer-focus:top-2 peer-focus:text-[11px] peer-focus:font-semibold peer-focus:text-[#717171] peer-[:not(:placeholder-shown)]:top-2 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:text-[#717171]"
+                  >
+                    {step === 'login' ? 'Password' : 'Create a password (min. 8 characters)'}
+                  </label>
                   <button
                     type="button"
-                    onClick={goBack}
-                    aria-label="Back"
-                    className="flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-[#F7F7F7]"
+                    onClick={() => setShowPw(p => !p)}
+                    aria-label={showPw ? 'Hide password' : 'Show password'}
+                    className="absolute bottom-3 right-3 text-[#717171] hover:text-sparq-ink"
                   >
-                    <ArrowLeft className="h-4 w-4 text-[#1A1A1A]" />
+                    {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
+                </div>
+
+                {step === 'login' && (
+                  <div className="mb-1 flex justify-end">
+                    <Link
+                      href="/forgot-password"
+                      className="text-xs font-semibold underline underline-offset-2 hover:text-sparq-coral"
+                    >
+                      Forgot password?
+                    </Link>
+                  </div>
                 )}
-              </div>
-              <div className="flex justify-center">
-                <LogoFull size="sm" />
-              </div>
-              <div />
-            </div>
 
-            {/* Headline */}
-            <h1 className="text-center text-[1.1rem] font-semibold text-[#1A1A1A] leading-snug">
-              {step === 'email'  && 'Log in or sign up'}
-              {step === 'login'  && 'Welcome back'}
-              {step === 'signup' && 'Create your account'}
-            </h1>
-          </div>
-
-          {/* ── Body ── */}
-          <div className="px-8 py-7">
-
-            {/* TS-2: Email not verified banner */}
-            {isEmailNotVerified && (
-              <div className="mb-5 rounded-xl bg-[#fdf6f4] border border-[#E96B56]/30 px-4 py-3.5">
-                <p className="text-sm font-semibold text-[#1A1A1A] mb-1">Please verify your email</p>
-                <p className="text-xs text-[#717171] mb-2">
-                  Check your inbox for a verification link before signing in.
-                </p>
-                <button
-                  type="button"
-                  onClick={handleResendVerification}
-                  disabled={resendLoading}
-                  className="text-xs font-semibold text-[#E96B56] hover:underline disabled:opacity-50"
-                >
-                  {resendLoading ? 'Sending…' : 'Resend verification email'}
-                </button>
-              </div>
-            )}
-
-            {/* ── STEP 1: Email ── */}
-            {step === 'email' && (
-              <div className="space-y-4">
-                {/* Google */}
-                <button
-                  type="button"
-                  onClick={handleGoogle}
-                  disabled={googleLoading}
-                  className="flex w-full items-center rounded-xl border border-[#222222] px-4 py-3.5 text-sm font-semibold text-[#1A1A1A] transition-colors hover:bg-[#F7F7F7] disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {googleLoading ? <Spinner /> : <GoogleIcon />}
-                  <span className="flex-1 text-center">Continue with Google</span>
-                </button>
-
-                {/* Divider */}
-                <div className="flex items-center gap-4">
-                  <hr className="flex-1 border-[#e8e1de]" />
-                  <span className="text-xs font-semibold text-[#ADADAD]">or</span>
-                  <hr className="flex-1 border-[#e8e1de]" />
-                </div>
-
-                {/* Email form */}
-                <form onSubmit={handleEmailSubmit} className="space-y-3">
-                  <div className="relative rounded-xl border border-[#e8e1de] transition-colors hover:border-[#b0b0b0] focus-within:border-[#1A1A1A]">
-                    <label
-                      htmlFor="email"
-                      className="absolute top-3 left-4 text-[11px] font-semibold text-[#717171] pointer-events-none"
-                    >
-                      Email
-                    </label>
+                {step === 'signup' && (
+                  <label className="mb-1 flex cursor-pointer select-none items-start gap-2.5">
                     <input
-                      id="email"
-                      type="email"
-                      value={email}
-                      onChange={e => setEmail(e.target.value)}
-                      placeholder="name@example.com"
-                      autoComplete="email"
-                      autoFocus
+                      type="checkbox"
+                      checked={acceptedTerms}
+                      onChange={e => setAcceptedTerms(e.target.checked)}
                       required
-                      className="w-full bg-transparent px-4 pt-[26px] pb-3 text-sm text-[#1A1A1A] placeholder:text-[#BEBAB6] outline-none rounded-xl"
+                      className="mt-0.5 h-4 w-4 rounded border-sparq-border text-sparq-coral focus:ring-sparq-coral"
+                      data-testid="tos-consent-checkbox"
                     />
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#E96B56] to-[#C95444] py-3.5 text-[15px] font-semibold text-white transition-all hover:opacity-90 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {loading && <Spinner light />}
-                    Continue
-                  </button>
-                </form>
-
-                <p className="text-center text-[11px] text-[#ADADAD] leading-relaxed">
-                  By continuing you agree to our{' '}
-                  <Link href="/terms" className="underline underline-offset-2 hover:text-[#717171] transition-colors">
-                    Terms
-                  </Link>
-                  {' '}&amp;{' '}
-                  <Link href="/privacy" className="underline underline-offset-2 hover:text-[#717171] transition-colors">
-                    Privacy Policy
-                  </Link>
-                </p>
-              </div>
-            )}
-
-            {/* ── STEP 2: Password (login or signup) ── */}
-            {(step === 'login' || step === 'signup') && (
-              <div className="space-y-4">
-                {/* Email chip — shows which account */}
-                <div className="flex items-center gap-2.5 rounded-xl border border-[#e8e1de] bg-[#F7F7F7] px-4 py-3">
-                  <Mail className="h-4 w-4 flex-shrink-0 text-[#717171]" />
-                  <span className="flex-1 truncate text-sm text-[#1A1A1A]">{email}</span>
-                </div>
-
-                <form
-                  onSubmit={step === 'login' ? handleLogin : handleSignup}
-                  className="space-y-3"
-                >
-                  {/* Password */}
-                  <div className="relative rounded-xl border border-[#e8e1de] transition-colors hover:border-[#b0b0b0] focus-within:border-[#1A1A1A]">
-                    <label
-                      htmlFor="password"
-                      className="absolute top-3 left-4 text-[11px] font-semibold text-[#717171] pointer-events-none"
-                    >
-                      {step === 'login' ? 'Password' : 'Create a password'}
-                    </label>
-                    <input
-                      id="password"
-                      type={showPw ? 'text' : 'password'}
-                      value={password}
-                      onChange={e => setPassword(e.target.value)}
-                      placeholder={step === 'login' ? 'Your password' : 'Min. 8 characters'}
-                      autoComplete={step === 'login' ? 'current-password' : 'new-password'}
-                      autoFocus
-                      required
-                      minLength={8}
-                      className="w-full bg-transparent px-4 pt-[26px] pb-3 pr-12 text-sm text-[#1A1A1A] placeholder:text-[#BEBAB6] outline-none rounded-xl"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPw(p => !p)}
-                      aria-label={showPw ? 'Hide password' : 'Show password'}
-                      className="absolute right-3 bottom-3 text-[#717171] hover:text-[#1A1A1A] transition-colors"
-                    >
-                      {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-
-                  {/* Forgot password — login only */}
-                  {step === 'login' && (
-                    <div className="flex justify-end">
-                      <Link
-                        href="/forgot-password"
-                        className="text-xs font-semibold text-[#1A1A1A] underline underline-offset-2 hover:text-[#E96B56] transition-colors"
-                      >
-                        Forgot password?
-                      </Link>
-                    </div>
-                  )}
-
-                  {/* FIND-4: explicit ToS consent checkbox — signup only.
-                      Replaces the passive "by continuing" footer with an
-                      interactive, auditable consent capture. */}
-                  {step === 'signup' && (
-                    <label className="flex items-start gap-2.5 cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        checked={acceptedTerms}
-                        onChange={e => setAcceptedTerms(e.target.checked)}
-                        required
-                        className="mt-0.5 h-4 w-4 rounded border-[#e8e1de] text-[#E96B56] focus:ring-[#E96B56]"
-                        data-testid="tos-consent-checkbox"
-                      />
-                      <span className="text-[12px] text-[#717171] leading-relaxed">
-                        I agree to Sparq&apos;s{' '}
-                        <Link href="/terms" className="underline underline-offset-2 text-[#1A1A1A] hover:text-[#E96B56] transition-colors">
-                          Terms of Service
-                        </Link>
-                        {' '}&amp;{' '}
-                        <Link href="/privacy" className="underline underline-offset-2 text-[#1A1A1A] hover:text-[#E96B56] transition-colors">
-                          Privacy Policy
-                        </Link>.
-                      </span>
-                    </label>
-                  )}
-
-                  <button
-                    type="submit"
-                    disabled={loading || (step === 'signup' && !acceptedTerms)}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#E96B56] to-[#C95444] py-3.5 text-[15px] font-semibold text-white transition-all hover:opacity-90 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {loading && <Spinner light />}
-                    {step === 'login' ? 'Log in' : 'Create account'}
-                  </button>
-                </form>
-              </div>
-            )}
-
-          </div>
-        </div>
-
-        {/* ── Dev quick-login strip ── */}
-        {isDev && (
-          <div className="mt-5">
-            <p className="mb-2 text-center text-[10px] font-semibold uppercase tracking-widest text-[#ADADAD]">
-              Dev accounts
-            </p>
-            <div className="grid grid-cols-3 gap-2">
-              {DEV_ACCOUNTS.map(account => (
-                <button
-                  key={account.label}
-                  type="button"
-                  onClick={() => handleDevLogin(account)}
-                  disabled={devLoading !== null}
-                  className="flex flex-col items-center gap-1 rounded-xl border border-[#e8e1de] bg-[#FDFBF7] px-3 py-3 text-center transition-colors hover:border-[#E96B56] hover:bg-[#fdf6f4] disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  {devLoading === account.label ? (
-                    <Spinner />
-                  ) : (
-                    <span className="text-lg leading-none">
-                      {account.label === 'Artist' ? '🎨' : account.label === 'Client' ? '👤' : '🔑'}
+                    <span className="text-[12px] leading-relaxed text-[#717171]">
+                      I agree to Sparq&apos;s{' '}
+                      <Link href="/terms" className="text-sparq-ink underline underline-offset-2 hover:text-sparq-coral">Terms of Service</Link>
+                      {' '}&amp;{' '}
+                      <Link href="/privacy" className="text-sparq-ink underline underline-offset-2 hover:text-sparq-coral">Privacy Policy</Link>.
                     </span>
-                  )}
-                  <span className="text-[11px] font-semibold text-[#1A1A1A]">{account.label}</span>
-                  <span className="text-[10px] text-[#ADADAD] leading-tight truncate w-full text-center">
-                    {account.email.split('@')[0]}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+                  </label>
+                )}
 
+                <button
+                  type="submit"
+                  disabled={loading || (step === 'signup' && !acceptedTerms)}
+                  className="mt-3 flex h-[54px] w-full items-center justify-center gap-2 rounded-[10px] bg-sparq-coral text-[15px] font-semibold text-white shadow-[0_4px_14px_rgba(233,107,86,0.22)] transition-colors hover:bg-sparq-coral-dark disabled:opacity-50"
+                >
+                  {loading && <Spinner light />}
+                  {step === 'login' ? 'Log in' : 'Create account'}
+                  {!loading && <ArrowRight className="h-4 w-4" />}
+                </button>
+              </form>
+            </div>
+          )}
+
+          {/* dev quick-login strip */}
+          {isDev && (
+            <div className="mt-5">
+              <p className="mb-2 text-center font-mono text-[10px] font-medium uppercase tracking-[0.22em] text-sparq-muted">
+                Dev accounts
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                {DEV_ACCOUNTS.map(account => (
+                  <button
+                    key={account.label}
+                    type="button"
+                    onClick={() => handleDevLogin(account)}
+                    disabled={devLoading !== null}
+                    className="flex flex-col items-center gap-1 rounded-[10px] border border-sparq-border bg-white px-3 py-3 text-center transition-colors hover:border-sparq-coral disabled:opacity-40"
+                  >
+                    {devLoading === account.label ? (
+                      <Spinner />
+                    ) : (
+                      <span className="text-lg leading-none">
+                        {account.label === 'Artist' ? '🎨' : account.label === 'Client' ? '👤' : '🔑'}
+                      </span>
+                    )}
+                    <span className="text-[11px] font-semibold">{account.label}</span>
+                    <span className="w-full truncate text-center text-[10px] text-sparq-muted">
+                      {account.email.split('@')[0]}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="mt-8 flex items-center justify-center gap-4 text-xs text-sparq-muted lg:absolute lg:bottom-6 lg:left-0 lg:right-0">
+            <span>Help</span>
+            <span className="h-[3px] w-[3px] rounded-full bg-sparq-muted opacity-50" />
+            <span>English (AU)</span>
+            <span className="h-[3px] w-[3px] rounded-full bg-sparq-muted opacity-50" />
+            <span>© 2026 Sparq</span>
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   )
 }
