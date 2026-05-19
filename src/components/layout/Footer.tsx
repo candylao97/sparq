@@ -9,7 +9,7 @@ const FULLSCREEN_ROUTES = ['/book']
 export function Footer() {
   const pathname = usePathname()
   // Home ('/') and Search ('/search') ship their own page-local footer (redesigned pages).
-  if (pathname === '/' || pathname === '/search' || pathname === '/how-it-works') return null
+  if (pathname === '/' || pathname === '/search' || pathname === '/how-it-works' || pathname === '/about') return null
   if (AUTH_ROUTES.some(r => pathname === r || pathname.startsWith(r + '/'))) return null
   if (FULLSCREEN_ROUTES.some(r => pathname === r || pathname.startsWith(r + '/'))) return null
   return (

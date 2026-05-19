@@ -7,7 +7,7 @@ const FULLSCREEN_ROUTES = ['/book', '/nearby']
 // Pages that render their own page-local nav (global Navbar is suppressed
 // on these routes) — they must NOT get the global 80px top offset, or an
 // empty strip appears above the page-local header.
-const HERO_PAGES       = ['/', '/search', '/how-it-works']
+const HERO_PAGES       = ['/', '/search', '/how-it-works', '/about']
 
 function isNoNavRoute(pathname: string) {
   return (
