@@ -25,20 +25,7 @@ export function Footer() {
   return (
     <footer className="bg-gray-50 border-t border-gray-200">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          {/* Brand column */}
-          <div className="flex flex-col gap-4">
-            <Link href="/" className="flex items-center w-fit">
-              <span className="text-xl font-bold tracking-tight text-neutral-900">
-                Sparq
-              </span>
-            </Link>
-            <p className="text-sm text-gray-500 leading-relaxed">
-              Melbourne&apos;s marketplace for talented nail and lash artists.
-              Book your next appointment with confidence.
-            </p>
-          </div>
-
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {/* Link columns */}
           {Object.entries(footerLinks).map(([category, links]) => (
             <div key={category} className="flex flex-col gap-3">
@@ -62,12 +49,9 @@ export function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-12 pt-8 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="mt-12 pt-8 border-t border-gray-200">
           <p className="text-sm text-gray-400">
             &copy; {currentYear} Sparq. All rights reserved.
-          </p>
-          <p className="text-sm text-gray-400">
-            Made with love in Melbourne, Australia 🇦🇺
           </p>
         </div>
       </div>

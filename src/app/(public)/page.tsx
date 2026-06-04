@@ -111,11 +111,7 @@ export default function HomePage() {
       {/* Hero */}
       <section className="relative overflow-hidden border-b border-neutral-100 bg-neutral-50">
         <div className="relative mx-auto max-w-5xl px-4 py-20 text-center sm:py-28">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-3.5 py-1.5 text-sm font-medium text-neutral-600 shadow-sm">
-            <span className="size-1.5 rounded-full bg-emerald-500" />
-            Now live in Melbourne
-          </span>
-          <h1 className="mx-auto mt-6 max-w-3xl text-5xl font-bold leading-[1.05] tracking-tight text-neutral-900 sm:text-6xl lg:text-7xl">
+          <h1 className="mx-auto max-w-3xl text-5xl font-bold leading-[1.05] tracking-tight text-neutral-900 sm:text-6xl lg:text-7xl">
             Book beauty,
             <br />
             beautifully.
