@@ -11,7 +11,6 @@ const navLinks = [
   { label: "How It Works", href: "/how-it-works" },
   { label: "Services", href: "/services" },
   { label: "Providers", href: "/providers" },
-  { label: "Become a Provider", href: "/become-a-provider" },
 ];
 
 function getDashboardPath(role?: string) {

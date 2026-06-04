@@ -10,7 +10,6 @@ import {
   ImagePlus,
   ClipboardList,
   ChevronRight,
-  Check,
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -50,15 +49,6 @@ const BENEFITS = [
     description:
       "Sparq's anti-circumvention policy and secure payment system protect you from no-shows and payment disputes.",
   },
-];
-
-const REQUIREMENTS = [
-  "Based in Melbourne or inner suburbs",
-  "At least 12 months of professional experience in your field",
-  "Valid ID for identity verification",
-  "Portfolio photos of your work (minimum 5)",
-  "Public liability insurance (or willingness to obtain before first booking)",
-  "A bank account in your name for Stripe payouts",
 ];
 
 const JOIN_STEPS = [
@@ -140,29 +130,6 @@ export default function BecomeAProviderPage() {
               </div>
             ))}
           </div>
-        </section>
-
-        <hr className="border-gray-100" />
-
-        {/* Requirements */}
-        <section>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">What we look for</h2>
-          <p className="text-gray-500 mb-8">
-            Sparq is a vetted marketplace. To keep quality high for customers, we have a few requirements.
-          </p>
-          <div className="rounded-2xl border border-gray-100 bg-gray-50 p-8">
-            <ul className="space-y-3">
-              {REQUIREMENTS.map((req) => (
-                <li key={req} className="flex items-start gap-3">
-                  <Check className="size-5 text-neutral-900 shrink-0 mt-0.5" />
-                  <span className="text-gray-700">{req}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <p className="text-sm text-gray-400 mt-4">
-            Don't have public liability insurance yet? We can point you toward affordable options — just reach out.
-          </p>
         </section>
 
         <hr className="border-gray-100" />
