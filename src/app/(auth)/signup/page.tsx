@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Sparkles, ArrowRight, ArrowLeft, Mail } from "lucide-react";
+import { Sparkles, ArrowRight, ArrowLeft } from "lucide-react";
 import { signupSchema, type SignupInput } from "@/server/validation/auth.schema";
 import { SocialAuthButtons, AuthDivider } from "@/components/auth/social-auth";
 import { Input } from "@/components/ui/input";
@@ -100,23 +100,19 @@ export default function SignupPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="email">Email address</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-neutral-400" />
-                  <Input
-                    id="email"
-                    type="email"
-                    autoFocus
-                    placeholder="you@example.com"
-                    className="h-12 rounded-xl pl-10 text-base"
-                    {...register("email")}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        handleContinue();
-                      }
-                    }}
-                  />
-                </div>
+                <Input
+                  id="email"
+                  type="email"
+                  autoFocus
+                  className="h-12 rounded-xl text-base"
+                  {...register("email")}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleContinue();
+                    }
+                  }}
+                />
                 {errors.email && (
                   <p className="text-sm text-red-500">{errors.email.message}</p>
                 )}
