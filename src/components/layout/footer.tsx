@@ -23,13 +23,13 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-gray-50 border-t border-gray-200">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
+    <footer className="bg-neutral-950 text-white">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {/* Link columns */}
           {Object.entries(footerLinks).map(([category, links]) => (
             <div key={category} className="flex flex-col gap-3">
-              <h3 className="text-sm font-semibold text-gray-900">
+              <h3 className="text-sm font-semibold text-white">
                 {category}
               </h3>
               <ul className="flex flex-col gap-2">
@@ -37,7 +37,7 @@ export function Footer() {
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-sm text-neutral-500 hover:text-neutral-900 transition-colors"
+                      className="text-sm text-neutral-400 hover:text-white transition-colors"
                     >
                       {link.label}
                     </Link>
@@ -49,8 +49,8 @@ export function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-12 pt-8 border-t border-gray-200">
-          <p className="text-sm text-gray-400">
+        <div className="mt-12 pt-8 border-t border-neutral-800">
+          <p className="text-sm text-neutral-500">
             &copy; {currentYear} Sparq. All rights reserved.
           </p>
         </div>

@@ -21,7 +21,7 @@ const SUBURBS = [
 
 export default function HomePage() {
   return (
-    <div className="bg-white">
+    <div className="bg-neutral-50">
       {/* Hero */}
       <section className="relative overflow-hidden bg-neutral-50">
         <div className="relative mx-auto flex min-h-[calc(100vh-4rem)] max-w-5xl flex-col items-center justify-center px-4 py-20 text-center">
