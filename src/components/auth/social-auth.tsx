@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
+import { toast } from "sonner";
 
 function AppleIcon({ className }: { className?: string }) {
   return (
@@ -28,6 +30,33 @@ export function SocialAuthButtons({
   mode?: "signup" | "continue";
   callbackUrl?: string;
 }) {
+  const [enabled, setEnabled] = useState<Set<string>>(new Set());
+
+  // Discover which OAuth providers are actually configured on the server, so a
+  // button doesn't dead-end when its credentials haven't been set yet.
+  useEffect(() => {
+    let active = true;
+    fetch("/api/auth/providers")
+      .then((r) => r.json())
+      .then((data) => {
+        if (active && data && typeof data === "object") {
+          setEnabled(new Set(Object.keys(data)));
+        }
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const handle = (provider: "apple" | "google", label: string) => {
+    if (!enabled.has(provider)) {
+      toast.info(`${label} sign-in is coming soon.`);
+      return;
+    }
+    signIn(provider, { callbackUrl });
+  };
+
   const appleLabel = mode === "signup" ? "Sign up with Apple" : "Continue with Apple";
   const googleLabel =
     mode === "signup" ? "Get started with Google" : "Continue with Google";
@@ -36,7 +65,7 @@ export function SocialAuthButtons({
     <div className="space-y-3">
       <button
         type="button"
-        onClick={() => signIn("apple", { callbackUrl })}
+        onClick={() => handle("apple", "Apple")}
         className="inline-flex h-12 w-full items-center justify-center gap-2.5 rounded-full bg-neutral-900 text-base font-semibold text-white transition-colors hover:bg-neutral-700"
       >
         <AppleIcon className="size-5" />
@@ -44,7 +73,7 @@ export function SocialAuthButtons({
       </button>
       <button
         type="button"
-        onClick={() => signIn("google", { callbackUrl })}
+        onClick={() => handle("google", "Google")}
         className="inline-flex h-12 w-full items-center justify-center gap-2.5 rounded-full border border-neutral-300 bg-white text-base font-semibold text-neutral-900 transition-colors hover:bg-neutral-50"
       >
         <GoogleIcon className="size-5" />
