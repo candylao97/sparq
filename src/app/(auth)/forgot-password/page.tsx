@@ -16,11 +16,6 @@ function AuthShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-neutral-50 px-4 py-12">
       <div className="w-full max-w-md">
-        <Link href="/" className="mb-8 flex items-center justify-center">
-          <span className="text-2xl font-bold tracking-tight text-neutral-900">
-            Sparq
-          </span>
-        </Link>
         <div className="rounded-2xl border border-neutral-200 bg-white p-8 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.12)]">
           {children}
         </div>
