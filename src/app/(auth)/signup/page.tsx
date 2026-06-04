@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Sparkles, ArrowRight, ArrowLeft } from "lucide-react";
+import { ArrowRight, ArrowLeft } from "lucide-react";
 import { signupSchema, type SignupInput } from "@/server/validation/auth.schema";
 import { SocialAuthButtons, AuthDivider } from "@/components/auth/social-auth";
 import { Input } from "@/components/ui/input";
@@ -67,8 +67,7 @@ export default function SignupPage() {
     <div className="flex min-h-screen items-center justify-center bg-neutral-50 px-4 py-12">
       <div className="w-full max-w-md">
         {/* Brand */}
-        <Link href="/" className="mb-8 flex items-center justify-center gap-1.5">
-          <Sparkles className="size-6 text-indigo-600" />
+        <Link href="/" className="mb-8 flex items-center justify-center">
           <span className="text-2xl font-bold tracking-tight text-neutral-900">
             Sparq
           </span>

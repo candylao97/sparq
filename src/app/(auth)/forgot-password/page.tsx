@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Sparkles, ArrowLeft, MailCheck } from "lucide-react";
+import { ArrowLeft, MailCheck } from "lucide-react";
 import {
   forgotPasswordSchema,
   type ForgotPasswordInput,
@@ -16,8 +16,7 @@ function AuthShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-neutral-50 px-4 py-12">
       <div className="w-full max-w-md">
-        <Link href="/" className="mb-8 flex items-center justify-center gap-1.5">
-          <Sparkles className="size-6 text-indigo-600" />
+        <Link href="/" className="mb-8 flex items-center justify-center">
           <span className="text-2xl font-bold tracking-tight text-neutral-900">
             Sparq
           </span>

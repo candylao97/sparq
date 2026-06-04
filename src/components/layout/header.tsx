@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { useState } from "react";
-import { Menu, X, Sparkles } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Drawer } from "@base-ui/react/drawer";
 import { cn } from "@/lib/utils";
 
@@ -31,8 +31,7 @@ export function Header() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-1.5">
-            <Sparkles className="size-5 text-indigo-600" />
+          <Link href="/" className="flex items-center">
             <span className="text-xl font-bold tracking-tight text-neutral-900">
               Sparq
             </span>
@@ -113,8 +112,7 @@ export function Header() {
                 )}
               >
                 <div className="flex items-center justify-between px-4 py-4 border-b border-gray-100">
-                  <div className="flex items-center gap-1.5">
-                    <Sparkles className="size-5 text-indigo-600" />
+                  <div className="flex items-center">
                     <span className="text-lg font-bold text-neutral-900">
                       Sparq
                     </span>

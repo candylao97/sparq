@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Sparkles } from "lucide-react";
 
 const footerLinks = {
   Services: [
@@ -29,8 +28,7 @@ export function Footer() {
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {/* Brand column */}
           <div className="flex flex-col gap-4">
-            <Link href="/" className="flex items-center gap-1.5 w-fit">
-              <Sparkles className="size-5 text-indigo-600" />
+            <Link href="/" className="flex items-center w-fit">
               <span className="text-xl font-bold tracking-tight text-neutral-900">
                 Sparq
               </span>
