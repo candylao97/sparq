@@ -6,7 +6,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Sparkles } from "lucide-react";
 import { loginSchema, type LoginInput } from "@/server/validation/auth.schema";
 import { SocialAuthButtons, AuthDivider } from "@/components/auth/social-auth";
 import { Input } from "@/components/ui/input";
@@ -53,14 +52,6 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-neutral-50 px-4 py-12">
       <div className="w-full max-w-md">
-        {/* Brand */}
-        <Link href="/" className="mb-8 flex items-center justify-center gap-1.5">
-          <Sparkles className="size-6 text-indigo-600" />
-          <span className="text-2xl font-bold tracking-tight text-neutral-900">
-            Sparq
-          </span>
-        </Link>
-
         <div className="rounded-2xl border border-neutral-200 bg-white p-8 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.12)]">
           <div className="mb-6 text-center">
             <h1 className="text-2xl font-bold tracking-tight text-neutral-900">
