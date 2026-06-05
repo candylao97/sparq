@@ -2,21 +2,19 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
 import {
   LayoutDashboard,
   CalendarDays,
   CreditCard,
   Star,
   Settings,
-  LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const LINKS = [
   { href: "/customer", label: "Account", icon: LayoutDashboard },
   { href: "/customer/bookings", label: "Bookings", icon: CalendarDays },
-  { href: "/customer/payments", label: "Payments & receipts", icon: CreditCard },
+  { href: "/customer/billing", label: "Billing", icon: CreditCard },
   { href: "/customer/reviews", label: "Reviews", icon: Star },
   { href: "/customer/settings", label: "Settings", icon: Settings },
 ];
@@ -51,13 +49,6 @@ export function CustomerNavSidebar() {
           </Link>
         );
       })}
-      <button
-        onClick={() => signOut({ callbackUrl: "/" })}
-        className="mt-2 flex items-center gap-2.5 rounded-lg border border-transparent px-3 py-2 text-sm text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900"
-      >
-        <LogOut className="size-4 shrink-0" />
-        Sign out
-      </button>
     </nav>
   );
 }
