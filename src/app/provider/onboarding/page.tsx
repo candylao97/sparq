@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
 import { LAUNCH_SUBURBS } from "@/lib/constants";
 import { toast } from "sonner";
 import {
@@ -26,9 +25,15 @@ const STEPS = [
   "Portfolio",
   "Services",
   "Availability",
-  "Stripe Payouts",
+  "Payout Details",
   "Review & Submit",
 ];
+
+function maskAccount(accountNumber?: string | null) {
+  if (!accountNumber) return null;
+  const last4 = accountNumber.slice(-4);
+  return `••••${last4}`;
+}
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -78,7 +83,11 @@ export default function OnboardingPage() {
     basePrice: 50,
     serviceMode: "BOTH",
   });
-  const [stripeStatus, setStripeStatus] = useState<{ connected: boolean } | null>(null);
+  const [payout, setPayout] = useState({
+    accountName: "",
+    bsb: "",
+    accountNumber: "",
+  });
   const [currentStatus, setCurrentStatus] = useState<string>("DRAFT");
 
   // Load existing profile data
@@ -87,9 +96,17 @@ export default function OnboardingPage() {
       .then((res) => res.ok ? res.json() : null)
       .catch(() => null);
 
-    fetch("/api/stripe/connect")
-      .then((res) => res.json())
-      .then((data) => setStripeStatus(data))
+    fetch("/api/providers/payout")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) {
+          setPayout({
+            accountName: data.accountName ?? "",
+            bsb: data.bsb ?? "",
+            accountNumber: data.accountNumber ?? "",
+          });
+        }
+      })
       .catch(() => null);
   }, []);
 
@@ -119,6 +136,10 @@ export default function OnboardingPage() {
   const handleNext = async () => {
     if (step <= 2) {
       const saved = await saveProfile();
+      if (!saved) return;
+    }
+    if (step === 6) {
+      const saved = await savePayout();
       if (!saved) return;
     }
     if (step < STEPS.length - 1) setStep(step + 1);
@@ -200,15 +221,26 @@ export default function OnboardingPage() {
     }
   };
 
-  const handleConnectStripe = async () => {
+  const savePayout = async () => {
+    setLoading(true);
     try {
-      const res = await fetch("/api/stripe/connect", { method: "POST" });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
+      const res = await fetch("/api/providers/payout", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payout),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        toast.error(err.error || "Failed to save payout details");
+        return false;
       }
+      toast.success("Payout details saved");
+      return true;
     } catch {
-      toast.error("Failed to connect Stripe");
+      toast.error("Failed to save payout details");
+      return false;
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -620,29 +652,49 @@ export default function OnboardingPage() {
         </Card>
       )}
 
-      {/* Step 6: Stripe */}
+      {/* Step 6: Payout details */}
       {step === 6 && (
         <Card>
           <CardHeader>
-            <CardTitle>Payout Setup</CardTitle>
-            <CardDescription>Connect your Stripe account to receive payments</CardDescription>
+            <CardTitle>Payout Details</CardTitle>
+            <CardDescription>
+              Enter the Australian bank account where you&apos;d like to receive your earnings
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {stripeStatus?.connected ? (
-              <div className="flex items-center gap-2 p-4 bg-green-50 rounded-lg">
-                <CheckCircle className="w-5 h-5 text-green-600" />
-                <span className="text-green-700 font-medium">Stripe account connected</span>
+            <div className="space-y-2">
+              <Label>Account name</Label>
+              <Input
+                value={payout.accountName}
+                onChange={(e) => setPayout({ ...payout, accountName: e.target.value })}
+                placeholder="Name on the bank account"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>BSB</Label>
+                <Input
+                  value={payout.bsb}
+                  onChange={(e) => setPayout({ ...payout, bsb: e.target.value })}
+                  placeholder="062-000"
+                  inputMode="numeric"
+                />
               </div>
-            ) : (
-              <>
-                <p className="text-sm text-gray-600">
-                  We use Stripe to securely process payments and send your earnings directly to your bank account.
-                </p>
-                <Button onClick={handleConnectStripe}>
-                  Connect Stripe Account
-                </Button>
-              </>
-            )}
+              <div className="space-y-2">
+                <Label>Account number</Label>
+                <Input
+                  value={payout.accountNumber}
+                  onChange={(e) =>
+                    setPayout({ ...payout, accountNumber: e.target.value.replace(/\D/g, "").slice(0, 10) })
+                  }
+                  placeholder="12345678"
+                  inputMode="numeric"
+                />
+              </div>
+            </div>
+            <p className="text-xs text-gray-500">
+              Your earnings are transferred to this account after each completed booking.
+            </p>
           </CardContent>
         </Card>
       )}
@@ -685,10 +737,12 @@ export default function OnboardingPage() {
                 <span>{portfolioImages.length} image(s)</span>
               </div>
               <div className="flex justify-between py-2 border-b">
-                <span className="text-gray-600">Stripe</span>
-                <Badge variant={stripeStatus?.connected ? "default" : "secondary"}>
-                  {stripeStatus?.connected ? "Connected" : "Not connected"}
-                </Badge>
+                <span className="text-gray-600">Payout account</span>
+                <span className="font-medium">
+                  {maskAccount(payout.accountNumber)
+                    ? `${payout.bsb} · ${maskAccount(payout.accountNumber)}`
+                    : "Not set"}
+                </span>
               </div>
             </div>
 

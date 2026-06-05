@@ -8,9 +8,21 @@ import { DollarSign, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { BookingWithDetails } from "@/types";
 
+interface PayoutDetails {
+  accountName?: string | null;
+  bsb?: string | null;
+  accountNumber?: string | null;
+}
+
+function maskAccount(accountNumber?: string | null) {
+  if (!accountNumber) return null;
+  return `••••${accountNumber.slice(-4)}`;
+}
+
 export default function ProviderEarningsPage() {
   const [bookings, setBookings] = useState<BookingWithDetails[]>([]);
   const [loadingBookings, setLoadingBookings] = useState(true);
+  const [payout, setPayout] = useState<PayoutDetails | null>(null);
 
   useEffect(() => {
     fetch("/api/bookings")
@@ -18,7 +30,14 @@ export default function ProviderEarningsPage() {
       .then((data) => setBookings(Array.isArray(data) ? data : []))
       .catch(() => toast.error("Failed to load earnings"))
       .finally(() => setLoadingBookings(false));
+
+    fetch("/api/providers/payout")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: PayoutDetails | null) => setPayout(data))
+      .catch(() => {});
   }, []);
+
+  const payoutSet = payout?.accountNumber && payout?.bsb;
 
   const completedBookings = bookings.filter((b) => b.status === "COMPLETED");
 
@@ -86,7 +105,9 @@ export default function ProviderEarningsPage() {
           <div>
             <p className="text-sm font-medium">Payout account</p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Earnings are paid to the bank account saved in your settings.
+              {payoutSet
+                ? `${payout?.accountName ? `${payout.accountName} · ` : ""}BSB ${payout?.bsb} · A/C ${maskAccount(payout?.accountNumber)}`
+                : "No payout account set yet — add your bank details to get paid."}
             </p>
           </div>
           <Link
