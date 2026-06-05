@@ -6,7 +6,6 @@ import {
   LayoutDashboard,
   CalendarDays,
   CreditCard,
-  Star,
   Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -15,7 +14,6 @@ const LINKS = [
   { href: "/customer", label: "Account", icon: LayoutDashboard },
   { href: "/customer/bookings", label: "Bookings", icon: CalendarDays },
   { href: "/customer/billing", label: "Billing", icon: CreditCard },
-  { href: "/customer/reviews", label: "Reviews", icon: Star },
   { href: "/customer/settings", label: "Settings", icon: Settings },
 ];
 
