@@ -1,9 +1,8 @@
 import Link from "next/link";
-import { CreditCard, Receipt, ArrowRight } from "lucide-react";
+import { CreditCard, Receipt, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 import { auth } from "@/lib/auth";
 import { getCustomerBookings } from "@/server/services/booking.service";
-import { PAYMENT_STATUS_LABELS } from "@/lib/constants";
 import { AddPaymentMethodButton } from "@/components/customer/add-payment-method-button";
 
 type CustomerBooking = Awaited<ReturnType<typeof getCustomerBookings>>[number];
@@ -29,6 +28,25 @@ function paymentStatusClass(status: string) {
       return "bg-red-100 text-red-800";
     default:
       return "bg-neutral-100 text-neutral-700";
+  }
+}
+
+function chargeStatusLabel(status: string) {
+  switch (status) {
+    case "CAPTURED":
+      return "Paid";
+    case "AUTHORISED":
+      return "Authorised";
+    case "AUTH_PENDING":
+      return "Pending";
+    case "AUTH_RELEASED":
+      return "Released";
+    case "REFUNDED":
+      return "Refunded";
+    case "FAILED":
+      return "Failed";
+    default:
+      return status;
   }
 }
 
@@ -70,11 +88,11 @@ export default async function CustomerBillingPage() {
         </div>
       </section>
 
-      {/* Charges */}
+      {/* Recent charges */}
       <section className="rounded-2xl border border-neutral-200 bg-white">
         <div className="flex items-center gap-2 border-b border-neutral-100 px-5 py-4">
           <Receipt className="size-4 text-neutral-400" />
-          <h2 className="font-semibold text-neutral-900">Charges</h2>
+          <h2 className="font-semibold text-neutral-900">Recent charges</h2>
         </div>
 
         {charges.length === 0 ? (
@@ -83,40 +101,51 @@ export default async function CustomerBillingPage() {
             booking.
           </p>
         ) : (
-          <ul className="divide-y divide-neutral-100">
-            {charges.map((b) => (
-              <li key={b.id}>
-                <Link
-                  href={`/customer/bookings/${b.id}`}
-                  className="flex items-center justify-between px-5 py-4 transition-colors hover:bg-neutral-50"
-                >
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-neutral-900">
-                      {b.service.title}
-                    </p>
-                    <p className="text-xs text-neutral-400">
-                      {format(new Date(b.payment!.createdAt), "d MMM yyyy")} ·{" "}
-                      {providerName(b)}
-                    </p>
-                  </div>
-                  <div className="ml-4 flex shrink-0 items-center gap-3">
-                    <span
-                      className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${paymentStatusClass(
-                        b.payment!.status
-                      )}`}
-                    >
-                      {PAYMENT_STATUS_LABELS[b.payment!.status] ??
-                        b.payment!.status}
+          <div>
+            {/* Column headers (desktop) */}
+            <div className="hidden grid-cols-[6rem_1fr_6rem_6rem_1.25rem] gap-3 border-b border-neutral-100 px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-neutral-400 sm:grid">
+              <span>Date</span>
+              <span>Name</span>
+              <span>Price</span>
+              <span>Status</span>
+              <span />
+            </div>
+
+            <ul className="divide-y divide-neutral-100">
+              {charges.map((b) => (
+                <li key={b.id}>
+                  <Link
+                    href={`/customer/bookings/${b.id}/receipt`}
+                    className="grid grid-cols-[1fr_auto] items-center gap-3 px-5 py-4 transition-colors hover:bg-neutral-50 sm:grid-cols-[6rem_1fr_6rem_6rem_1.25rem]"
+                  >
+                    <span className="order-2 text-xs text-neutral-400 sm:order-1 sm:text-sm sm:text-neutral-600">
+                      {format(new Date(b.payment!.createdAt), "d MMM yyyy")}
                     </span>
-                    <span className="text-sm font-semibold text-neutral-900">
+                    <span className="order-1 min-w-0 truncate text-sm font-medium text-neutral-900 sm:order-2">
+                      {b.service.title}
+                      <span className="text-neutral-400 sm:hidden">
+                        {" · "}
+                        {providerName(b)}
+                      </span>
+                    </span>
+                    <span className="order-3 text-sm font-semibold text-neutral-900">
                       {money(b.payment!.amount)}
                     </span>
-                    <ArrowRight className="size-4 text-neutral-300" />
-                  </div>
-                </Link>
-              </li>
-            ))}
-          </ul>
+                    <span className="order-4">
+                      <span
+                        className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${paymentStatusClass(
+                          b.payment!.status
+                        )}`}
+                      >
+                        {chargeStatusLabel(b.payment!.status)}
+                      </span>
+                    </span>
+                    <ChevronRight className="order-5 hidden size-4 text-neutral-300 sm:block" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
       </section>
     </div>
