@@ -1,0 +1,396 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────
+
+enum UserRole {
+  CUSTOMER
+  PROVIDER
+  ADMIN
+}
+
+enum ProviderModerationStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum ServiceCategory {
+  NAILS
+  LASHES
+}
+
+enum ServiceMode {
+  STUDIO
+  MOBILE
+  BOTH
+}
+
+enum BookingStatus {
+  PENDING_PROVIDER_RESPONSE
+  DECLINED
+  CONFIRMED
+  COMPLETED
+  CANCELLED_BY_CUSTOMER
+  CANCELLED_BY_PROVIDER
+  REFUNDED
+  EXPIRED
+  DISPUTED
+}
+
+enum PaymentStatus {
+  AUTH_PENDING
+  AUTHORISED
+  CAPTURED
+  AUTH_RELEASED
+  REFUNDED
+  FAILED
+}
+
+enum ReviewStatus {
+  PUBLISHED
+  HIDDEN
+}
+
+// ─── Models ──────────────────────────────────────────────
+
+model User {
+  id              String    @id @default(cuid())
+  name            String?
+  email           String    @unique
+  emailVerified   DateTime?
+  hashedPassword  String?
+  image           String?
+  role            UserRole  @default(CUSTOMER)
+  phone           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Auth.js
+  accounts        Account[]
+  sessions        Session[]
+
+  // Relations
+  providerProfile ProviderProfile?
+  bookingsAsCustomer Booking[]  @relation("CustomerBookings")
+  reviewsWritten  Review[]      @relation("CustomerReviews")
+  adminNotes      AdminNote[]   @relation("AdminNoteAuthor")
+  auditLogs       AuditLog[]
+
+  // Password reset
+  passwordResetToken    String?   @unique
+  passwordResetExpires  DateTime?
+
+  // Email verification
+  emailVerifyToken      String?   @unique
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+model ProviderProfile {
+  id               String                   @id @default(cuid())
+  userId           String                   @unique
+  businessName     String?
+  bio              String?                  @db.Text
+  serviceTypes     ServiceCategory[]
+  serviceMode      ServiceMode              @default(BOTH)
+  studioAddress    String?
+  studioSuburb     String?
+  mobileRadius     Int?
+  abn              String?
+  yearsExperience  Int?
+  moderationStatus ProviderModerationStatus @default(DRAFT)
+  rejectionReason  String?
+  stripeAccountId  String?
+  stripeOnboarded  Boolean                  @default(false)
+  avgRating        Float?
+  reviewCount      Int                      @default(0)
+  responseRate     Float?
+  submittedAt      DateTime?
+  approvedAt       DateTime?
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  suburbs          ProviderSuburb[]
+  services         Service[]
+  availabilityRules AvailabilityRule[]
+  blockedDates     BlockedDate[]
+  portfolioImages  PortfolioImage[]
+  documents        ProviderDocument[]
+  bookings         Booking[]
+  payouts          Payout[]
+  reviews          Review[]
+  adminNotes       AdminNote[]       @relation("ProviderNotes")
+
+  @@index([moderationStatus])
+  @@index([serviceMode])
+  @@map("provider_profiles")
+}
+
+model ProviderSuburb {
+  id         String          @id @default(cuid())
+  profileId  String
+  suburb     String
+
+  profile    ProviderProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([profileId, suburb])
+  @@index([suburb])
+  @@map("provider_suburbs")
+}
+
+model Service {
+  id              String          @id @default(cuid())
+  profileId       String
+  title           String
+  category        ServiceCategory
+  description     String?         @db.Text
+  durationMinutes Int
+  basePrice       Float
+  serviceMode     ServiceMode     @default(BOTH)
+  isActive        Boolean         @default(true)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  profile         ProviderProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  bookings        Booking[]
+
+  @@index([profileId])
+  @@index([category])
+  @@map("services")
+}
+
+model AvailabilityRule {
+  id        String          @id @default(cuid())
+  profileId String
+  dayOfWeek Int             // 0 = Sunday, 6 = Saturday
+  startTime String          // "09:00"
+  endTime   String          // "17:00"
+  createdAt DateTime        @default(now())
+
+  profile   ProviderProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+  @@map("availability_rules")
+}
+
+model BlockedDate {
+  id        String          @id @default(cuid())
+  profileId String
+  date      DateTime        @db.Date
+  reason    String?
+  createdAt DateTime        @default(now())
+
+  profile   ProviderProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([profileId, date])
+  @@map("blocked_dates")
+}
+
+model Booking {
+  id                  String        @id @default(cuid())
+  customerId          String
+  providerId          String
+  serviceId           String
+  status              BookingStatus @default(PENDING_PROVIDER_RESPONSE)
+  bookingDate         DateTime      @db.Date
+  startTime           String        // "10:00"
+  endTime             String        // "11:00"
+  totalPrice          Float
+  serviceMode         ServiceMode
+  address             String?       // customer address for mobile
+  notes               String?       @db.Text
+  providerResponseDeadline DateTime?
+  respondedAt         DateTime?
+  completedAt         DateTime?
+  cancelledAt         DateTime?
+  cancellationReason  String?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  customer            User            @relation("CustomerBookings", fields: [customerId], references: [id])
+  provider            ProviderProfile @relation(fields: [providerId], references: [id])
+  service             Service         @relation(fields: [serviceId], references: [id])
+  payment             Payment?
+  payout              Payout?
+  review              Review?
+
+  @@index([customerId])
+  @@index([providerId])
+  @@index([status])
+  @@index([bookingDate])
+  @@map("bookings")
+}
+
+model Payment {
+  id                    String        @id @default(cuid())
+  bookingId             String        @unique
+  stripePaymentIntentId String?       @unique
+  status                PaymentStatus @default(AUTH_PENDING)
+  amount                Float
+  platformFee           Float?
+  providerAmount        Float?
+  currency              String        @default("aud")
+  capturedAt            DateTime?
+  releasedAt            DateTime?
+  refundedAt            DateTime?
+  stripeRefundId        String?
+  failureReason         String?
+  idempotencyKey        String?       @unique
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  booking               Booking       @relation(fields: [bookingId], references: [id])
+
+  @@index([status])
+  @@map("payments")
+}
+
+model Payout {
+  id                String   @id @default(cuid())
+  providerId        String
+  bookingId         String   @unique
+  stripeTransferId  String?  @unique
+  amount            Float
+  currency          String   @default("aud")
+  status            String   @default("pending") // pending, completed, failed
+  paidAt            DateTime?
+  createdAt         DateTime @default(now())
+
+  provider          ProviderProfile @relation(fields: [providerId], references: [id])
+  booking           Booking         @relation(fields: [bookingId], references: [id])
+
+  @@index([providerId])
+  @@map("payouts")
+}
+
+model Review {
+  id         String       @id @default(cuid())
+  bookingId  String       @unique
+  customerId String
+  providerId String
+  rating     Int          // 1-5
+  comment    String?      @db.Text
+  status     ReviewStatus @default(PUBLISHED)
+  isVerified Boolean      @default(true)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  booking    Booking         @relation(fields: [bookingId], references: [id])
+  customer   User            @relation("CustomerReviews", fields: [customerId], references: [id])
+  provider   ProviderProfile @relation(fields: [providerId], references: [id])
+
+  @@index([providerId])
+  @@index([customerId])
+  @@map("reviews")
+}
+
+model PortfolioImage {
+  id          String          @id @default(cuid())
+  profileId   String
+  url         String
+  publicId    String          // Cloudinary public ID
+  caption     String?
+  sortOrder   Int             @default(0)
+  createdAt   DateTime        @default(now())
+
+  profile     ProviderProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+  @@map("portfolio_images")
+}
+
+model ProviderDocument {
+  id          String          @id @default(cuid())
+  profileId   String
+  type        String          // "abn_certificate", "insurance", etc.
+  url         String
+  publicId    String
+  createdAt   DateTime        @default(now())
+
+  profile     ProviderProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@map("provider_documents")
+}
+
+model AdminNote {
+  id          String   @id @default(cuid())
+  authorId    String
+  providerId  String?
+  bookingId   String?
+  content     String   @db.Text
+  createdAt   DateTime @default(now())
+
+  author      User            @relation("AdminNoteAuthor", fields: [authorId], references: [id])
+  provider    ProviderProfile? @relation("ProviderNotes", fields: [providerId], references: [id])
+
+  @@index([providerId])
+  @@map("admin_notes")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  action     String
+  entity     String
+  entityId   String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  user       User?    @relation(fields: [userId], references: [id])
+
+  @@index([entity, entityId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}

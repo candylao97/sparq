@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: sparq-db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: sparq
+      POSTGRES_PASSWORD: sparq_dev_password
+      POSTGRES_DB: sparq
+    volumes:
+      - sparq_pgdata:/var/lib/postgresql/data
+
+volumes:
+  sparq_pgdata:
