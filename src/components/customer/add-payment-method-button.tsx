@@ -1,40 +1,23 @@
 "use client";
 
-import { useState } from "react";
-import { toast } from "sonner";
 import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export function AddPaymentMethodButton({
   label = "Add payment method",
 }: {
   label?: string;
 }) {
-  const [loading, setLoading] = useState(false);
-
-  async function openPortal() {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/customer/billing-portal", {
-        method: "POST",
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.url) {
-        toast.error(data.error || "Couldn't open billing.");
-        setLoading(false);
-        return;
-      }
-      window.location.href = data.url;
-    } catch {
-      toast.error("Something went wrong.");
-      setLoading(false);
-    }
-  }
-
   return (
-    <Button size="sm" onClick={openPortal} disabled={loading}>
+    <a
+      href="https://link.com/au"
+      target="_blank"
+      rel="noopener noreferrer"
+      className={cn(buttonVariants({ size: "sm" }))}
+    >
       <Plus className="size-4" />
-      {loading ? "Opening…" : label}
-    </Button>
+      {label}
+    </a>
   );
 }
