@@ -11,7 +11,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { LAUNCH_SUBURBS } from "@/lib/constants";
 import { providerProfileSchema, type ProviderProfileInput } from "@/server/validation/provider.schema";
 
@@ -228,52 +227,6 @@ export default function ProviderProfilePage() {
 
       {/* Profile form */}
       <form onSubmit={handleSubmit(onSave)} className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Business details</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="businessName">Business name</Label>
-              <Input id="businessName" {...register("businessName")} />
-              {errors.businessName && (
-                <p className="text-sm text-red-500">{errors.businessName.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="bio">Bio</Label>
-              <Textarea id="bio" rows={4} {...register("bio")} placeholder="Tell clients about yourself..." />
-              {errors.bio && (
-                <p className="text-sm text-red-500">{errors.bio.message}</p>
-              )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="abn">ABN</Label>
-                <Input id="abn" placeholder="11 digits, no spaces" {...register("abn")} />
-                {errors.abn && (
-                  <p className="text-sm text-red-500">{errors.abn.message}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="yearsExperience">Years of experience</Label>
-                <Input
-                  id="yearsExperience"
-                  type="number"
-                  min={0}
-                  max={50}
-                  {...register("yearsExperience", { valueAsNumber: true })}
-                />
-                {errors.yearsExperience && (
-                  <p className="text-sm text-red-500">{errors.yearsExperience.message}</p>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         <Card>
           <CardHeader>
             <CardTitle>Service types</CardTitle>

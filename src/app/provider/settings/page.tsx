@@ -3,27 +3,23 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { CheckCircle, AlertCircle, ExternalLink } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-
-interface StripeStatus {
-  connected: boolean;
-  detailsSubmitted?: boolean;
-  payoutsEnabled?: boolean;
-}
 
 export default function ProviderSettingsPage() {
   const { data: session, update } = useSession();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
-  const [stripeStatus, setStripeStatus] = useState<StripeStatus | null>(null);
-  const [loadingStripe, setLoadingStripe] = useState(true);
-  const [connectingStripe, setConnectingStripe] = useState(false);
+
+  // Payout (bank) details
+  const [accountName, setAccountName] = useState("");
+  const [bsb, setBsb] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
+  const [loadingPayout, setLoadingPayout] = useState(true);
+  const [savingPayout, setSavingPayout] = useState(false);
 
   useEffect(() => {
     if (session?.user) {
@@ -33,11 +29,21 @@ export default function ProviderSettingsPage() {
   }, [session]);
 
   useEffect(() => {
-    fetch("/api/stripe/connect")
-      .then((r) => r.json())
-      .then((data: StripeStatus) => setStripeStatus(data))
+    fetch("/api/providers/payout")
+      .then((r) => (r.ok ? r.json() : {}))
+      .then(
+        (data: {
+          accountName?: string | null;
+          bsb?: string | null;
+          accountNumber?: string | null;
+        }) => {
+          setAccountName(data?.accountName ?? "");
+          setBsb(data?.bsb ?? "");
+          setAccountNumber(data?.accountNumber ?? "");
+        }
+      )
       .catch(() => {})
-      .finally(() => setLoadingStripe(false));
+      .finally(() => setLoadingPayout(false));
   }, []);
 
   async function saveProfile() {
@@ -65,23 +71,25 @@ export default function ProviderSettingsPage() {
     }
   }
 
-  async function handleConnectStripe() {
-    setConnectingStripe(true);
+  async function savePayout() {
+    setSavingPayout(true);
     try {
-      const res = await fetch("/api/stripe/connect", { method: "POST" });
-      if (!res.ok) throw new Error();
-      const { url } = await res.json();
-      window.location.href = url;
-    } catch {
-      toast.error("Failed to start Stripe Connect");
-      setConnectingStripe(false);
+      const res = await fetch("/api/providers/payout", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accountName, bsb, accountNumber }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error ?? "Failed to save");
+      }
+      toast.success("Payout details saved");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to save payout details");
+    } finally {
+      setSavingPayout(false);
     }
   }
-
-  const stripeFullyOnboarded =
-    stripeStatus?.connected &&
-    stripeStatus?.detailsSubmitted &&
-    stripeStatus?.payoutsEnabled;
 
   return (
     <div className="space-y-8 max-w-2xl">
@@ -121,52 +129,55 @@ export default function ProviderSettingsPage() {
         </CardContent>
       </Card>
 
-      {/* Stripe Connect */}
+      {/* Payout details */}
       <Card>
         <CardHeader>
-          <CardTitle>Stripe Connect</CardTitle>
+          <CardTitle>Payout details</CardTitle>
         </CardHeader>
-        <CardContent>
-          {loadingStripe ? (
-            <p className="text-sm text-muted-foreground">Checking Stripe status...</p>
-          ) : stripeFullyOnboarded ? (
-            <div className="flex items-center gap-3">
-              <CheckCircle className="size-5 text-green-600 shrink-0" />
-              <div>
-                <p className="text-sm font-medium text-green-700">Stripe account connected</p>
-                <p className="text-xs text-muted-foreground">
-                  Your account is set up and payouts are enabled
-                </p>
-              </div>
-              <Badge variant="green" className="ml-auto">Active</Badge>
-            </div>
-          ) : stripeStatus?.connected && !stripeFullyOnboarded ? (
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <AlertCircle className="size-5 text-yellow-600 shrink-0" />
-                <div>
-                  <p className="text-sm font-medium text-yellow-700">Onboarding incomplete</p>
-                  <p className="text-xs text-muted-foreground">
-                    Complete your Stripe account setup to receive payouts
-                  </p>
-                </div>
-                <Badge variant="yellow" className="ml-auto">Pending</Badge>
-              </div>
-              <Button variant="outline" onClick={handleConnectStripe} disabled={connectingStripe}>
-                <ExternalLink className="size-4 mr-1.5" />
-                {connectingStripe ? "Redirecting..." : "Complete Stripe setup"}
-              </Button>
-            </div>
+        <CardContent className="space-y-5">
+          <p className="text-sm text-muted-foreground">
+            Your earnings are paid to this Australian bank account after each
+            completed booking.
+          </p>
+          {loadingPayout ? (
+            <p className="text-sm text-muted-foreground">Loading…</p>
           ) : (
-            <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                Connect your Stripe account to receive payouts when bookings are completed.
-              </p>
-              <Button onClick={handleConnectStripe} disabled={connectingStripe}>
-                <ExternalLink className="size-4 mr-1.5" />
-                {connectingStripe ? "Redirecting..." : "Connect with Stripe"}
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="accountName">Account name</Label>
+                <Input
+                  id="accountName"
+                  value={accountName}
+                  onChange={(e) => setAccountName(e.target.value)}
+                  placeholder="Name on the bank account"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="bsb">BSB</Label>
+                  <Input
+                    id="bsb"
+                    value={bsb}
+                    onChange={(e) => setBsb(e.target.value)}
+                    placeholder="062-000"
+                    inputMode="numeric"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="accountNumber">Account number</Label>
+                  <Input
+                    id="accountNumber"
+                    value={accountNumber}
+                    onChange={(e) => setAccountNumber(e.target.value)}
+                    placeholder="12345678"
+                    inputMode="numeric"
+                  />
+                </div>
+              </div>
+              <Button onClick={savePayout} disabled={savingPayout}>
+                {savingPayout ? "Saving..." : "Save payout details"}
               </Button>
-            </div>
+            </>
           )}
         </CardContent>
       </Card>

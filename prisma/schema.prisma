@@ -152,6 +152,10 @@ model ProviderProfile {
   rejectionReason  String?
   stripeAccountId  String?
   stripeOnboarded  Boolean                  @default(false)
+  // Manual AU bank payout details
+  bsb              String?
+  accountNumber    String?
+  accountName      String?
   avgRating        Float?
   reviewCount      Int                      @default(0)
   responseRate     Float?

@@ -46,5 +46,19 @@ export const providerLocationSchema = z.object({
   { message: "Mobile radius is required", path: ["mobileRadius"] }
 );
 
+export const payoutDetailsSchema = z.object({
+  accountName: z
+    .string()
+    .min(2, "Account name is required")
+    .max(100),
+  bsb: z
+    .string()
+    .regex(/^\d{3}-?\d{3}$/, "BSB must be 6 digits (e.g. 062-000)"),
+  accountNumber: z
+    .string()
+    .regex(/^\d{5,10}$/, "Account number must be 5–10 digits"),
+});
+
 export type ProviderProfileInput = z.infer<typeof providerProfileSchema>;
 export type ProviderLocationInput = z.infer<typeof providerLocationSchema>;
+export type PayoutDetailsInput = z.infer<typeof payoutDetailsSchema>;

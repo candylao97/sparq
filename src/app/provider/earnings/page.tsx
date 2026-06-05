@@ -1,27 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { DollarSign, ExternalLink, CheckCircle, AlertCircle } from "lucide-react";
+import { DollarSign, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import type { BookingWithDetails } from "@/types";
-
-interface StripeStatus {
-  connected: boolean;
-  detailsSubmitted?: boolean;
-  payoutsEnabled?: boolean;
-  chargesEnabled?: boolean;
-}
 
 export default function ProviderEarningsPage() {
   const [bookings, setBookings] = useState<BookingWithDetails[]>([]);
-  const [stripeStatus, setStripeStatus] = useState<StripeStatus | null>(null);
   const [loadingBookings, setLoadingBookings] = useState(true);
-  const [loadingStripe, setLoadingStripe] = useState(true);
-  const [connectingStripe, setConnectingStripe] = useState(false);
 
   useEffect(() => {
     fetch("/api/bookings")
@@ -29,26 +18,7 @@ export default function ProviderEarningsPage() {
       .then((data) => setBookings(Array.isArray(data) ? data : []))
       .catch(() => toast.error("Failed to load earnings"))
       .finally(() => setLoadingBookings(false));
-
-    fetch("/api/stripe/connect")
-      .then((r) => r.json())
-      .then((data: StripeStatus) => setStripeStatus(data))
-      .catch(() => {})
-      .finally(() => setLoadingStripe(false));
   }, []);
-
-  async function handleConnectStripe() {
-    setConnectingStripe(true);
-    try {
-      const res = await fetch("/api/stripe/connect", { method: "POST" });
-      if (!res.ok) throw new Error();
-      const { url } = await res.json();
-      window.location.href = url;
-    } catch {
-      toast.error("Failed to start Stripe Connect");
-      setConnectingStripe(false);
-    }
-  }
 
   const completedBookings = bookings.filter((b) => b.status === "COMPLETED");
 
@@ -68,11 +38,6 @@ export default function ProviderEarningsPage() {
   const sortedEarnings = [...completedBookings].sort(
     (a, b) => new Date(b.bookingDate).getTime() - new Date(a.bookingDate).getTime()
   );
-
-  const stripeFullyOnboarded =
-    stripeStatus?.connected &&
-    stripeStatus?.detailsSubmitted &&
-    stripeStatus?.payoutsEnabled;
 
   return (
     <div className="space-y-8 max-w-3xl">
@@ -115,50 +80,22 @@ export default function ProviderEarningsPage() {
         </Card>
       </div>
 
-      {/* Stripe Connect */}
+      {/* Payout account note */}
       <Card>
-        <CardHeader>
-          <CardTitle>Stripe Connect</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loadingStripe ? (
-            <p className="text-sm text-muted-foreground">Checking Stripe status...</p>
-          ) : stripeFullyOnboarded ? (
-            <div className="flex items-center gap-3">
-              <CheckCircle className="size-5 text-green-600 shrink-0" />
-              <div>
-                <p className="text-sm font-medium text-green-700">Stripe connected</p>
-                <p className="text-xs text-muted-foreground">Payouts are enabled for your account</p>
-              </div>
-              <Badge variant="green" className="ml-auto">Active</Badge>
-            </div>
-          ) : stripeStatus?.connected && !stripeFullyOnboarded ? (
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <AlertCircle className="size-5 text-yellow-600 shrink-0" />
-                <div>
-                  <p className="text-sm font-medium text-yellow-700">Stripe onboarding incomplete</p>
-                  <p className="text-xs text-muted-foreground">
-                    Please complete your Stripe account setup to receive payouts
-                  </p>
-                </div>
-              </div>
-              <Button onClick={handleConnectStripe} disabled={connectingStripe} variant="outline">
-                <ExternalLink className="size-4 mr-1.5" />
-                {connectingStripe ? "Redirecting..." : "Continue Stripe setup"}
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                Connect your Stripe account to receive payouts for completed bookings.
-              </p>
-              <Button onClick={handleConnectStripe} disabled={connectingStripe}>
-                <ExternalLink className="size-4 mr-1.5" />
-                {connectingStripe ? "Redirecting..." : "Connect Stripe"}
-              </Button>
-            </div>
-          )}
+        <CardContent className="flex items-center justify-between gap-4 p-5">
+          <div>
+            <p className="text-sm font-medium">Payout account</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Earnings are paid to the bank account saved in your settings.
+            </p>
+          </div>
+          <Link
+            href="/provider/settings"
+            className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-neutral-900 hover:underline"
+          >
+            Manage payout details
+            <ArrowRight className="size-4" />
+          </Link>
         </CardContent>
       </Card>
 

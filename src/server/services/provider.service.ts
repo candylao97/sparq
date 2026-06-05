@@ -171,3 +171,25 @@ export async function searchProviders(
 
   return { providers, total };
 }
+
+export async function getPayoutDetails(userId: string) {
+  return prisma.providerProfile.findUnique({
+    where: { userId },
+    select: { bsb: true, accountNumber: true, accountName: true },
+  });
+}
+
+export async function updatePayoutDetails(
+  userId: string,
+  data: { bsb: string; accountNumber: string; accountName: string }
+) {
+  return prisma.providerProfile.update({
+    where: { userId },
+    data: {
+      bsb: data.bsb,
+      accountNumber: data.accountNumber,
+      accountName: data.accountName,
+    },
+    select: { bsb: true, accountNumber: true, accountName: true },
+  });
+}
