@@ -152,7 +152,7 @@ export default function CustomerSettingsPage() {
             </div>
             <div className="flex gap-2">
               <Button size="sm" onClick={saveProfile} disabled={savingProfile}>
-                {savingProfile ? "Saving…" : "Save"}
+                {savingProfile ? "Saving…" : "Save changes"}
               </Button>
               <Button
                 size="sm"
