@@ -6,6 +6,7 @@ import {
   ArrowRight,
   Receipt,
   Sparkles,
+  ChevronRight,
 } from "lucide-react";
 import { format, startOfDay } from "date-fns";
 import { auth } from "@/lib/auth";
@@ -63,11 +64,13 @@ export default async function CustomerAccountPage() {
     });
 
   const nextBooking = upcoming[0] ?? null;
+  const completedCount = bookings.filter((b) => b.status === "COMPLETED").length;
+  const totalSpent = bookings
+    .filter((b) => b.payment?.status === "CAPTURED")
+    .reduce((sum, b) => sum + (b.payment?.amount ?? 0), 0);
 
-  // Most recent completed booking → rebook nudge (bookings are sorted desc by createdAt)
   const lastCompleted = bookings.find((b) => b.status === "COMPLETED") ?? null;
 
-  // Recent charges from payment records
   const charges = bookings
     .filter((b) => b.payment)
     .sort(
@@ -77,10 +80,12 @@ export default async function CustomerAccountPage() {
     )
     .slice(0, 4);
 
-  const firstName = session?.user?.name?.split(" ")[0] ?? "there";
-
   return (
     <div className="space-y-6">
+      <h1 className="text-3xl font-bold tracking-tight text-neutral-900">
+        Account
+      </h1>
+
       {/* Contextual prompt */}
       {lastCompleted && (
         <RebookBanner
@@ -90,15 +95,12 @@ export default async function CustomerAccountPage() {
         />
       )}
 
-      {/* Hero status card */}
-      <section>
-        <h1 className="mb-3 text-lg font-semibold text-neutral-900">
-          Hey, {firstName}
-        </h1>
-
+      {/* Two-column: focal card + at-a-glance */}
+      <div className="grid gap-5 lg:grid-cols-[1.5fr_1fr]">
+        {/* Focal: next appointment */}
         {nextBooking ? (
-          <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white">
-            <div className="flex items-center justify-between border-b border-neutral-100 bg-neutral-50 px-5 py-3">
+          <div className="flex flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white">
+            <div className="flex items-center justify-between border-b border-neutral-100 px-5 py-3">
               <span className="text-xs font-semibold uppercase tracking-wider text-neutral-500">
                 Your next appointment
               </span>
@@ -111,9 +113,9 @@ export default async function CustomerAccountPage() {
               </span>
             </div>
 
-            <div className="p-5">
+            <div className="flex flex-1 flex-col p-5">
               <div className="flex items-start gap-4">
-                <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-neutral-100">
+                <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-neutral-100">
                   {nextBooking.provider.user.image ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -122,7 +124,7 @@ export default async function CustomerAccountPage() {
                       className="size-full object-cover"
                     />
                   ) : (
-                    <Sparkles className="size-6 text-neutral-400" />
+                    <Sparkles className="size-5 text-neutral-400" />
                   )}
                 </div>
                 <div className="min-w-0">
@@ -138,7 +140,8 @@ export default async function CustomerAccountPage() {
                 </span>
               </div>
 
-              <div className="mt-4 grid gap-2 text-sm text-neutral-600 sm:grid-cols-2">
+              {/* Nested detail box */}
+              <div className="mt-4 space-y-2 rounded-xl bg-neutral-50 p-4 text-sm text-neutral-600">
                 <span className="flex items-center gap-2">
                   <CalendarDays className="size-4 text-neutral-400" />
                   {format(new Date(nextBooking.bookingDate), "EEEE, d MMMM yyyy")}
@@ -147,7 +150,7 @@ export default async function CustomerAccountPage() {
                   <Clock className="size-4 text-neutral-400" />
                   {nextBooking.startTime} – {nextBooking.endTime}
                 </span>
-                <span className="flex items-center gap-2 sm:col-span-2">
+                <span className="flex items-center gap-2">
                   <MapPin className="size-4 text-neutral-400" />
                   {nextBooking.serviceMode === "MOBILE"
                     ? `Mobile · ${nextBooking.address ?? "Your address"}`
@@ -175,13 +178,13 @@ export default async function CustomerAccountPage() {
             </div>
           </div>
         ) : (
-          <div className="rounded-2xl border border-dashed border-neutral-200 bg-white px-6 py-12 text-center">
-            <CalendarDays className="mx-auto mb-3 size-10 text-neutral-300" />
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-neutral-200 bg-white px-6 py-12 text-center">
+            <CalendarDays className="mb-3 size-10 text-neutral-300" />
             <p className="font-medium text-neutral-700">No upcoming appointments</p>
             <p className="mt-1 text-sm text-neutral-400">
               Book a nail or lash artist to see it here.
             </p>
-            <Link href="/providers" className="mt-5 inline-block">
+            <Link href="/providers" className="mt-5">
               <Button>
                 Browse services
                 <ArrowRight className="size-4" />
@@ -189,9 +192,43 @@ export default async function CustomerAccountPage() {
             </Link>
           </div>
         )}
-      </section>
 
-      {/* Payments preview */}
+        {/* At a glance */}
+        <div className="flex flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white">
+          <div className="flex flex-1 flex-col p-5">
+            <h2 className="font-semibold text-neutral-900">At a glance</h2>
+            <dl className="mt-4 space-y-3 text-sm">
+              <div className="flex justify-between">
+                <dt className="text-neutral-500">Upcoming appointments</dt>
+                <dd className="font-medium text-neutral-900">
+                  {upcoming.length}
+                </dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-neutral-500">Completed</dt>
+                <dd className="font-medium text-neutral-900">{completedCount}</dd>
+              </div>
+              <div className="mt-2 flex justify-between border-t border-neutral-100 pt-3">
+                <dt className="font-semibold text-neutral-900">Total spent</dt>
+                <dd className="font-semibold text-neutral-900">
+                  {money(totalSpent)}
+                </dd>
+              </div>
+            </dl>
+          </div>
+
+          {/* Pinned highlighted row */}
+          <Link
+            href="/providers"
+            className="group flex items-center justify-between gap-2 border-t border-amber-100 bg-amber-50 px-5 py-3.5 text-sm font-medium text-amber-900 transition-colors hover:bg-amber-100"
+          >
+            Discover new artists near you
+            <ChevronRight className="size-4 shrink-0 transition-transform group-hover:translate-x-0.5" />
+          </Link>
+        </div>
+      </div>
+
+      {/* Recent charges */}
       <section className="rounded-2xl border border-neutral-200 bg-white">
         <div className="flex items-center justify-between border-b border-neutral-100 px-5 py-4">
           <h2 className="flex items-center gap-2 font-semibold text-neutral-900">
@@ -242,6 +279,14 @@ export default async function CustomerAccountPage() {
           </ul>
         )}
       </section>
+
+      {/* Footer */}
+      <p className="pt-2 text-sm text-neutral-500">
+        Questions?{" "}
+        <Link href="/contact" className="font-medium text-neutral-900 hover:underline">
+          Reach out to us.
+        </Link>
+      </p>
     </div>
   );
 }
