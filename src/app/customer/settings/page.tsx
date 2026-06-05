@@ -1,149 +1,248 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { Button } from "@/components/ui/button";
-import { User, Mail, Save } from "lucide-react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
-export default function SettingsPage() {
-  const { data: session, update } = useSession();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
+const updateLink =
+  "text-sm font-medium text-neutral-900 underline-offset-2 hover:underline";
+
+export default function CustomerSettingsPage() {
+  const { update } = useSession();
+
+  const [profile, setProfile] = useState({ name: "", email: "", phone: "" });
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [profileDraft, setProfileDraft] = useState(profile);
+  const [savingProfile, setSavingProfile] = useState(false);
+
+  const [editingPassword, setEditingPassword] = useState(false);
+  const [pw, setPw] = useState({ current: "", next: "", confirm: "" });
+  const [savingPassword, setSavingPassword] = useState(false);
 
   useEffect(() => {
-    if (session?.user) {
-      setName(session.user.name ?? "");
-      setEmail(session.user.email ?? "");
-    }
-  }, [session]);
+    fetch("/api/user/profile")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data) {
+          setProfile({
+            name: data.name ?? "",
+            email: data.email ?? "",
+            phone: data.phone ?? "",
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  function startEditProfile() {
+    setProfileDraft(profile);
+    setEditingProfile(true);
+  }
 
-    if (!name.trim()) {
-      toast.error("Name cannot be empty");
-      return;
-    }
-    if (!email.trim()) {
-      toast.error("Email cannot be empty");
-      return;
-    }
-
-    setLoading(true);
+  async function saveProfile() {
+    setSavingProfile(true);
     try {
-      const res = await fetch("/api/auth/profile", {
-        method: "PATCH",
+      const res = await fetch("/api/user/profile", {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), email: email.trim() }),
+        body: JSON.stringify(profileDraft),
       });
-
-      if (res.ok) {
-        await update({ name: name.trim(), email: email.trim() });
-        toast.success("Profile updated successfully");
-      } else {
-        const data = await res.json().catch(() => ({}));
-        toast.error(data.error || "Failed to update profile");
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error(data.error || "Failed to update");
+        setSavingProfile(false);
+        return;
       }
+      setProfile({
+        name: data.name ?? "",
+        email: data.email ?? "",
+        phone: data.phone ?? "",
+      });
+      await update({ name: data.name, email: data.email });
+      toast.success("Personal information updated");
+      setEditingProfile(false);
     } catch {
       toast.error("Something went wrong");
     } finally {
-      setLoading(false);
+      setSavingProfile(false);
     }
-  };
+  }
+
+  async function savePassword() {
+    if (pw.next !== pw.confirm) {
+      toast.error("New passwords don't match");
+      return;
+    }
+    setSavingPassword(true);
+    try {
+      const res = await fetch("/api/user/password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          currentPassword: pw.current || undefined,
+          newPassword: pw.next,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error(data.error || "Failed to update password");
+        setSavingPassword(false);
+        return;
+      }
+      toast.success("Password updated");
+      setPw({ current: "", next: "", confirm: "" });
+      setEditingPassword(false);
+    } catch {
+      toast.error("Something went wrong");
+    } finally {
+      setSavingPassword(false);
+    }
+  }
 
   return (
-    <div className="space-y-5 max-w-xl">
-      <div>
-        <h1 className="text-xl font-bold text-gray-900">Settings</h1>
-        <p className="text-sm text-gray-500 mt-0.5">
-          Manage your account details
-        </p>
-      </div>
+    <div className="max-w-xl space-y-8">
+      <h1 className="text-3xl font-bold tracking-tight text-neutral-900">
+        Settings
+      </h1>
 
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h2 className="font-semibold text-gray-900 text-sm mb-4">
-          Personal information
-        </h2>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Name field */}
-          <div className="space-y-1.5">
-            <label
-              htmlFor="name"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Full name
-            </label>
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-              <input
+      {/* Personal information */}
+      <section>
+        {!editingProfile ? (
+          <div className="space-y-1">
+            <p className="text-lg font-semibold text-neutral-900">
+              {profile.name || "Your name"}
+            </p>
+            <p className="text-neutral-600">{profile.email}</p>
+            {profile.phone && <p className="text-neutral-600">{profile.phone}</p>}
+            <button onClick={startEditProfile} className={`${updateLink} pt-2`}>
+              Update personal information
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <p className="text-lg font-semibold text-neutral-900">
+              Personal information
+            </p>
+            <div className="space-y-2">
+              <Label htmlFor="name">Full name</Label>
+              <Input
                 id="name"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition"
-                placeholder="Your full name"
-                autoComplete="name"
+                value={profileDraft.name}
+                onChange={(e) =>
+                  setProfileDraft({ ...profileDraft, name: e.target.value })
+                }
               />
             </div>
-          </div>
-
-          {/* Email field */}
-          <div className="space-y-1.5">
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Email address
-            </label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="email">Email address</Label>
+              <Input
                 id="email"
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition"
-                placeholder="you@example.com"
-                autoComplete="email"
+                value={profileDraft.email}
+                onChange={(e) =>
+                  setProfileDraft({ ...profileDraft, email: e.target.value })
+                }
               />
             </div>
-            <p className="text-xs text-gray-400">
-              Changing your email may require re-verification.
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone (optional)</Label>
+              <Input
+                id="phone"
+                value={profileDraft.phone}
+                onChange={(e) =>
+                  setProfileDraft({ ...profileDraft, phone: e.target.value })
+                }
+                placeholder="+61…"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button size="sm" onClick={saveProfile} disabled={savingProfile}>
+                {savingProfile ? "Saving…" : "Save"}
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setEditingProfile(false)}
+                disabled={savingProfile}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        )}
+      </section>
+
+      <hr className="border-neutral-200" />
+
+      {/* Password */}
+      <section>
+        {!editingPassword ? (
+          <div className="space-y-1">
+            <p className="text-lg font-semibold text-neutral-900">Password</p>
+            <p className="select-none text-2xl leading-none tracking-widest text-neutral-400">
+              ••••••••
             </p>
+            <button
+              onClick={() => setEditingPassword(true)}
+              className={`${updateLink} pt-2`}
+            >
+              Update password
+            </button>
           </div>
+        ) : (
+          <div className="space-y-4">
+            <p className="text-lg font-semibold text-neutral-900">Password</p>
+            <div className="space-y-2">
+              <Label htmlFor="current">Current password</Label>
+              <Input
+                id="current"
+                type="password"
+                value={pw.current}
+                onChange={(e) => setPw({ ...pw, current: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="next">New password</Label>
+              <Input
+                id="next"
+                type="password"
+                value={pw.next}
+                onChange={(e) => setPw({ ...pw, next: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm">Confirm new password</Label>
+              <Input
+                id="confirm"
+                type="password"
+                value={pw.confirm}
+                onChange={(e) => setPw({ ...pw, confirm: e.target.value })}
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button size="sm" onClick={savePassword} disabled={savingPassword}>
+                {savingPassword ? "Saving…" : "Save"}
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  setEditingPassword(false);
+                  setPw({ current: "", next: "", confirm: "" });
+                }}
+                disabled={savingPassword}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        )}
+      </section>
 
-          <div className="pt-1">
-            <Button type="submit" disabled={loading} size="sm">
-              <Save className="w-3.5 h-3.5" />
-              {loading ? "Saving..." : "Save changes"}
-            </Button>
-          </div>
-        </form>
-      </div>
-
-      {/* Account info (read-only) */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h2 className="font-semibold text-gray-900 text-sm mb-3">
-          Account details
-        </h2>
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between">
-            <span className="text-gray-500">Account type</span>
-            <span className="font-medium text-gray-900 capitalize">
-              {session?.user?.role?.toLowerCase() ?? "Customer"}
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-500">Member since</span>
-            <span className="font-medium text-gray-900">
-              {session?.user ? "Active" : "—"}
-            </span>
-          </div>
-        </div>
-      </div>
+      <hr className="border-neutral-200" />
     </div>
   );
 }
