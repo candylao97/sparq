@@ -2,10 +2,9 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
-import { APP_URL } from "@/lib/constants";
 
-// Creates (or reuses) a Stripe customer for the signed-in customer and returns
-// a hosted Stripe billing portal link where they can add a card + billing info.
+// Creates a SetupIntent so the customer can save a payment method (card or
+// Link) via Stripe Elements, embedded in the app.
 export async function POST() {
   try {
     const session = await auth();
@@ -35,16 +34,18 @@ export async function POST() {
       });
     }
 
-    const portal = await stripe.billingPortal.sessions.create({
+    const setupIntent = await stripe.setupIntents.create({
       customer: customerId,
-      return_url: `${APP_URL}/customer/billing`,
+      usage: "off_session",
+      // Enables card + Link in the Payment Element.
+      automatic_payment_methods: { enabled: true },
     });
 
-    return NextResponse.json({ url: portal.url });
+    return NextResponse.json({ clientSecret: setupIntent.client_secret });
   } catch (error) {
-    console.error("Billing portal error:", error);
+    console.error("Setup intent error:", error);
     return NextResponse.json(
-      { error: "Billing isn't available right now. Please try again later." },
+      { error: "Payments aren't available right now. Please try again later." },
       { status: 500 }
     );
   }
