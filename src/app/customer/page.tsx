@@ -1,184 +1,247 @@
-"use client";
-
-import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
 import Link from "next/link";
+import {
+  CalendarDays,
+  Clock,
+  MapPin,
+  ArrowRight,
+  Receipt,
+  Sparkles,
+} from "lucide-react";
+import { format, startOfDay } from "date-fns";
+import { auth } from "@/lib/auth";
+import { getCustomerBookings } from "@/server/services/booking.service";
+import { BOOKING_STATUS_LABELS, PAYMENT_STATUS_LABELS } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, ArrowRight, Clock, Sparkles } from "lucide-react";
-import { BOOKING_STATUS_LABELS } from "@/lib/constants";
-import { format, parseISO } from "date-fns";
-
-type Booking = {
-  id: string;
-  bookingDate: string;
-  startTime: string;
-  status: string;
-  totalAmount: number;
-  service: { title: string };
-  provider: { name: string | null; providerProfile: { businessName: string | null } };
-};
+import { CancelBookingButton } from "@/components/customer/cancel-booking-button";
+import { RebookBanner } from "@/components/customer/rebook-banner";
 
 const UPCOMING_STATUSES = ["PENDING_PROVIDER_RESPONSE", "CONFIRMED"];
 
-export default function CustomerOverviewPage() {
-  const { data: session } = useSession();
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [loading, setLoading] = useState(true);
+type CustomerBooking = Awaited<ReturnType<typeof getCustomerBookings>>[number];
 
-  useEffect(() => {
-    fetch("/api/bookings")
-      .then((res) => res.json())
-      .then((data) => {
-        setBookings(Array.isArray(data) ? data : []);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
-
-  const upcomingBookings = bookings.filter((b) =>
-    UPCOMING_STATUSES.includes(b.status)
-  );
-
-  const name = session?.user?.name?.split(" ")[0] ?? "there";
-
-  return (
-    <div className="space-y-6">
-      {/* Welcome banner */}
-      <div className="bg-neutral-950 rounded-xl p-6 text-white">
-        <div className="flex items-center gap-2 mb-1">
-          <Sparkles className="w-5 h-5" />
-          <p className="text-neutral-300 text-sm font-medium">Welcome back</p>
-        </div>
-        <h1 className="text-2xl font-bold">Hey, {name}!</h1>
-        <p className="text-neutral-300 mt-1 text-sm">
-          Manage your bookings and discover new providers.
-        </p>
-      </div>
-
-      {/* Stats row */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <p className="text-sm text-gray-500">Upcoming</p>
-          <p className="text-3xl font-bold text-gray-900 mt-1">
-            {loading ? "—" : upcomingBookings.length}
-          </p>
-          <p className="text-xs text-gray-400 mt-0.5">bookings</p>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <p className="text-sm text-gray-500">Total</p>
-          <p className="text-3xl font-bold text-gray-900 mt-1">
-            {loading ? "—" : bookings.length}
-          </p>
-          <p className="text-xs text-gray-400 mt-0.5">bookings all time</p>
-        </div>
-      </div>
-
-      {/* Upcoming bookings */}
-      <div className="bg-white rounded-xl border border-gray-200">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-          <h2 className="font-semibold text-gray-900 flex items-center gap-2">
-            <CalendarDays className="w-4 h-4 text-indigo-600" />
-            Upcoming bookings
-          </h2>
-          <Link
-            href="/customer/bookings"
-            className="text-xs text-indigo-600 hover:underline flex items-center gap-1"
-          >
-            View all <ArrowRight className="w-3 h-3" />
-          </Link>
-        </div>
-
-        {loading ? (
-          <div className="px-5 py-8 text-center text-gray-400 text-sm">Loading...</div>
-        ) : upcomingBookings.length === 0 ? (
-          <div className="px-5 py-8 text-center">
-            <CalendarDays className="w-10 h-10 text-gray-200 mx-auto mb-3" />
-            <p className="text-gray-500 text-sm">No upcoming bookings</p>
-            <p className="text-gray-400 text-xs mt-1">Book a service to get started</p>
-          </div>
-        ) : (
-          <ul className="divide-y divide-gray-100">
-            {upcomingBookings.slice(0, 3).map((booking) => {
-              const providerName =
-                booking.provider.providerProfile?.businessName ||
-                booking.provider.name ||
-                "Provider";
-              return (
-                <li key={booking.id}>
-                  <Link
-                    href={`/customer/bookings/${booking.id}`}
-                    className="flex items-center justify-between px-5 py-3.5 hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">
-                        {booking.service.title}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-0.5">{providerName}</p>
-                      <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
-                        <Clock className="w-3 h-3" />
-                        {format(parseISO(booking.bookingDate), "EEE d MMM")}{" "}
-                        at {booking.startTime}
-                      </p>
-                    </div>
-                    <div className="ml-4 shrink-0 text-right">
-                      <StatusBadge status={booking.status} />
-                      <p className="text-xs text-gray-500 mt-1">
-                        ${booking.totalAmount}
-                      </p>
-                    </div>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </div>
-
-      {/* Quick action */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5 flex items-center justify-between">
-        <div>
-          <p className="font-medium text-gray-900 text-sm">Discover providers</p>
-          <p className="text-xs text-gray-500 mt-0.5">
-            Browse trusted nail and lash artists near you
-          </p>
-        </div>
-        <Link href="/providers">
-          <Button size="sm">
-            Browse <ArrowRight className="w-3.5 h-3.5" />
-          </Button>
-        </Link>
-      </div>
-    </div>
-  );
+function money(n: number) {
+  return `$${Number(n).toFixed(2)}`;
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const label = BOOKING_STATUS_LABELS[status] ?? status;
-  const colorClass = getStatusColor(status);
-  return (
-    <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full ${colorClass}`}>
-      {label}
-    </span>
-  );
+function providerName(b: CustomerBooking) {
+  return b.provider.businessName || b.provider.user.name || "Artist";
 }
 
-function getStatusColor(status: string): string {
+function statusPillClass(status: string) {
   switch (status) {
+    case "CONFIRMED":
+      return "bg-green-100 text-green-800";
     case "PENDING_PROVIDER_RESPONSE":
       return "bg-yellow-100 text-yellow-800";
-    case "CONFIRMED":
-      return "bg-blue-100 text-blue-800";
     case "COMPLETED":
-      return "bg-green-100 text-green-800";
-    case "DECLINED":
-      return "bg-red-100 text-red-800";
-    case "CANCELLED_BY_CUSTOMER":
-    case "CANCELLED_BY_PROVIDER":
-    case "EXPIRED":
-      return "bg-gray-100 text-gray-700";
+      return "bg-blue-100 text-blue-800";
     case "REFUNDED":
       return "bg-purple-100 text-purple-800";
     default:
-      return "bg-gray-100 text-gray-700";
+      return "bg-neutral-100 text-neutral-700";
   }
+}
+
+export default async function CustomerAccountPage() {
+  const session = await auth();
+  const bookings = session?.user
+    ? await getCustomerBookings(session.user.id)
+    : [];
+
+  const today = startOfDay(new Date());
+
+  const upcoming = bookings
+    .filter(
+      (b) =>
+        UPCOMING_STATUSES.includes(b.status) &&
+        startOfDay(new Date(b.bookingDate)) >= today
+    )
+    .sort((a, b) => {
+      const d =
+        new Date(a.bookingDate).getTime() - new Date(b.bookingDate).getTime();
+      return d !== 0 ? d : a.startTime.localeCompare(b.startTime);
+    });
+
+  const nextBooking = upcoming[0] ?? null;
+
+  // Most recent completed booking → rebook nudge (bookings are sorted desc by createdAt)
+  const lastCompleted = bookings.find((b) => b.status === "COMPLETED") ?? null;
+
+  // Recent charges from payment records
+  const charges = bookings
+    .filter((b) => b.payment)
+    .sort(
+      (a, b) =>
+        new Date(b.payment!.createdAt).getTime() -
+        new Date(a.payment!.createdAt).getTime()
+    )
+    .slice(0, 4);
+
+  const firstName = session?.user?.name?.split(" ")[0] ?? "there";
+
+  return (
+    <div className="space-y-6">
+      {/* Contextual prompt */}
+      {lastCompleted && (
+        <RebookBanner
+          providerName={providerName(lastCompleted)}
+          href={`/providers/${lastCompleted.providerId}/book?serviceId=${lastCompleted.serviceId}`}
+          dismissKey={lastCompleted.id}
+        />
+      )}
+
+      {/* Hero status card */}
+      <section>
+        <h1 className="mb-3 text-lg font-semibold text-neutral-900">
+          Hey, {firstName}
+        </h1>
+
+        {nextBooking ? (
+          <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white">
+            <div className="flex items-center justify-between border-b border-neutral-100 bg-neutral-50 px-5 py-3">
+              <span className="text-xs font-semibold uppercase tracking-wider text-neutral-500">
+                Your next appointment
+              </span>
+              <span
+                className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${statusPillClass(
+                  nextBooking.status
+                )}`}
+              >
+                {BOOKING_STATUS_LABELS[nextBooking.status] ?? nextBooking.status}
+              </span>
+            </div>
+
+            <div className="p-5">
+              <div className="flex items-start gap-4">
+                <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-neutral-100">
+                  {nextBooking.provider.user.image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={nextBooking.provider.user.image}
+                      alt={providerName(nextBooking)}
+                      className="size-full object-cover"
+                    />
+                  ) : (
+                    <Sparkles className="size-6 text-neutral-400" />
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <h2 className="text-xl font-bold text-neutral-900">
+                    {nextBooking.service.title}
+                  </h2>
+                  <p className="text-sm text-neutral-500">
+                    with {providerName(nextBooking)}
+                  </p>
+                </div>
+                <span className="ml-auto shrink-0 text-lg font-semibold text-neutral-900">
+                  {money(nextBooking.totalPrice)}
+                </span>
+              </div>
+
+              <div className="mt-4 grid gap-2 text-sm text-neutral-600 sm:grid-cols-2">
+                <span className="flex items-center gap-2">
+                  <CalendarDays className="size-4 text-neutral-400" />
+                  {format(new Date(nextBooking.bookingDate), "EEEE, d MMMM yyyy")}
+                </span>
+                <span className="flex items-center gap-2">
+                  <Clock className="size-4 text-neutral-400" />
+                  {nextBooking.startTime} – {nextBooking.endTime}
+                </span>
+                <span className="flex items-center gap-2 sm:col-span-2">
+                  <MapPin className="size-4 text-neutral-400" />
+                  {nextBooking.serviceMode === "MOBILE"
+                    ? `Mobile · ${nextBooking.address ?? "Your address"}`
+                    : `Studio · ${
+                        nextBooking.provider.studioSuburb ??
+                        nextBooking.provider.studioAddress ??
+                        "Artist's studio"
+                      }`}
+                </span>
+              </div>
+
+              <div className="mt-5 flex flex-wrap gap-2">
+                <Link href={`/customer/bookings/${nextBooking.id}`}>
+                  <Button size="sm">View details</Button>
+                </Link>
+                <CancelBookingButton bookingId={nextBooking.id} />
+                <Link
+                  href={`/providers/${nextBooking.providerId}/book?serviceId=${nextBooking.serviceId}`}
+                >
+                  <Button variant="ghost" size="sm">
+                    Book again
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-dashed border-neutral-200 bg-white px-6 py-12 text-center">
+            <CalendarDays className="mx-auto mb-3 size-10 text-neutral-300" />
+            <p className="font-medium text-neutral-700">No upcoming appointments</p>
+            <p className="mt-1 text-sm text-neutral-400">
+              Book a nail or lash artist to see it here.
+            </p>
+            <Link href="/providers" className="mt-5 inline-block">
+              <Button>
+                Browse services
+                <ArrowRight className="size-4" />
+              </Button>
+            </Link>
+          </div>
+        )}
+      </section>
+
+      {/* Payments preview */}
+      <section className="rounded-2xl border border-neutral-200 bg-white">
+        <div className="flex items-center justify-between border-b border-neutral-100 px-5 py-4">
+          <h2 className="flex items-center gap-2 font-semibold text-neutral-900">
+            <Receipt className="size-4 text-neutral-400" />
+            Recent charges
+          </h2>
+          {charges.length > 0 && (
+            <Link
+              href="/customer/payments"
+              className="flex items-center gap-1 text-xs font-medium text-neutral-500 hover:text-neutral-900"
+            >
+              View all <ArrowRight className="size-3" />
+            </Link>
+          )}
+        </div>
+
+        {charges.length === 0 ? (
+          <p className="px-5 py-8 text-center text-sm text-neutral-400">
+            No charges yet.
+          </p>
+        ) : (
+          <ul className="divide-y divide-neutral-100">
+            {charges.map((b) => (
+              <li
+                key={b.id}
+                className="flex items-center justify-between px-5 py-3.5"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-neutral-900">
+                    {b.service.title}
+                  </p>
+                  <p className="text-xs text-neutral-400">
+                    {format(new Date(b.payment!.createdAt), "d MMM yyyy")} ·{" "}
+                    {providerName(b)}
+                  </p>
+                </div>
+                <div className="ml-4 shrink-0 text-right">
+                  <p className="text-sm font-semibold text-neutral-900">
+                    {money(b.payment!.amount)}
+                  </p>
+                  <p className="text-xs text-neutral-400">
+                    {PAYMENT_STATUS_LABELS[b.payment!.status] ??
+                      b.payment!.status}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    </div>
+  );
 }
