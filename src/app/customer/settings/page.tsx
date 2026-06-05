@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -22,10 +23,6 @@ export default function CustomerSettingsPage() {
     phone: "",
   });
   const [savingProfile, setSavingProfile] = useState(false);
-
-  const [editingPassword, setEditingPassword] = useState(false);
-  const [pw, setPw] = useState({ current: "", next: "", confirm: "" });
-  const [savingPassword, setSavingPassword] = useState(false);
 
   useEffect(() => {
     fetch("/api/user/profile")
@@ -83,37 +80,6 @@ export default function CustomerSettingsPage() {
       toast.error("Something went wrong");
     } finally {
       setSavingProfile(false);
-    }
-  }
-
-  async function savePassword() {
-    if (pw.next !== pw.confirm) {
-      toast.error("New passwords don't match");
-      return;
-    }
-    setSavingPassword(true);
-    try {
-      const res = await fetch("/api/user/password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          currentPassword: pw.current || undefined,
-          newPassword: pw.next,
-        }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        toast.error(data.error || "Failed to update password");
-        setSavingPassword(false);
-        return;
-      }
-      toast.success("Password updated");
-      setPw({ current: "", next: "", confirm: "" });
-      setEditingPassword(false);
-    } catch {
-      toast.error("Something went wrong");
-    } finally {
-      setSavingPassword(false);
     }
   }
 
@@ -206,67 +172,18 @@ export default function CustomerSettingsPage() {
 
       {/* Password */}
       <section>
-        {!editingPassword ? (
-          <div className="space-y-1">
-            <p className="text-lg font-semibold text-neutral-900">Password</p>
-            <p className="select-none text-2xl leading-none tracking-widest text-neutral-400">
-              ••••••••
-            </p>
-            <button
-              onClick={() => setEditingPassword(true)}
-              className={`${updateLink} pt-2`}
-            >
-              Update password
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <p className="text-lg font-semibold text-neutral-900">Password</p>
-            <div className="space-y-2">
-              <Label htmlFor="current">Current password</Label>
-              <Input
-                id="current"
-                type="password"
-                value={pw.current}
-                onChange={(e) => setPw({ ...pw, current: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="next">New password</Label>
-              <Input
-                id="next"
-                type="password"
-                value={pw.next}
-                onChange={(e) => setPw({ ...pw, next: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirm">Confirm new password</Label>
-              <Input
-                id="confirm"
-                type="password"
-                value={pw.confirm}
-                onChange={(e) => setPw({ ...pw, confirm: e.target.value })}
-              />
-            </div>
-            <div className="flex gap-2">
-              <Button size="sm" onClick={savePassword} disabled={savingPassword}>
-                {savingPassword ? "Saving…" : "Save"}
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => {
-                  setEditingPassword(false);
-                  setPw({ current: "", next: "", confirm: "" });
-                }}
-                disabled={savingPassword}
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
-        )}
+        <div className="space-y-1">
+          <p className="text-lg font-semibold text-neutral-900">Password</p>
+          <p className="select-none text-2xl leading-none tracking-widest text-neutral-400">
+            ••••••••
+          </p>
+          <Link
+            href="/customer/settings/password"
+            className={`${updateLink} inline-block pt-2`}
+          >
+            Update password
+          </Link>
+        </div>
       </section>
 
       <hr className="border-neutral-200" />
