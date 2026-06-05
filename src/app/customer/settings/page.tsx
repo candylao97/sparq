@@ -141,14 +141,13 @@ export default function CustomerSettingsPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone (optional)</Label>
+              <Label htmlFor="phone">Phone number</Label>
               <Input
                 id="phone"
                 value={profileDraft.phone}
                 onChange={(e) =>
                   setProfileDraft({ ...profileDraft, phone: e.target.value })
                 }
-                placeholder="+61…"
               />
             </div>
             <div className="flex gap-2">
