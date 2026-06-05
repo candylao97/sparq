@@ -15,7 +15,12 @@ export default function CustomerSettingsPage() {
 
   const [profile, setProfile] = useState({ name: "", email: "", phone: "" });
   const [editingProfile, setEditingProfile] = useState(false);
-  const [profileDraft, setProfileDraft] = useState(profile);
+  const [profileDraft, setProfileDraft] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+  });
   const [savingProfile, setSavingProfile] = useState(false);
 
   const [editingPassword, setEditingPassword] = useState(false);
@@ -38,17 +43,27 @@ export default function CustomerSettingsPage() {
   }, []);
 
   function startEditProfile() {
-    setProfileDraft(profile);
+    const parts = (profile.name ?? "").trim().split(/\s+/).filter(Boolean);
+    const firstName = parts.shift() ?? "";
+    const lastName = parts.join(" ");
+    setProfileDraft({ firstName, lastName, email: profile.email, phone: profile.phone });
     setEditingProfile(true);
   }
 
   async function saveProfile() {
+    const name = [profileDraft.firstName.trim(), profileDraft.lastName.trim()]
+      .filter(Boolean)
+      .join(" ");
     setSavingProfile(true);
     try {
       const res = await fetch("/api/user/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(profileDraft),
+        body: JSON.stringify({
+          name,
+          email: profileDraft.email,
+          phone: profileDraft.phone,
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -126,15 +141,27 @@ export default function CustomerSettingsPage() {
             <p className="text-lg font-semibold text-neutral-900">
               Personal information
             </p>
-            <div className="space-y-2">
-              <Label htmlFor="name">Full name</Label>
-              <Input
-                id="name"
-                value={profileDraft.name}
-                onChange={(e) =>
-                  setProfileDraft({ ...profileDraft, name: e.target.value })
-                }
-              />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">First name</Label>
+                <Input
+                  id="firstName"
+                  value={profileDraft.firstName}
+                  onChange={(e) =>
+                    setProfileDraft({ ...profileDraft, firstName: e.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Last name</Label>
+                <Input
+                  id="lastName"
+                  value={profileDraft.lastName}
+                  onChange={(e) =>
+                    setProfileDraft({ ...profileDraft, lastName: e.target.value })
+                  }
+                />
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email address</Label>
