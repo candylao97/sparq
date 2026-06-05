@@ -150,19 +150,9 @@ export default function CustomerSettingsPage() {
                 }
               />
             </div>
-            <div className="flex gap-2">
-              <Button size="sm" onClick={saveProfile} disabled={savingProfile}>
-                {savingProfile ? "Saving…" : "Save changes"}
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setEditingProfile(false)}
-                disabled={savingProfile}
-              >
-                Cancel
-              </Button>
-            </div>
+            <Button size="sm" onClick={saveProfile} disabled={savingProfile}>
+              {savingProfile ? "Saving…" : "Save changes"}
+            </Button>
           </div>
         )}
       </section>
