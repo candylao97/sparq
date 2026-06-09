@@ -6,7 +6,15 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { loginSchema, type LoginInput } from "@/server/validation/auth.schema";
+
+// In development the seeded test accounts can sign in with no password,
+// so the password field is not required when running locally.
+const isDev = process.env.NODE_ENV !== "production";
+const formSchema = isDev
+  ? loginSchema.extend({ password: z.string() })
+  : loginSchema;
 import { SocialAuthButtons, AuthDivider } from "@/components/auth/social-auth";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,7 +31,7 @@ export default function LoginPage() {
     handleSubmit,
     formState: { errors },
   } = useForm<LoginInput>({
-    resolver: zodResolver(loginSchema),
+    resolver: zodResolver(formSchema),
   });
 
   const onSubmit = async (data: LoginInput) => {
@@ -118,6 +126,15 @@ export default function LoginPage() {
               {loading ? "Signing in…" : "Sign in"}
             </button>
           </form>
+
+          {isDev && (
+            <p className="mt-4 rounded-lg bg-neutral-50 px-3 py-2 text-center text-xs text-neutral-400">
+              Dev sign-in (no password):{" "}
+              <span className="font-medium text-neutral-600">customer@test.com</span>
+              {" · "}
+              <span className="font-medium text-neutral-600">artist@test.com</span>
+            </p>
+          )}
 
           <p className="mt-6 text-center text-sm text-neutral-500">
             Don&apos;t have an account?{" "}

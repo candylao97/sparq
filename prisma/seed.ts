@@ -35,10 +35,10 @@ async function main() {
   // Create sample customer
   const customerPassword = await hash("customer123!", 12);
   const customer = await prisma.user.upsert({
-    where: { email: "customer@example.com" },
+    where: { email: "customer@test.com" },
     update: {},
     create: {
-      email: "customer@example.com",
+      email: "customer@test.com",
       name: "Jane Smith",
       hashedPassword: customerPassword,
       role: UserRole.CUSTOMER,
@@ -51,10 +51,10 @@ async function main() {
   const providerPassword = await hash("provider123!", 12);
 
   const provider1 = await prisma.user.upsert({
-    where: { email: "lisa@example.com" },
+    where: { email: "artist@test.com" },
     update: {},
     create: {
-      email: "lisa@example.com",
+      email: "artist@test.com",
       name: "Lisa Nguyen",
       hashedPassword: providerPassword,
       role: UserRole.PROVIDER,

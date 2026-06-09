@@ -71,12 +71,38 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
+        const email = credentials?.email as string | undefined;
+        if (!email) {
+          return null;
+        }
+
+        // Dev-only convenience: seeded test accounts may sign in without a
+        // password when NOT running in production. Hard-gated on NODE_ENV,
+        // so this can never authorize in a production deployment.
+        const DEV_TEST_ACCOUNTS = ["customer@test.com", "artist@test.com"];
+        if (
+          process.env.NODE_ENV !== "production" &&
+          DEV_TEST_ACCOUNTS.includes(email.toLowerCase())
+        ) {
+          const devUser = await prisma.user.findUnique({ where: { email } });
+          if (!devUser) {
+            return null;
+          }
+          return {
+            id: devUser.id,
+            email: devUser.email,
+            name: devUser.name,
+            image: devUser.image,
+            role: devUser.role,
+          };
+        }
+
+        if (!credentials?.password) {
           return null;
         }
 
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email as string },
+          where: { email },
         });
 
         if (!user || !user.hashedPassword) {
