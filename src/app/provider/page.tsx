@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BOOKING_STATUS_LABELS } from "@/lib/constants";
+import { deriveProviderDashboard } from "@/lib/provider-dashboard";
 import type { BookingWithDetails } from "@/types";
 
 type StatusVariant = "yellow" | "blue" | "green" | "red" | "gray";
@@ -45,23 +46,14 @@ export default function ProviderOverviewPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const pending = bookings.filter((b) => b.status === "PENDING_PROVIDER_RESPONSE");
-  const confirmed = bookings.filter((b) => b.status === "CONFIRMED");
-
-  const now = new Date();
-  const completedThisMonth = bookings.filter((b) => {
-    if (b.status !== "COMPLETED") return false;
-    const d = new Date(b.bookingDate);
-    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-  });
-
-  const totalEarnings = bookings
-    .filter((b) => b.status === "COMPLETED")
-    .reduce((sum, b) => sum + (b.payment?.amount ?? b.totalPrice ?? 0), 0);
-
-  const recentRequests = [...bookings]
-    .sort((a, b) => new Date(String(b.createdAt)).getTime() - new Date(String(a.createdAt)).getTime())
-    .slice(0, 8);
+  const {
+    pendingCount,
+    confirmedCount,
+    completedThisMonthCount,
+    totalEarnings,
+    pendingRequests,
+    recentRequests,
+  } = deriveProviderDashboard(bookings, new Date());
 
   async function respond(id: string, action: "accept" | "decline") {
     setRespondingId(id);
@@ -90,21 +82,21 @@ export default function ProviderOverviewPage() {
   const stats = [
     {
       label: "Pending requests",
-      value: pending.length,
+      value: pendingCount,
       icon: Clock,
       color: "text-yellow-600",
       bg: "bg-yellow-50",
     },
     {
       label: "Confirmed bookings",
-      value: confirmed.length,
+      value: confirmedCount,
       icon: CheckCircle,
       color: "text-blue-600",
       bg: "bg-blue-50",
     },
     {
       label: "Completed this month",
-      value: completedThisMonth.length,
+      value: completedThisMonthCount,
       icon: TrendingUp,
       color: "text-green-600",
       bg: "bg-green-50",
@@ -144,6 +136,26 @@ export default function ProviderOverviewPage() {
         ))}
       </div>
 
+      {/* Action needed */}
+      {!loading && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Action needed</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {pendingRequests.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                You&apos;re all caught up — no requests waiting.
+              </p>
+            ) : (
+              <div className="divide-y divide-border">
+                {pendingRequests.map((booking) => renderBookingRow(booking))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Recent booking requests */}
       <Card>
         <CardHeader>
@@ -156,53 +168,57 @@ export default function ProviderOverviewPage() {
             <p className="text-sm text-muted-foreground">No bookings yet.</p>
           ) : (
             <div className="divide-y divide-border">
-              {recentRequests.map((booking) => (
-                <div
-                  key={booking.id}
-                  className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-                >
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-medium text-sm">
-                        {booking.customer?.name ?? "Unknown customer"}
-                      </span>
-                      <Badge variant={getStatusVariant(booking.status)}>
-                        {BOOKING_STATUS_LABELS[booking.status] ?? booking.status}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {booking.service?.title} &middot;{" "}
-                      {format(new Date(booking.bookingDate), "d MMM yyyy")} at {booking.startTime}
-                    </p>
-                    <p className="text-sm font-medium">
-                      ${(booking.totalPrice ?? 0).toFixed(2)}
-                    </p>
-                  </div>
-                  {booking.status === "PENDING_PROVIDER_RESPONSE" && (
-                    <div className="flex gap-2 shrink-0">
-                      <Button
-                        size="sm"
-                        onClick={() => respond(booking.id, "accept")}
-                        disabled={respondingId === booking.id}
-                      >
-                        Accept
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => respond(booking.id, "decline")}
-                        disabled={respondingId === booking.id}
-                      >
-                        Decline
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              ))}
+              {recentRequests.map((booking) => renderBookingRow(booking))}
             </div>
           )}
         </CardContent>
       </Card>
     </div>
   );
+
+  function renderBookingRow(booking: BookingWithDetails) {
+    return (
+      <div
+        key={booking.id}
+        className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+      >
+        <div className="space-y-0.5">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-medium text-sm">
+              {booking.customer?.name ?? "Unknown customer"}
+            </span>
+            <Badge variant={getStatusVariant(booking.status)}>
+              {BOOKING_STATUS_LABELS[booking.status] ?? booking.status}
+            </Badge>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            {booking.service?.title} &middot;{" "}
+            {format(new Date(booking.bookingDate), "d MMM yyyy")} at {booking.startTime}
+          </p>
+          <p className="text-sm font-medium">
+            ${(booking.totalPrice ?? 0).toFixed(2)}
+          </p>
+        </div>
+        {booking.status === "PENDING_PROVIDER_RESPONSE" && (
+          <div className="flex gap-2 shrink-0">
+            <Button
+              size="sm"
+              onClick={() => respond(booking.id, "accept")}
+              disabled={respondingId === booking.id}
+            >
+              Accept
+            </Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={() => respond(booking.id, "decline")}
+              disabled={respondingId === booking.id}
+            >
+              Decline
+            </Button>
+          </div>
+        )}
+      </div>
+    );
+  }
 }
