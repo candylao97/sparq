@@ -3,17 +3,11 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import {
-  Clock,
-  CheckCircle,
-  TrendingUp,
-  DollarSign,
-} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BOOKING_STATUS_LABELS } from "@/lib/constants";
-import { deriveProviderDashboard } from "@/lib/provider-dashboard";
+import { orderProviderBookings } from "@/lib/provider-dashboard";
 import type { BookingWithDetails } from "@/types";
 
 type StatusVariant = "yellow" | "blue" | "green" | "red" | "gray";
@@ -46,14 +40,7 @@ export default function ProviderOverviewPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const {
-    pendingCount,
-    confirmedCount,
-    completedThisMonthCount,
-    totalEarnings,
-    pendingRequests,
-    recentRequests,
-  } = deriveProviderDashboard(bookings, new Date());
+  const orderedBookings = orderProviderBookings(bookings);
 
   async function respond(id: string, action: "accept" | "decline") {
     setRespondingId(id);
@@ -79,82 +66,12 @@ export default function ProviderOverviewPage() {
     }
   }
 
-  const stats = [
-    {
-      label: "Pending requests",
-      value: pendingCount,
-      icon: Clock,
-      color: "text-yellow-600",
-      bg: "bg-yellow-50",
-    },
-    {
-      label: "Confirmed bookings",
-      value: confirmedCount,
-      icon: CheckCircle,
-      color: "text-blue-600",
-      bg: "bg-blue-50",
-    },
-    {
-      label: "Completed this month",
-      value: completedThisMonthCount,
-      icon: TrendingUp,
-      color: "text-green-600",
-      bg: "bg-green-50",
-    },
-    {
-      label: "Total earnings",
-      value: `$${totalEarnings.toFixed(2)}`,
-      icon: DollarSign,
-      color: "text-indigo-600",
-      bg: "bg-indigo-50",
-    },
-  ];
-
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold">Overview</h1>
         <p className="text-muted-foreground text-sm mt-1">Welcome back to your provider dashboard</p>
       </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map(({ label, value, icon: Icon, color, bg }) => (
-          <Card key={label}>
-            <CardContent className="p-5">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">{label}</p>
-                  <p className="text-2xl font-bold mt-1">{loading ? "—" : value}</p>
-                </div>
-                <div className={`${bg} ${color} p-2 rounded-lg`}>
-                  <Icon className="size-5" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Action needed */}
-      {!loading && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Action needed</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {pendingRequests.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                You&apos;re all caught up — no requests waiting.
-              </p>
-            ) : (
-              <div className="divide-y divide-border">
-                {pendingRequests.map((booking) => renderBookingRow(booking))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
 
       {/* Recent booking requests */}
       <Card>
@@ -164,11 +81,11 @@ export default function ProviderOverviewPage() {
         <CardContent>
           {loading ? (
             <p className="text-sm text-muted-foreground">Loading...</p>
-          ) : recentRequests.length === 0 ? (
+          ) : orderedBookings.length === 0 ? (
             <p className="text-sm text-muted-foreground">No bookings yet.</p>
           ) : (
             <div className="divide-y divide-border">
-              {recentRequests.map((booking) => renderBookingRow(booking))}
+              {orderedBookings.map((booking) => renderBookingRow(booking))}
             </div>
           )}
         </CardContent>
