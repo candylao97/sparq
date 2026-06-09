@@ -1,22 +1,24 @@
 import Link from "next/link";
 import {
   CalendarDays,
+  CheckCircle2,
   Clock,
   MapPin,
   ArrowRight,
   Sparkles,
 } from "lucide-react";
-import { format, startOfDay } from "date-fns";
+import { format } from "date-fns";
 import { auth } from "@/lib/auth";
 import { getCustomerBookings } from "@/server/services/booking.service";
 import { BOOKING_STATUS_LABELS } from "@/lib/constants";
+import {
+  deriveCustomerDashboard,
+  deriveFirstName,
+  type CustomerBooking,
+} from "@/lib/customer-dashboard";
 import { Button } from "@/components/ui/button";
 import { CancelBookingButton } from "@/components/customer/cancel-booking-button";
 import { RebookBanner } from "@/components/customer/rebook-banner";
-
-const UPCOMING_STATUSES = ["PENDING_PROVIDER_RESPONSE", "CONFIRMED"];
-
-type CustomerBooking = Awaited<ReturnType<typeof getCustomerBookings>>[number];
 
 function money(n: number) {
   return `$${Number(n).toFixed(2)}`;
@@ -47,28 +49,47 @@ export default async function CustomerAccountPage() {
     ? await getCustomerBookings(session.user.id)
     : [];
 
-  const today = startOfDay(new Date());
+  const {
+    nextBooking,
+    moreUpcoming,
+    lastCompleted,
+    upcomingCount,
+    completedCount,
+  } = deriveCustomerDashboard(bookings, new Date());
 
-  const nextBooking =
-    bookings
-      .filter(
-        (b) =>
-          UPCOMING_STATUSES.includes(b.status) &&
-          startOfDay(new Date(b.bookingDate)) >= today
-      )
-      .sort((a, b) => {
-        const d =
-          new Date(a.bookingDate).getTime() - new Date(b.bookingDate).getTime();
-        return d !== 0 ? d : a.startTime.localeCompare(b.startTime);
-      })[0] ?? null;
-
-  const lastCompleted = bookings.find((b) => b.status === "COMPLETED") ?? null;
+  const firstName = deriveFirstName(session?.user?.name);
 
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold tracking-tight text-neutral-900">
-        Account
+        {firstName ? `Hi ${firstName}` : "Account"}
       </h1>
+
+      {/* At a glance */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="rounded-2xl border border-neutral-200 bg-white p-4">
+          <div className="flex items-center gap-2 text-neutral-500">
+            <CalendarDays className="size-4 text-neutral-400" />
+            <span className="text-xs font-semibold uppercase tracking-wider">
+              Upcoming
+            </span>
+          </div>
+          <p className="mt-2 text-2xl font-bold text-neutral-900">
+            {upcomingCount}
+          </p>
+        </div>
+        <div className="rounded-2xl border border-neutral-200 bg-white p-4">
+          <div className="flex items-center gap-2 text-neutral-500">
+            <CheckCircle2 className="size-4 text-neutral-400" />
+            <span className="text-xs font-semibold uppercase tracking-wider">
+              Completed
+            </span>
+          </div>
+          <p className="mt-2 text-2xl font-bold text-neutral-900">
+            {completedCount}
+          </p>
+        </div>
+      </div>
 
       {/* Contextual prompt */}
       {lastCompleted && (
@@ -172,6 +193,46 @@ export default async function CustomerAccountPage() {
               <ArrowRight className="size-4" />
             </Button>
           </Link>
+        </div>
+      )}
+
+      {/* More upcoming */}
+      {moreUpcoming.length > 0 && (
+        <div className="space-y-3">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-neutral-500">
+            More upcoming
+          </h2>
+          <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white">
+            {moreUpcoming.map((b, i) => (
+              <Link
+                key={b.id}
+                href={`/customer/bookings/${b.id}`}
+                className={`flex items-center gap-4 px-5 py-4 transition-colors hover:bg-neutral-50 ${
+                  i > 0 ? "border-t border-neutral-100" : ""
+                }`}
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium text-neutral-900">
+                    {b.service.title}
+                  </p>
+                  <p className="truncate text-sm text-neutral-500">
+                    with {providerName(b)}
+                  </p>
+                </div>
+                <div className="hidden shrink-0 text-right text-sm text-neutral-600 sm:block">
+                  <p>{format(new Date(b.bookingDate), "EEE, d MMM")}</p>
+                  <p className="text-neutral-400">{b.startTime}</p>
+                </div>
+                <span
+                  className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${statusPillClass(
+                    b.status
+                  )}`}
+                >
+                  {BOOKING_STATUS_LABELS[b.status] ?? b.status}
+                </span>
+              </Link>
+            ))}
+          </div>
         </div>
       )}
 
