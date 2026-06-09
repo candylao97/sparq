@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { RefreshCw, RotateCcw, Filter } from "lucide-react";
 import { toast } from "sonner";
 import { BOOKING_STATUS_LABELS, PAYMENT_STATUS_LABELS } from "@/lib/constants";
+import { formatCurrency } from "@/lib/utils";
 
 // ---- Types ----------------------------------------------------------------
 
@@ -26,13 +27,6 @@ type BookingRow = {
 
 // ---- Helpers ---------------------------------------------------------------
 
-function formatAUD(cents: number) {
-  return new Intl.NumberFormat("en-AU", {
-    style: "currency",
-    currency: "AUD",
-    minimumFractionDigits: 2,
-  }).format(cents / 100);
-}
 
 function bookingStatusBadge(status: string) {
   const map: Record<string, string> = {
@@ -210,7 +204,11 @@ export default function AdminBookingsPage() {
                       )}
                     </td>
                     <td className="px-4 py-3 text-gray-300 whitespace-nowrap font-medium">
-                      {b.payment ? formatAUD(b.payment.amount) : "—"}
+                      {b.payment
+                        ? formatCurrency(b.payment.amount, {
+                            minimumFractionDigits: 2,
+                          })
+                        : "—"}
                     </td>
                     <td className="px-4 py-3 text-right">
                       {b.payment?.status === "CAPTURED" && (

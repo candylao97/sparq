@@ -67,13 +67,6 @@ function statusBadge(status: string) {
   );
 }
 
-function formatAUD(cents: number) {
-  return new Intl.NumberFormat("en-AU", {
-    style: "currency",
-    currency: "AUD",
-    minimumFractionDigits: 0,
-  }).format(cents / 100);
-}
 
 // ---- Reject / Suspend Dialog -----------------------------------------------
 
@@ -276,7 +269,10 @@ function QueueCard({
                   {provider.services.map((s) => (
                     <span key={s.id} className="inline-flex items-center gap-1 rounded-full bg-gray-800 px-2 py-0.5 text-xs text-gray-300">
                       <Scissors className="size-3" />
-                      {s.title} — {formatAUD(s.priceInCents)}
+                      {s.title} —{" "}
+                      {formatCurrency(s.priceInCents, {
+                        minimumFractionDigits: 0,
+                      })}
                     </span>
                   ))}
                 </div>

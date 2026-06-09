@@ -14,21 +14,13 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
+import { formatCurrency } from "@/lib/utils";
 import type { DashboardMetrics, LeakageIndicators } from "@/types";
 
 type MetricsResponse = {
   metrics: DashboardMetrics;
   leakage: LeakageIndicators;
 };
-
-function formatAUD(cents: number) {
-  return new Intl.NumberFormat("en-AU", {
-    style: "currency",
-    currency: "AUD",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(cents / 100);
-}
 
 function StatCard({
   label,
@@ -130,7 +122,10 @@ export default function AdminOverviewPage() {
           />
           <StatCard
             label="Revenue"
-            value={formatAUD(metrics?.totalRevenue ?? 0)}
+            value={formatCurrency(metrics?.totalRevenue ?? 0, {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0,
+            })}
             icon={DollarSign}
             sub="From captured payments"
           />
