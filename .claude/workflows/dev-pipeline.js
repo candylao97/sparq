@@ -1,12 +1,13 @@
 export const meta = {
   name: 'dev-pipeline',
-  description: 'Two senior coders (one writes, one peer-reviews), then a formal reviewer and tester — looping until clean',
-  whenToUse: 'Run a full implement→peer-review→fix→review→fix→test cycle with the role-based agents (two senior-coders, code-reviewer, tester).',
+  description: 'Two senior coders (one writes, one peer-reviews), then a code reviewer, a UI/UX reviewer, and a tester — looping until clean',
+  whenToUse: 'Run a full implement→peer-review→fix→review(code+UX)→fix→test cycle with the role-based agents (two senior-coders, code-reviewer, ux-reviewer, tester).',
   phases: [
     { title: 'Implement', detail: 'Coder A writes the code' },
     { title: 'Peer review', detail: 'Coder B reviews Coder A\'s work' },
     { title: 'Peer fix', detail: 'Coder A addresses peer feedback' },
     { title: 'Review', detail: 'code-reviewer critiques the diff' },
+    { title: 'UX review', detail: 'ux-reviewer critiques the UI/UX' },
     { title: 'Fix', detail: 'Coder A addresses blocker/should-fix findings' },
     { title: 'Test', detail: 'tester writes and runs tests' },
   ],
@@ -89,20 +90,26 @@ if (peerFixes.length > 0) {
   )
 }
 
-// ── 4–6. Formal reviewer + tester loop ───────────────────────────────────────
-let review, tests
+// ── 4–6. Reviewers (code + UI/UX) + tester loop ──────────────────────────────
+let review, uxReview, tests
 for (let round = 1; round <= MAX_ROUNDS; round++) {
-  phase('Review')
-  review = await agent(
-    `Review the current working-tree changes (run \`git diff\`). The task being implemented was:\n\n${task}\n\nReport findings.`,
-    { agentType: 'code-reviewer', label: `review-r${round}`, phase: 'Review', schema: REVIEW_SCHEMA }
-  )
+  // Code review and UI/UX review run concurrently — different lenses on the same diff.
+  ;[review, uxReview] = await parallel([
+    () => agent(
+      `Review the current working-tree changes (run \`git diff\`). The task being implemented was:\n\n${task}\n\nReport findings.`,
+      { agentType: 'code-reviewer', label: `review-r${round}`, phase: 'Review', schema: REVIEW_SCHEMA }
+    ),
+    () => agent(
+      `Review the UI/UX of the current working-tree changes (run \`git diff\`). The task being implemented was:\n\n${task}\n\nReport findings. If the diff has no user-facing UI changes, return clean.`,
+      { agentType: 'ux-reviewer', label: `ux-review-r${round}`, phase: 'UX review', schema: REVIEW_SCHEMA }
+    ),
+  ])
 
-  const mustFix = mustFixOf(review)
+  const mustFix = [...mustFixOf(review), ...mustFixOf(uxReview)]
   if (mustFix.length > 0) {
     phase('Fix')
     lastWork = await agent(
-      fixPrompt('You are Coder A. The code reviewer found issues. Fix each in the code, no unrelated changes.', mustFix),
+      fixPrompt('You are Coder A. The code reviewer and UI/UX reviewer found issues. Fix each in the code, no unrelated changes.', mustFix),
       { agentType: 'senior-coder', label: `coderA:fix-r${round}`, phase: 'Fix' }
     )
   }
@@ -113,9 +120,9 @@ for (let round = 1; round <= MAX_ROUNDS; round++) {
     { agentType: 'tester', label: `test-r${round}`, phase: 'Test', schema: TEST_SCHEMA }
   )
 
-  const reviewClean = review?.clean || mustFix.length === 0
+  const reviewClean = mustFix.length === 0
   if (reviewClean && tests?.passed) {
-    log(`Converged after round ${round}: review clean, tests green.`)
+    log(`Converged after round ${round}: code + UX review clean, tests green.`)
     break
   }
 
@@ -135,5 +142,6 @@ return {
   finalWork: lastWork,
   peerReview: { clean: peer?.clean, summary: peer?.summary, findings: peer?.findings },
   review: { clean: review?.clean, summary: review?.summary, findings: review?.findings },
+  uxReview: { clean: uxReview?.clean, summary: uxReview?.summary, findings: uxReview?.findings },
   tests: { passed: tests?.passed, summary: tests?.summary, failures: tests?.failures },
 }
