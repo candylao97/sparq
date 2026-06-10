@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { CalendarClock, Inbox } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -69,8 +70,10 @@ export default function ProviderOverviewPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold">Overview</h1>
-        <p className="text-muted-foreground text-sm mt-1">Welcome back to your provider dashboard</p>
+        <h1 className="text-2xl font-bold tracking-tight">Overview</h1>
+        <p className="text-muted-foreground text-sm mt-1">
+          Welcome back to your provider dashboard
+        </p>
       </div>
 
       {/* Recent booking requests */}
@@ -80,48 +83,101 @@ export default function ProviderOverviewPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <p className="text-sm text-muted-foreground">Loading...</p>
+            renderSkeleton()
           ) : orderedBookings.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No bookings yet.</p>
+            renderEmptyState()
           ) : (
-            <div className="divide-y divide-border">
+            <ul className="divide-y divide-border">
               {orderedBookings.map((booking) => renderBookingRow(booking))}
-            </div>
+            </ul>
           )}
         </CardContent>
       </Card>
     </div>
   );
 
-  function renderBookingRow(booking: BookingWithDetails) {
+  function renderSkeleton() {
     return (
-      <div
+      <div className="divide-y divide-border" aria-hidden="true">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div
+            key={i}
+            className="py-4 flex items-start justify-between gap-4 first:pt-0"
+          >
+            <div className="space-y-2">
+              <div className="h-4 w-40 rounded bg-muted animate-pulse" />
+              <div className="h-3.5 w-56 rounded bg-muted animate-pulse" />
+              <div className="h-4 w-16 rounded bg-muted animate-pulse" />
+            </div>
+            <div className="h-8 w-32 rounded-md bg-muted animate-pulse" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  function renderEmptyState() {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
+        <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+          <Inbox className="size-6 text-muted-foreground" aria-hidden="true" />
+        </div>
+        <div className="space-y-1">
+          <p className="text-sm font-medium">No bookings yet</p>
+          <p className="text-sm text-muted-foreground">
+            New booking requests from customers will appear here.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  function renderBookingRow(booking: BookingWithDetails) {
+    const isPending = booking.status === "PENDING_PROVIDER_RESPONSE";
+    const isResponding = respondingId === booking.id;
+    const customerName = booking.customer?.name ?? "Unknown customer";
+    const statusLabel = BOOKING_STATUS_LABELS[booking.status] ?? booking.status;
+
+    return (
+      <li
         key={booking.id}
-        className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+        className={`flex flex-col gap-3 px-3 py-4 sm:flex-row sm:items-center sm:justify-between ${
+          isPending
+            ? "-mx-3 rounded-lg bg-yellow-50/60 sm:my-1"
+            : "first:pt-0 last:pb-0"
+        }`}
       >
-        <div className="space-y-0.5">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-medium text-sm">
-              {booking.customer?.name ?? "Unknown customer"}
-            </span>
+        <div className="min-w-0 space-y-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="truncate text-sm font-medium">{customerName}</span>
             <Badge variant={getStatusVariant(booking.status)}>
-              {BOOKING_STATUS_LABELS[booking.status] ?? booking.status}
+              <span className="sr-only">Status: </span>
+              {statusLabel}
             </Badge>
           </div>
-          <p className="text-sm text-muted-foreground">
-            {booking.service?.title} &middot;{" "}
-            {format(new Date(booking.bookingDate), "d MMM yyyy")} at {booking.startTime}
+          <p className="flex min-w-0 items-center gap-1.5 text-sm text-muted-foreground">
+            <CalendarClock
+              className="size-3.5 shrink-0 text-muted-foreground"
+              aria-hidden="true"
+            />
+            <span className="truncate">
+              {booking.service?.title} &middot;{" "}
+              {format(new Date(booking.bookingDate), "d MMM yyyy")} at{" "}
+              {booking.startTime}
+            </span>
           </p>
-          <p className="text-sm font-medium">
+          <p className="text-sm font-semibold tabular-nums">
             ${(booking.totalPrice ?? 0).toFixed(2)}
           </p>
         </div>
-        {booking.status === "PENDING_PROVIDER_RESPONSE" && (
-          <div className="flex gap-2 shrink-0">
+        {isPending && (
+          <div className="flex shrink-0 gap-2">
             <Button
               size="sm"
               onClick={() => respond(booking.id, "accept")}
-              disabled={respondingId === booking.id}
+              disabled={isResponding}
+              aria-label={`Accept booking from ${customerName}`}
+              className="flex-1 sm:flex-none"
             >
               Accept
             </Button>
@@ -129,13 +185,15 @@ export default function ProviderOverviewPage() {
               size="sm"
               variant="destructive"
               onClick={() => respond(booking.id, "decline")}
-              disabled={respondingId === booking.id}
+              disabled={isResponding}
+              aria-label={`Decline booking from ${customerName}`}
+              className="flex-1 sm:flex-none"
             >
               Decline
             </Button>
           </div>
         )}
-      </div>
+      </li>
     );
   }
 }
