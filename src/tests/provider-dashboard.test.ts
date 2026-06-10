@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { orderProviderBookings } from "@/lib/provider-dashboard";
+import {
+  deriveProviderStats,
+  orderProviderBookings,
+} from "@/lib/provider-dashboard";
 import type { BookingWithDetails } from "@/types";
 
 /**
@@ -66,5 +69,62 @@ describe("orderProviderBookings", () => {
       "pend",
       "conf",
     ]);
+  });
+});
+
+describe("deriveProviderStats", () => {
+  it("returns zero counts for no bookings (empty)", () => {
+    expect(deriveProviderStats([])).toEqual({
+      pendingCount: 0,
+      confirmedCount: 0,
+      completedCount: 0,
+    });
+  });
+
+  it("counts pending, confirmed and completed across mixed statuses", () => {
+    const bookings = [
+      makeBooking({ id: "p1", status: "PENDING_PROVIDER_RESPONSE", bookingDate: "2026-07-01" }),
+      makeBooking({ id: "p2", status: "PENDING_PROVIDER_RESPONSE", bookingDate: "2026-07-02" }),
+      makeBooking({ id: "c1", status: "CONFIRMED", bookingDate: "2026-07-03" }),
+      makeBooking({ id: "done1", status: "COMPLETED", bookingDate: "2026-06-01" }),
+      makeBooking({ id: "done2", status: "COMPLETED", bookingDate: "2026-06-02" }),
+      makeBooking({ id: "done3", status: "COMPLETED", bookingDate: "2026-06-03" }),
+      // Statuses that must not be counted in any bucket.
+      makeBooking({ id: "dec", status: "DECLINED", bookingDate: "2026-06-04" }),
+      makeBooking({ id: "exp", status: "EXPIRED", bookingDate: "2026-06-05" }),
+    ];
+    expect(deriveProviderStats(bookings)).toEqual({
+      pendingCount: 2,
+      confirmedCount: 1,
+      completedCount: 3,
+    });
+  });
+
+  it("preserves a per-bucket zero independently of the other buckets", () => {
+    // Confirmed present, but no pending and no completed: pending/completed
+    // must each stay 0 (the dashboard renders 0 explicitly per stat card).
+    const bookings = [
+      makeBooking({ id: "c1", status: "CONFIRMED", bookingDate: "2026-07-03" }),
+      makeBooking({ id: "c2", status: "CONFIRMED", bookingDate: "2026-07-04" }),
+    ];
+    expect(deriveProviderStats(bookings)).toEqual({
+      pendingCount: 0,
+      confirmedCount: 2,
+      completedCount: 0,
+    });
+  });
+
+  it("ignores non-counted statuses entirely (all buckets zero)", () => {
+    const bookings = [
+      makeBooking({ id: "dec", status: "DECLINED", bookingDate: "2026-06-04" }),
+      makeBooking({ id: "exp", status: "EXPIRED", bookingDate: "2026-06-05" }),
+      makeBooking({ id: "ref", status: "REFUNDED", bookingDate: "2026-06-06" }),
+      makeBooking({ id: "canc", status: "CANCELLED_BY_CUSTOMER", bookingDate: "2026-06-07" }),
+    ];
+    expect(deriveProviderStats(bookings)).toEqual({
+      pendingCount: 0,
+      confirmedCount: 0,
+      completedCount: 0,
+    });
   });
 });

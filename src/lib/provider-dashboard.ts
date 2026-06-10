@@ -33,3 +33,33 @@ export function orderProviderBookings(
 
   return [...pending, ...rest];
 }
+
+export interface ProviderStats {
+  /** Count of bookings awaiting the provider's response. */
+  pendingCount: number;
+  /** Count of confirmed bookings. */
+  confirmedCount: number;
+  /** Count of completed bookings. */
+  completedCount: number;
+}
+
+/**
+ * Pure derivation of the provider dashboard at-a-glance stat counts from a
+ * bookings array. No DB or session access, and never calls `new Date()`, so it
+ * can be unit-tested.
+ */
+export function deriveProviderStats(
+  bookings: BookingWithDetails[]
+): ProviderStats {
+  let pendingCount = 0;
+  let confirmedCount = 0;
+  let completedCount = 0;
+
+  for (const b of bookings) {
+    if (b.status === "PENDING_PROVIDER_RESPONSE") pendingCount += 1;
+    else if (b.status === "CONFIRMED") confirmedCount += 1;
+    else if (b.status === "COMPLETED") completedCount += 1;
+  }
+
+  return { pendingCount, confirmedCount, completedCount };
+}
