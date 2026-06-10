@@ -19,6 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { CancelBookingButton } from "@/components/customer/cancel-booking-button";
 import { RebookBanner } from "@/components/customer/rebook-banner";
+import { ReviewPromptBanner } from "@/components/customer/review-prompt-banner";
 
 function money(n: number) {
   return `$${Number(n).toFixed(2)}`;
@@ -53,6 +54,7 @@ export default async function CustomerAccountPage() {
     nextBooking,
     moreUpcoming,
     lastCompleted,
+    reviewable,
     upcomingCount,
     completedCount,
   } = deriveCustomerDashboard(bookings, new Date());
@@ -91,13 +93,21 @@ export default async function CustomerAccountPage() {
         </div>
       </div>
 
-      {/* Contextual prompt */}
-      {lastCompleted && (
-        <RebookBanner
-          providerName={providerName(lastCompleted)}
-          href={`/providers/${lastCompleted.providerId}/book?serviceId=${lastCompleted.serviceId}`}
-          dismissKey={lastCompleted.id}
+      {/* Contextual prompt: nudge a review first, otherwise a rebook */}
+      {reviewable ? (
+        <ReviewPromptBanner
+          providerName={providerName(reviewable)}
+          href={`/customer/bookings/${reviewable.id}`}
+          dismissKey={reviewable.id}
         />
+      ) : (
+        lastCompleted && (
+          <RebookBanner
+            providerName={providerName(lastCompleted)}
+            href={`/providers/${lastCompleted.providerId}/book?serviceId=${lastCompleted.serviceId}`}
+            dismissKey={lastCompleted.id}
+          />
+        )
       )}
 
       {/* Focal: next appointment */}

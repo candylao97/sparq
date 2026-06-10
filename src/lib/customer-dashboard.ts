@@ -17,6 +17,11 @@ export interface CustomerDashboardSummary {
   moreUpcoming: CustomerBooking[];
   /** The most recently created completed booking, or null. */
   lastCompleted: CustomerBooking | null;
+  /**
+   * The most recently created completed booking that has not yet been
+   * reviewed, or null when every completed booking already has a review.
+   */
+  reviewable: CustomerBooking | null;
   /** Count of upcoming bookings (status upcoming and date >= today). */
   upcomingCount: number;
   /** Count of completed bookings. */
@@ -56,6 +61,9 @@ export function deriveCustomerDashboard(
   const lastCompleted =
     bookings.find((b) => b.status === "COMPLETED") ?? null;
 
+  const reviewable =
+    bookings.find((b) => b.status === "COMPLETED" && !b.review) ?? null;
+
   const completedCount = bookings.filter(
     (b) => b.status === "COMPLETED"
   ).length;
@@ -64,6 +72,7 @@ export function deriveCustomerDashboard(
     nextBooking,
     moreUpcoming,
     lastCompleted,
+    reviewable,
     upcomingCount: upcoming.length,
     completedCount,
   };

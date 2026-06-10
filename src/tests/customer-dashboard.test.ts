@@ -19,6 +19,7 @@ function makeBooking(overrides: {
   bookingDate: string;
   startTime?: string;
   createdAt?: string;
+  reviewed?: boolean;
 }): CustomerBooking {
   return {
     id: overrides.id,
@@ -27,6 +28,7 @@ function makeBooking(overrides: {
     startTime: overrides.startTime ?? "10:00",
     endTime: "11:00",
     createdAt: new Date(overrides.createdAt ?? overrides.bookingDate),
+    review: overrides.reviewed ? { id: `rev-${overrides.id}` } : null,
   } as unknown as CustomerBooking;
 }
 
@@ -148,6 +150,66 @@ describe("deriveCustomerDashboard", () => {
     const result = deriveCustomerDashboard(bookings, TODAY);
     expect(result.upcomingCount).toBe(2);
     expect(result.completedCount).toBe(2);
+  });
+
+  it("reviewable is null when there are no completed bookings", () => {
+    const bookings = [
+      makeBooking({ id: "u1", status: "CONFIRMED", bookingDate: "2026-06-20" }),
+    ];
+    expect(deriveCustomerDashboard(bookings, TODAY).reviewable).toBeNull();
+  });
+
+  it("surfaces the most recent unreviewed completed booking as reviewable", () => {
+    const bookings = [
+      makeBooking({
+        id: "c-new",
+        status: "COMPLETED",
+        bookingDate: "2026-05-10",
+        reviewed: false,
+      }),
+      makeBooking({
+        id: "c-old",
+        status: "COMPLETED",
+        bookingDate: "2026-04-01",
+        reviewed: false,
+      }),
+    ];
+    // bookings arrive createdAt desc, so the first unreviewed one wins.
+    expect(deriveCustomerDashboard(bookings, TODAY).reviewable?.id).toBe(
+      "c-new"
+    );
+  });
+
+  it("skips already-reviewed completed bookings when choosing reviewable", () => {
+    const bookings = [
+      makeBooking({
+        id: "c-reviewed",
+        status: "COMPLETED",
+        bookingDate: "2026-05-10",
+        reviewed: true,
+      }),
+      makeBooking({
+        id: "c-unreviewed",
+        status: "COMPLETED",
+        bookingDate: "2026-04-01",
+        reviewed: false,
+      }),
+    ];
+    expect(deriveCustomerDashboard(bookings, TODAY).reviewable?.id).toBe(
+      "c-unreviewed"
+    );
+  });
+
+  it("reviewable is null when every completed booking is already reviewed", () => {
+    const bookings = [
+      makeBooking({
+        id: "c1",
+        status: "COMPLETED",
+        bookingDate: "2026-05-10",
+        reviewed: true,
+      }),
+    ];
+    expect(deriveCustomerDashboard(bookings, TODAY).reviewable).toBeNull();
   });
 });
 
