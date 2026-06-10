@@ -4,7 +4,16 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { CalendarClock, CheckCircle2, Clock, Inbox, Loader2 } from "lucide-react";
+import {
+  ArrowRight,
+  Bell,
+  CalendarClock,
+  CheckCircle2,
+  ChevronRight,
+  Clock,
+  Inbox,
+  Loader2,
+} from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -124,24 +133,47 @@ export default function ProviderOverviewPage() {
         </div>
       </div>
 
+      {/* Contextual nudge: pending requests awaiting a response */}
+      {pendingCount > 0 && (
+        <Link
+          href="#booking-requests"
+          className="group flex items-center gap-3 rounded-xl bg-amber-50 px-5 py-4 transition-colors hover:bg-amber-100/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+        >
+          <Bell
+            className="size-5 shrink-0 fill-amber-400 text-amber-400"
+            aria-hidden="true"
+          />
+          <p className="min-w-0 flex-1 text-sm font-medium text-neutral-900">
+            You have {pendingCount} request{pendingCount === 1 ? "" : "s"}{" "}
+            waiting for your response
+          </p>
+          <ChevronRight
+            className="size-5 shrink-0 text-neutral-400 transition-transform group-hover:translate-x-0.5"
+            aria-hidden="true"
+          />
+        </Link>
+      )}
+
       {/* Booking requests */}
-      <div className="space-y-3">
+      <div id="booking-requests" className="space-y-3">
         <h2 className="text-xs font-semibold uppercase tracking-wider text-neutral-500">
           Booking requests
         </h2>
-        <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white">
-          {loading ? (
-            renderSkeleton()
-          ) : orderedBookings.length === 0 ? (
-            renderEmptyState()
-          ) : (
+        {loading ? (
+          <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white">
+            {renderSkeleton()}
+          </div>
+        ) : orderedBookings.length === 0 ? (
+          renderEmptyState()
+        ) : (
+          <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white">
             <ul>
               {orderedBookings.map((booking, i) =>
                 renderBookingRow(booking, i)
               )}
             </ul>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Footer */}
@@ -181,16 +213,18 @@ export default function ProviderOverviewPage() {
 
   function renderEmptyState() {
     return (
-      <div className="flex flex-col items-center justify-center gap-3 px-6 py-12 text-center">
-        <div className="flex size-12 items-center justify-center rounded-full bg-neutral-100">
-          <Inbox className="size-6 text-neutral-400" aria-hidden="true" />
-        </div>
-        <div className="space-y-1">
-          <p className="font-medium text-neutral-700">No bookings yet</p>
-          <p className="text-sm text-neutral-400">
-            New booking requests from customers will appear here.
-          </p>
-        </div>
+      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-neutral-200 bg-white px-6 py-12 text-center">
+        <Inbox className="mb-3 size-10 text-neutral-300" aria-hidden="true" />
+        <p className="font-medium text-neutral-700">No bookings yet</p>
+        <p className="mt-1 text-sm text-neutral-400">
+          New booking requests from customers will appear here.
+        </p>
+        <Link href="/provider/availability" className="mt-5">
+          <Button>
+            Set your availability
+            <ArrowRight className="size-4" />
+          </Button>
+        </Link>
       </div>
     );
   }
