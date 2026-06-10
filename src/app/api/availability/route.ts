@@ -8,6 +8,7 @@ import {
   addBlockedDate,
   removeBlockedDate,
   getAvailableSlots,
+  getAvailabilityOverrides,
 } from "@/server/services/availability.service";
 import { availabilityBulkSchema, blockedDateSchema } from "@/server/validation/service.schema";
 
@@ -38,12 +39,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
 
-    const [rules, blocked] = await Promise.all([
+    const [rules, blocked, overrides] = await Promise.all([
       getAvailabilityRules(profile.id),
       getBlockedDates(profile.id),
+      getAvailabilityOverrides(profile.id),
     ]);
 
-    return NextResponse.json({ rules, blockedDates: blocked });
+    return NextResponse.json({ rules, blockedDates: blocked, overrides });
   } catch (error) {
     console.error("Get availability error:", error);
     return NextResponse.json({ error: "Failed to get availability" }, { status: 500 });

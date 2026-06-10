@@ -28,6 +28,36 @@ export const availabilityBulkSchema = z.object({
   rules: z.array(availabilityRuleSchema),
 });
 
+const timeString = z.string().regex(/^\d{2}:\d{2}$/, "Use HH:MM format");
+const dateOnlyString = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "Use yyyy-MM-dd format");
+
+export const availabilityOverrideSchema = z.object({
+  date: dateOnlyString,
+  isAvailable: z.boolean(),
+  startTime: timeString.nullish(),
+  endTime: timeString.nullish(),
+  serviceMode: z.enum(["STUDIO", "MOBILE", "BOTH"]).nullish(),
+}).refine(
+  (data) => (data.startTime == null) === (data.endTime == null),
+  { message: "Provide both start and end time", path: ["endTime"] }
+).refine(
+  (data) => !data.startTime || !data.endTime || data.startTime < data.endTime,
+  { message: "End time must be after start time", path: ["endTime"] }
+);
+
+export const applyWeekdaySchema = z.object({
+  dayOfWeek: z.number().int().min(0).max(6),
+  startTime: timeString,
+  endTime: timeString,
+}).refine(
+  (data) => data.startTime < data.endTime,
+  { message: "End time must be after start time", path: ["endTime"] }
+);
+
 export type ServiceInput = z.infer<typeof serviceSchema>;
 export type AvailabilityRuleInput = z.infer<typeof availabilityRuleSchema>;
 export type BlockedDateInput = z.infer<typeof blockedDateSchema>;
+export type AvailabilityOverrideInput = z.infer<typeof availabilityOverrideSchema>;
+export type ApplyWeekdayInput = z.infer<typeof applyWeekdaySchema>;

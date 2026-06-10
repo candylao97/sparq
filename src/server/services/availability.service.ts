@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import type { ServiceMode } from "@prisma/client";
 import { addMinutes, format, parse, isBefore, isEqual } from "date-fns";
 
 export async function getAvailabilityRules(profileId: string) {
@@ -48,6 +49,66 @@ export async function removeBlockedDate(profileId: string, dateId: string) {
   return prisma.blockedDate.delete({
     where: { id: dateId, profileId },
   });
+}
+
+export async function getAvailabilityOverrides(profileId: string) {
+  return prisma.availabilityOverride.findMany({
+    where: { profileId },
+    orderBy: { date: "asc" },
+  });
+}
+
+export async function upsertAvailabilityOverride(
+  profileId: string,
+  data: {
+    date: string;
+    isAvailable: boolean;
+    startTime?: string | null;
+    endTime?: string | null;
+    serviceMode?: ServiceMode | null;
+  }
+) {
+  const date = new Date(data.date);
+  const fields = {
+    isAvailable: data.isAvailable,
+    startTime: data.startTime ?? null,
+    endTime: data.endTime ?? null,
+    serviceMode: data.serviceMode ?? null,
+  };
+
+  return prisma.availabilityOverride.upsert({
+    where: { profileId_date: { profileId, date } },
+    create: { profileId, date, ...fields },
+    update: fields,
+  });
+}
+
+export async function deleteAvailabilityOverride(profileId: string, date: string) {
+  // deleteMany keeps this idempotent — deleting a non-existent override is a no-op.
+  return prisma.availabilityOverride.deleteMany({
+    where: { profileId, date: new Date(date) },
+  });
+}
+
+export async function applyHoursToWeekday(
+  profileId: string,
+  dayOfWeek: number,
+  startTime: string,
+  endTime: string
+) {
+  // Replace the recurring default for this single weekday only. Wrapped in a
+  // transaction so the delete+create is atomic: if the create fails, the delete
+  // rolls back and the weekday keeps its existing rule instead of silently
+  // flipping to 'off' (resolveEffectiveDay treats a no-rule weekday as
+  // unavailable).
+  const [, created] = await prisma.$transaction([
+    prisma.availabilityRule.deleteMany({ where: { profileId, dayOfWeek } }),
+    prisma.availabilityRule.create({
+      data: { profileId, dayOfWeek, startTime, endTime },
+    }),
+  ]);
+
+  return created;
 }
 
 export async function getAvailableSlots(

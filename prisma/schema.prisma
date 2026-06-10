@@ -170,6 +170,7 @@ model ProviderProfile {
   services         Service[]
   availabilityRules AvailabilityRule[]
   blockedDates     BlockedDate[]
+  availabilityOverrides AvailabilityOverride[]
   portfolioImages  PortfolioImage[]
   documents        ProviderDocument[]
   bookings         Booking[]
@@ -240,6 +241,26 @@ model BlockedDate {
 
   @@unique([profileId, date])
   @@map("blocked_dates")
+}
+
+// A per-date override of the artist's weekly default schedule.
+// Absence of a row means the date uses the weekday's AvailabilityRule default.
+model AvailabilityOverride {
+  id          String          @id @default(cuid())
+  profileId   String
+  date        DateTime        @db.Date
+  isAvailable Boolean         @default(true) // false = day off (overrides the default)
+  startTime   String?         // "09:00" — overrides the default hours when available
+  endTime     String?         // "17:00"
+  serviceMode ServiceMode?    // optional per-day location narrowing
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  profile     ProviderProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([profileId, date])
+  @@index([profileId])
+  @@map("availability_overrides")
 }
 
 model Booking {
