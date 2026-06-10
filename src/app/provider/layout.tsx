@@ -1,79 +1,64 @@
-import Link from "next/link";
 import { requireProvider } from "@/server/permissions";
 import {
-  LayoutDashboard,
-  User,
-  Scissors,
-  CalendarDays,
-  BookOpen,
-  DollarSign,
-  Star,
-  Settings,
-} from "lucide-react";
-
-const NAV_LINKS = [
-  { href: "/provider", label: "Overview", icon: LayoutDashboard },
-  { href: "/provider/profile", label: "Profile", icon: User },
-  { href: "/provider/services", label: "Services", icon: Scissors },
-  { href: "/provider/availability", label: "Availability", icon: CalendarDays },
-  { href: "/provider/bookings", label: "Bookings", icon: BookOpen },
-  { href: "/provider/earnings", label: "Earnings", icon: DollarSign },
-  { href: "/provider/reviews", label: "Reviews", icon: Star },
-  { href: "/provider/settings", label: "Settings", icon: Settings },
-];
+  ProviderNavSidebar,
+  ProviderNavMobile,
+} from "@/components/provider/provider-nav";
+import { ProviderAccountMenu } from "@/components/provider/provider-account-menu";
 
 export default async function ProviderLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  await requireProvider();
+  const session = await requireProvider();
+  const { name, email, image } = session.user;
+  const initial = (name ?? email ?? "?").trim().charAt(0).toUpperCase() || "?";
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      {/* Mobile: horizontal scroll tabs */}
-      <nav className="lg:hidden sticky top-0 z-30 bg-background border-b border-border shadow-sm">
-        <div className="flex overflow-x-auto scrollbar-hide px-4 py-2 gap-1">
-          {NAV_LINKS.map(({ href, label, icon: Icon }) => (
-            <Link
-              key={href}
-              href={href}
-              className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors whitespace-nowrap"
-            >
-              <Icon className="size-4" />
-              {label}
-            </Link>
-          ))}
+    <div className="min-h-screen bg-gray-50">
+      {/* Mobile: identity bar + tabs */}
+      <div className="sticky top-0 z-10 border-b border-gray-200 bg-white md:hidden">
+        <div className="flex h-12 items-center justify-between px-4">
+          <span className="text-sm font-semibold text-neutral-900">
+            My Account
+          </span>
+          <ProviderAccountMenu name={name} email={email} image={image} />
         </div>
-      </nav>
+        <ProviderNavMobile />
+      </div>
 
-      <div className="flex">
-        {/* Desktop: sidebar */}
-        <aside className="hidden lg:flex lg:flex-col w-56 shrink-0 sticky top-0 h-screen border-r border-border bg-background">
-          <div className="p-6 border-b border-border">
-            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-              Provider
-            </p>
-            <p className="text-lg font-bold mt-0.5">Dashboard</p>
-          </div>
-          <nav className="flex-1 overflow-y-auto p-3 space-y-0.5">
-            {NAV_LINKS.map(({ href, label, icon: Icon }) => (
-              <Link
-                key={href}
-                href={href}
-                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-              >
-                <Icon className="size-4 shrink-0" />
-                {label}
-              </Link>
-            ))}
-          </nav>
-        </aside>
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="flex gap-8">
+          {/* Desktop sidebar */}
+          <aside className="hidden w-60 shrink-0 md:flex md:flex-col">
+            <div className="sticky top-8">
+              {/* Identity */}
+              <div className="mb-6 flex flex-col items-start gap-3">
+                <div className="flex size-16 items-center justify-center overflow-hidden rounded-full bg-neutral-900 text-xl font-semibold text-white">
+                  {image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={image} alt="" className="size-full object-cover" />
+                  ) : (
+                    initial
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate font-semibold text-neutral-900">
+                    {name ?? "Account"}
+                  </p>
+                  {email && (
+                    <p className="truncate text-xs text-neutral-500">{email}</p>
+                  )}
+                </div>
+              </div>
 
-        {/* Main content */}
-        <main className="flex-1 min-w-0 p-4 lg:p-8">
-          {children}
-        </main>
+              <ProviderNavSidebar />
+            </div>
+          </aside>
+
+          {/* Main content */}
+          <main className="min-w-0 flex-1">{children}</main>
+        </div>
       </div>
     </div>
   );
