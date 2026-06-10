@@ -1,29 +1,28 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import Image from "next/image";
 import { Upload, Trash2 } from "lucide-react";
+import { z } from "zod";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { LAUNCH_SUBURBS } from "@/lib/constants";
-import { providerProfileSchema, type ProviderProfileInput } from "@/server/validation/provider.schema";
+import { Textarea } from "@/components/ui/textarea";
 
-const SERVICE_TYPE_OPTIONS = [
-  { value: "NAILS", label: "Nails" },
-  { value: "LASHES", label: "Lashes" },
-] as const;
+// Lightweight editor schema: businessName and bio are saved incrementally, so
+// each field can be left empty without blocking a save of the other. We keep
+// the upper bounds from providerProfileSchema but drop the min() requirements
+// (those are enforced at submit-for-approval time, not on every partial save).
+const publicProfileSchema = z.object({
+  businessName: z.string().max(100, "Business name must be at most 100 characters"),
+  bio: z.string().max(1000, "Bio must be at most 1000 characters"),
+});
 
-const SERVICE_MODE_OPTIONS = [
-  { value: "STUDIO", label: "Studio / Provider Location" },
-  { value: "MOBILE", label: "Home Visit / Mobile" },
-  { value: "BOTH", label: "Both" },
-] as const;
+type PublicProfileInput = z.infer<typeof publicProfileSchema>;
 
 const MODERATION_STATUS_MAP: Record<string, { label: string; variant: "yellow" | "blue" | "green" | "red" | "gray" }> = {
   PENDING: { label: "Pending Review", variant: "yellow" },
@@ -32,7 +31,9 @@ const MODERATION_STATUS_MAP: Record<string, { label: string; variant: "yellow" |
   SUSPENDED: { label: "Suspended", variant: "red" },
 };
 
-interface ProfileData extends ProviderProfileInput {
+interface ProfileData {
+  businessName?: string | null;
+  bio?: string | null;
   moderationStatus?: string;
   profilePhoto?: string | null;
   portfolioImages?: { id: string; url: string }[];
@@ -59,20 +60,15 @@ export default function ProviderProfilePage() {
   const {
     register,
     handleSubmit,
-    control,
-    watch,
     reset,
     formState: { errors },
-  } = useForm<ProviderProfileInput>({
-    resolver: zodResolver(providerProfileSchema),
+  } = useForm<PublicProfileInput>({
+    resolver: zodResolver(publicProfileSchema),
     defaultValues: {
-      serviceTypes: [],
-      suburbs: [],
-      serviceMode: "STUDIO",
+      businessName: "",
+      bio: "",
     },
   });
-
-  const serviceMode = watch("serviceMode");
 
   useEffect(() => {
     fetch("/api/providers/me")
@@ -82,14 +78,6 @@ export default function ProviderProfilePage() {
           reset({
             businessName: data.businessName ?? "",
             bio: data.bio ?? "",
-            serviceTypes: (data.serviceTypes ?? []) as ("NAILS" | "LASHES")[],
-            serviceMode: (data.serviceMode as "STUDIO" | "MOBILE" | "BOTH") ?? "STUDIO",
-            studioAddress: data.studioAddress ?? "",
-            studioSuburb: data.studioSuburb ?? "",
-            mobileRadius: data.mobileRadius ?? undefined,
-            suburbs: data.suburbs ?? [],
-            abn: data.abn ?? "",
-            yearsExperience: data.yearsExperience ?? 0,
           });
           setProfilePhotoUrl(data.profilePhoto ?? null);
           setPortfolioImages(data.portfolioImages ?? []);
@@ -100,13 +88,13 @@ export default function ProviderProfilePage() {
       .finally(() => setLoading(false));
   }, [reset]);
 
-  const onSave = async (data: ProviderProfileInput) => {
+  const onSave = async (data: PublicProfileInput) => {
     setSaving(true);
     try {
       const res = await fetch("/api/providers", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ businessName: data.businessName, bio: data.bio }),
       });
       if (!res.ok) {
         const err = await res.json();
@@ -192,7 +180,7 @@ export default function ProviderProfilePage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Profile</h1>
-          <p className="text-muted-foreground text-sm mt-1">Manage your public provider profile</p>
+          <p className="text-muted-foreground text-sm mt-1">Manage your public provider page</p>
         </div>
         {statusInfo && (
           <Badge variant={statusInfo.variant} className="text-sm px-3 py-1">
@@ -234,140 +222,25 @@ export default function ProviderProfilePage() {
               </div>
             </div>
 
-            {/* Service types */}
+            {/* Business name */}
             <div className="space-y-3">
-              <SectionHeading>Service types</SectionHeading>
-              <Controller
-                name="serviceTypes"
-                control={control}
-                render={({ field }) => (
-                  <div className="flex gap-4">
-                    {SERVICE_TYPE_OPTIONS.map(({ value, label }) => {
-                      const checked = field.value.includes(value);
-                      return (
-                        <label key={value} className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={() => {
-                              if (checked) {
-                                field.onChange(field.value.filter((v) => v !== value));
-                              } else {
-                                field.onChange([...field.value, value]);
-                              }
-                            }}
-                            className="h-4 w-4 rounded border-border"
-                          />
-                          <span className="text-sm font-medium">{label}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                )}
-              />
-              {errors.serviceTypes && (
-                <p className="text-sm text-red-500">{errors.serviceTypes.message}</p>
+              <SectionHeading>Business name</SectionHeading>
+              <Input id="businessName" {...register("businessName")} placeholder="e.g. Luxe Nails Studio" />
+              {errors.businessName && (
+                <p className="text-sm text-red-500">{errors.businessName.message}</p>
               )}
             </div>
 
-            {/* Service mode & location */}
+            {/* Bio */}
             <div className="space-y-3">
-              <SectionHeading>Service mode &amp; location</SectionHeading>
-              <Controller
-                name="serviceMode"
-                control={control}
-                render={({ field }) => (
-                  <div className="space-y-2">
-                    <Label>Service mode</Label>
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      {SERVICE_MODE_OPTIONS.map(({ value, label }) => (
-                        <label
-                          key={value}
-                          className={`flex items-center gap-2 border rounded-lg px-4 py-2.5 cursor-pointer transition ${
-                            field.value === value
-                              ? "border-indigo-600 bg-indigo-50 text-indigo-700"
-                              : "border-border hover:border-muted-foreground"
-                          }`}
-                        >
-                          <input
-                            type="radio"
-                            className="sr-only"
-                            value={value}
-                            checked={field.value === value}
-                            onChange={() => field.onChange(value)}
-                          />
-                          <span className="text-sm font-medium">{label}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                )}
+              <SectionHeading>Bio</SectionHeading>
+              <Textarea
+                id="bio"
+                rows={5}
+                {...register("bio")}
+                placeholder="Tell customers about your experience, style, and what makes you stand out."
               />
-
-              {(serviceMode === "STUDIO" || serviceMode === "BOTH") && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="studioAddress">Studio address</Label>
-                    <Input id="studioAddress" {...register("studioAddress")} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="studioSuburb">Studio suburb</Label>
-                    <Input id="studioSuburb" {...register("studioSuburb")} />
-                  </div>
-                </div>
-              )}
-
-              {(serviceMode === "MOBILE" || serviceMode === "BOTH") && (
-                <div className="space-y-2">
-                  <Label htmlFor="mobileRadius">Mobile radius (km)</Label>
-                  <Input
-                    id="mobileRadius"
-                    type="number"
-                    min={1}
-                    max={50}
-                    {...register("mobileRadius", { valueAsNumber: true })}
-                  />
-                  {errors.mobileRadius && (
-                    <p className="text-sm text-red-500">{errors.mobileRadius.message}</p>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Service suburbs */}
-            <div className="space-y-3">
-              <SectionHeading>Service suburbs</SectionHeading>
-              <Controller
-                name="suburbs"
-                control={control}
-                render={({ field }) => (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {LAUNCH_SUBURBS.map((suburb) => {
-                      const checked = field.value.includes(suburb);
-                      return (
-                        <label key={suburb} className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={() => {
-                              if (checked) {
-                                field.onChange(field.value.filter((s) => s !== suburb));
-                              } else {
-                                field.onChange([...field.value, suburb]);
-                              }
-                            }}
-                            className="h-4 w-4 rounded border-border"
-                          />
-                          <span className="text-sm">{suburb}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                )}
-              />
-              {errors.suburbs && (
-                <p className="text-sm text-red-500">{errors.suburbs.message}</p>
-              )}
+              {errors.bio && <p className="text-sm text-red-500">{errors.bio.message}</p>}
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 border-t border-border pt-6">

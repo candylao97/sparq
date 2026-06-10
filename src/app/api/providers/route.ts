@@ -41,7 +41,15 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    const validated = providerProfileSchema.parse(body);
+    // Partial validation: only the fields present in the body are validated and
+    // updated. updateProviderProfile treats undefined as "leave unchanged", so
+    // omitted fields (and relations like suburbs) are never wiped.
+    // abn and yearsExperience are intentionally omitted — they are managed in
+    // their own flows and must not be writable through this route.
+    const validated = providerProfileSchema
+      .omit({ abn: true, yearsExperience: true })
+      .partial()
+      .parse(body);
 
     const profile = await updateProviderProfile(session.user.id, validated);
     return NextResponse.json(profile);

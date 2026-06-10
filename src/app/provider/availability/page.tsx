@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Plus, X } from "lucide-react";
 import { format } from "date-fns";
@@ -8,6 +10,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { LAUNCH_SUBURBS } from "@/lib/constants";
+import {
+  providerLocationSchema,
+  type ProviderLocationInput,
+} from "@/server/validation/provider.schema";
+
+const SERVICE_MODE_OPTIONS = [
+  { value: "STUDIO", label: "Studio / Provider Location" },
+  { value: "MOBILE", label: "Home Visit / Mobile" },
+  { value: "BOTH", label: "Both" },
+] as const;
 
 const DAYS = [
   { value: 1, label: "Monday" },
@@ -53,6 +66,70 @@ export default function ProviderAvailabilityPage() {
   const [newReason, setNewReason] = useState("");
   const [addingDate, setAddingDate] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [savingLocation, setSavingLocation] = useState(false);
+
+  const {
+    register,
+    handleSubmit: handleLocationSubmit,
+    control,
+    watch,
+    reset: resetLocation,
+    formState: { errors: locationErrors },
+  } = useForm<ProviderLocationInput>({
+    resolver: zodResolver(providerLocationSchema),
+    defaultValues: {
+      serviceMode: "STUDIO",
+      studioAddress: "",
+      studioSuburb: "",
+      mobileRadius: undefined,
+      suburbs: [],
+    },
+  });
+
+  const serviceMode = watch("serviceMode");
+
+  useEffect(() => {
+    fetch("/api/providers/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data) {
+          resetLocation({
+            serviceMode: (data.serviceMode as "STUDIO" | "MOBILE" | "BOTH") ?? "STUDIO",
+            studioAddress: data.studioAddress ?? "",
+            studioSuburb: data.studioSuburb ?? "",
+            mobileRadius: data.mobileRadius ?? undefined,
+            suburbs: data.suburbs ?? [],
+          });
+        }
+      })
+      .catch(() => {});
+  }, [resetLocation]);
+
+  async function onSaveLocation(data: ProviderLocationInput) {
+    setSavingLocation(true);
+    try {
+      const res = await fetch("/api/providers", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          serviceMode: data.serviceMode,
+          studioAddress: data.studioAddress,
+          studioSuburb: data.studioSuburb,
+          mobileRadius: data.mobileRadius,
+          suburbs: data.suburbs,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error ?? "Save failed");
+      }
+      toast.success("Location & coverage saved");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to save location");
+    } finally {
+      setSavingLocation(false);
+    }
+  }
 
   useEffect(() => {
     fetch("/api/availability")
@@ -280,6 +357,122 @@ export default function ProviderAvailabilityPage() {
               {addingDate ? "Adding..." : "Add blocked date"}
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Location & coverage */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Location &amp; coverage</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleLocationSubmit(onSaveLocation)} className="space-y-6">
+            {/* Service mode */}
+            <Controller
+              name="serviceMode"
+              control={control}
+              render={({ field }) => (
+                <div className="space-y-2">
+                  <Label>Service mode</Label>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    {SERVICE_MODE_OPTIONS.map(({ value, label }) => (
+                      <label
+                        key={value}
+                        className={`flex items-center gap-2 border rounded-lg px-4 py-2.5 cursor-pointer transition ${
+                          field.value === value
+                            ? "border-indigo-600 bg-indigo-50 text-indigo-700"
+                            : "border-border hover:border-muted-foreground"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          className="sr-only"
+                          value={value}
+                          checked={field.value === value}
+                          onChange={() => field.onChange(value)}
+                        />
+                        <span className="text-sm font-medium">{label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+            />
+
+            {(serviceMode === "STUDIO" || serviceMode === "BOTH") && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="studioAddress">Studio address</Label>
+                  <Input id="studioAddress" {...register("studioAddress")} />
+                  {locationErrors.studioAddress && (
+                    <p className="text-sm text-red-500">{locationErrors.studioAddress.message}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="studioSuburb">Studio suburb</Label>
+                  <Input id="studioSuburb" {...register("studioSuburb")} />
+                </div>
+              </div>
+            )}
+
+            {(serviceMode === "MOBILE" || serviceMode === "BOTH") && (
+              <div className="space-y-2">
+                <Label htmlFor="mobileRadius">Mobile radius (km)</Label>
+                <Input
+                  id="mobileRadius"
+                  type="number"
+                  min={1}
+                  max={50}
+                  {...register("mobileRadius", { valueAsNumber: true })}
+                />
+                {locationErrors.mobileRadius && (
+                  <p className="text-sm text-red-500">{locationErrors.mobileRadius.message}</p>
+                )}
+              </div>
+            )}
+
+            {/* Service suburbs */}
+            <div className="space-y-2">
+              <Label>Service suburbs</Label>
+              <Controller
+                name="suburbs"
+                control={control}
+                render={({ field }) => (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {LAUNCH_SUBURBS.map((suburb) => {
+                      const checked = field.value.includes(suburb);
+                      return (
+                        <label key={suburb} className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => {
+                              if (checked) {
+                                field.onChange(field.value.filter((s) => s !== suburb));
+                              } else {
+                                field.onChange([...field.value, suburb]);
+                              }
+                            }}
+                            className="h-4 w-4 rounded border-border"
+                          />
+                          <span className="text-sm">{suburb}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
+              />
+              {locationErrors.suburbs && (
+                <p className="text-sm text-red-500">{locationErrors.suburbs.message}</p>
+              )}
+            </div>
+
+            <div className="pt-2">
+              <Button type="submit" disabled={savingLocation}>
+                {savingLocation ? "Saving..." : "Save location"}
+              </Button>
+            </div>
+          </form>
         </CardContent>
       </Card>
     </div>

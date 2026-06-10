@@ -22,15 +22,16 @@ import { Switch } from "@/components/ui/switch";
 import { serviceSchema, type ServiceInput } from "@/server/validation/service.schema";
 import type { Service } from "@/types";
 
+type ServiceType = "NAILS" | "LASHES";
+
 const CATEGORY_OPTIONS = [
   { value: "NAILS", label: "Nails" },
   { value: "LASHES", label: "Lashes" },
 ] as const;
 
-const SERVICE_MODE_OPTIONS = [
-  { value: "STUDIO", label: "Studio" },
-  { value: "MOBILE", label: "Mobile" },
-  { value: "BOTH", label: "Both" },
+const SERVICE_TYPE_OPTIONS = [
+  { value: "NAILS", label: "Nails" },
+  { value: "LASHES", label: "Lashes" },
 ] as const;
 
 export default function ProviderServicesPage() {
@@ -40,6 +41,8 @@ export default function ProviderServicesPage() {
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
+  const [savingServiceTypes, setSavingServiceTypes] = useState(false);
 
   const {
     register,
@@ -47,7 +50,6 @@ export default function ProviderServicesPage() {
     control,
     reset,
     formState: { errors },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } = useForm<ServiceInput>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(serviceSchema) as any,
@@ -60,7 +62,41 @@ export default function ProviderServicesPage() {
 
   useEffect(() => {
     loadServices();
+    fetch("/api/providers/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data && Array.isArray(data.serviceTypes)) {
+          setServiceTypes(data.serviceTypes as ServiceType[]);
+        }
+      })
+      .catch(() => {});
   }, []);
+
+  function toggleServiceType(value: ServiceType) {
+    setServiceTypes((prev) =>
+      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
+    );
+  }
+
+  async function saveServiceTypes() {
+    setSavingServiceTypes(true);
+    try {
+      const res = await fetch("/api/providers", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ serviceTypes }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error ?? "Save failed");
+      }
+      toast.success("Service types saved");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to save service types");
+    } finally {
+      setSavingServiceTypes(false);
+    }
+  }
 
   async function loadServices() {
     try {
@@ -158,6 +194,40 @@ export default function ProviderServicesPage() {
 
       <Card>
         <CardHeader>
+          <CardTitle>Service types</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            The categories of services you offer. This controls how customers discover you.
+          </p>
+          <div className="flex gap-3">
+            {SERVICE_TYPE_OPTIONS.map(({ value, label }) => {
+              const checked = serviceTypes.includes(value);
+              return (
+                <label key={value} className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggleServiceType(value)}
+                    className="h-4 w-4 rounded border-border"
+                  />
+                  <span className="text-sm font-medium">{label}</span>
+                </label>
+              );
+            })}
+          </div>
+          <Button
+            onClick={saveServiceTypes}
+            disabled={savingServiceTypes || serviceTypes.length === 0}
+            variant="outline"
+          >
+            {savingServiceTypes ? "Saving..." : "Save service types"}
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>Your services ({services.length})</CardTitle>
         </CardHeader>
         <CardContent>
@@ -192,8 +262,6 @@ export default function ProviderServicesPage() {
                       <span>{service.durationMinutes} min</span>
                       <span>&middot;</span>
                       <span>${(service.basePrice / 100).toFixed(2)}</span>
-                      <span>&middot;</span>
-                      <span>{service.serviceMode}</span>
                     </div>
                   </div>
                   <div className="flex gap-2 shrink-0">
@@ -292,38 +360,6 @@ export default function ProviderServicesPage() {
                   <p className="text-sm text-red-500">{errors.basePrice.message}</p>
                 )}
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Service mode</Label>
-              <Controller
-                name="serviceMode"
-                control={control}
-                render={({ field }) => (
-                  <div className="flex gap-2 flex-wrap">
-                    {SERVICE_MODE_OPTIONS.map(({ value, label }) => (
-                      <label key={value} className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          className="sr-only"
-                          value={value}
-                          checked={field.value === value}
-                          onChange={() => field.onChange(value)}
-                        />
-                        <span
-                          className={`border rounded-lg px-3 py-1.5 text-sm font-medium cursor-pointer transition ${
-                            field.value === value
-                              ? "border-indigo-600 bg-indigo-50 text-indigo-700"
-                              : "border-border hover:border-muted-foreground"
-                          }`}
-                        >
-                          {label}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                )}
-              />
             </div>
 
             <Controller
