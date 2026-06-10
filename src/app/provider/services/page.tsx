@@ -22,14 +22,7 @@ import { Switch } from "@/components/ui/switch";
 import { serviceSchema, type ServiceInput } from "@/server/validation/service.schema";
 import type { Service } from "@/types";
 
-type ServiceType = "NAILS" | "LASHES";
-
 const CATEGORY_OPTIONS = [
-  { value: "NAILS", label: "Nails" },
-  { value: "LASHES", label: "Lashes" },
-] as const;
-
-const SERVICE_TYPE_OPTIONS = [
   { value: "NAILS", label: "Nails" },
   { value: "LASHES", label: "Lashes" },
 ] as const;
@@ -41,8 +34,6 @@ export default function ProviderServicesPage() {
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
-  const [savingServiceTypes, setSavingServiceTypes] = useState(false);
 
   const {
     register,
@@ -62,41 +53,7 @@ export default function ProviderServicesPage() {
 
   useEffect(() => {
     loadServices();
-    fetch("/api/providers/me")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (data && Array.isArray(data.serviceTypes)) {
-          setServiceTypes(data.serviceTypes as ServiceType[]);
-        }
-      })
-      .catch(() => {});
   }, []);
-
-  function toggleServiceType(value: ServiceType) {
-    setServiceTypes((prev) =>
-      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
-    );
-  }
-
-  async function saveServiceTypes() {
-    setSavingServiceTypes(true);
-    try {
-      const res = await fetch("/api/providers", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ serviceTypes }),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error ?? "Save failed");
-      }
-      toast.success("Service types saved");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to save service types");
-    } finally {
-      setSavingServiceTypes(false);
-    }
-  }
 
   async function loadServices() {
     try {
@@ -191,40 +148,6 @@ export default function ProviderServicesPage() {
           Add service
         </Button>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Service types</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <p className="text-sm text-muted-foreground">
-            The categories of services you offer. This controls how customers discover you.
-          </p>
-          <div className="flex gap-3">
-            {SERVICE_TYPE_OPTIONS.map(({ value, label }) => {
-              const checked = serviceTypes.includes(value);
-              return (
-                <label key={value} className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={() => toggleServiceType(value)}
-                    className="h-4 w-4 rounded border-border"
-                  />
-                  <span className="text-sm font-medium">{label}</span>
-                </label>
-              );
-            })}
-          </div>
-          <Button
-            onClick={saveServiceTypes}
-            disabled={savingServiceTypes || serviceTypes.length === 0}
-            variant="outline"
-          >
-            {savingServiceTypes ? "Saving..." : "Save service types"}
-          </Button>
-        </CardContent>
-      </Card>
 
       <Card>
         <CardHeader>
