@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { ProviderReviews } from "@/components/provider/provider-reviews";
 
 // Lightweight editor schema: businessName and bio are saved incrementally, so
 // each field can be left empty without blocking a save of the other. We keep
@@ -292,6 +293,17 @@ export default function ProviderProfilePage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Reviews */}
+      <div className="space-y-4 border-t border-border pt-8">
+        <div>
+          <h2 className="text-lg font-semibold">Reviews</h2>
+          <p className="text-muted-foreground text-sm mt-1">
+            Reviews from your customers
+          </p>
+        </div>
+        <ProviderReviews />
+      </div>
     </div>
   );
 }

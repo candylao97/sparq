@@ -63,3 +63,26 @@ export function deriveProviderStats(
 
   return { pendingCount, confirmedCount, completedCount };
 }
+
+/**
+ * Pure sum of earnings for COMPLETED bookings whose bookingDate falls within
+ * `now`'s calendar month and year. Per completed booking it uses
+ * `payment.amount` when present, otherwise `totalPrice`, otherwise 0 — matching
+ * the earnings view's money convention exactly (units are not normalised here).
+ * Takes `now` as an argument (never calls `new Date()`) so it is unit-testable.
+ */
+export function deriveThisMonthEarnings(
+  bookings: BookingWithDetails[],
+  now: Date
+): number {
+  return bookings
+    .filter((b) => b.status === "COMPLETED")
+    .filter((b) => {
+      const d = new Date(b.bookingDate);
+      return (
+        d.getMonth() === now.getMonth() &&
+        d.getFullYear() === now.getFullYear()
+      );
+    })
+    .reduce((sum, b) => sum + (b.payment?.amount ?? b.totalPrice ?? 0), 0);
+}

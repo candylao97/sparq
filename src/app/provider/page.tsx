@@ -5,22 +5,22 @@ import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import {
-  ArrowRight,
-  Bell,
+  Clock,
   CalendarClock,
   CheckCircle2,
   ChevronRight,
-  Clock,
-  Inbox,
+  DollarSign,
   Loader2,
 } from "lucide-react";
 import Link from "next/link";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { BOOKING_STATUS_LABELS } from "@/lib/constants";
 import {
   deriveProviderStats,
-  orderProviderBookings,
+  deriveThisMonthEarnings,
 } from "@/lib/provider-dashboard";
 import { deriveFirstName } from "@/lib/customer-dashboard";
 import type { BookingWithDetails } from "@/types";
@@ -42,7 +42,133 @@ function getStatusVariant(status: string): StatusVariant {
   return map[status] ?? "gray";
 }
 
-export default function ProviderOverviewPage() {
+function BookingCard({
+  booking,
+  onRespond,
+  onComplete,
+  respondingId,
+  respondingAction,
+  completingId,
+}: {
+  booking: BookingWithDetails;
+  onRespond: (id: string, action: "accept" | "decline") => void;
+  onComplete: (id: string) => void;
+  respondingId: string | null;
+  respondingAction: "accept" | "decline" | null;
+  completingId: string | null;
+}) {
+  const isResponding = respondingId === booking.id;
+  return (
+    <div className="py-4 flex flex-col sm:flex-row sm:items-start justify-between gap-3 border-b border-border last:border-0">
+      <div className="space-y-1 flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="font-medium text-sm">
+            {booking.customer?.name ?? "Unknown customer"}
+          </span>
+          <Badge variant={getStatusVariant(booking.status)}>
+            {BOOKING_STATUS_LABELS[booking.status] ?? booking.status}
+          </Badge>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          {booking.service?.title}
+        </p>
+        <p className="text-sm text-muted-foreground">
+          {format(new Date(booking.bookingDate), "EEEE d MMM yyyy")} at {booking.startTime}
+        </p>
+        <p className="text-sm font-medium">
+          ${(booking.totalPrice ?? 0).toFixed(2)}
+        </p>
+        {booking.customer?.email && (
+          <p className="text-xs text-muted-foreground">{booking.customer.email}</p>
+        )}
+      </div>
+
+      <div className="flex gap-2 shrink-0">
+        {booking.status === "PENDING_PROVIDER_RESPONSE" && (
+          <>
+            <Button
+              size="sm"
+              onClick={() => onRespond(booking.id, "accept")}
+              disabled={isResponding}
+            >
+              {isResponding && respondingAction === "accept" ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" aria-hidden />
+                  Accepting…
+                </>
+              ) : (
+                "Accept"
+              )}
+            </Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={() => onRespond(booking.id, "decline")}
+              disabled={isResponding}
+            >
+              {isResponding && respondingAction === "decline" ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" aria-hidden />
+                  Declining…
+                </>
+              ) : (
+                "Decline"
+              )}
+            </Button>
+          </>
+        )}
+        {booking.status === "CONFIRMED" && (
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => onComplete(booking.id)}
+            disabled={completingId === booking.id}
+          >
+            {completingId === booking.id ? "Marking..." : "Mark complete"}
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function BookingList({
+  bookings,
+  loading,
+  onRespond,
+  onComplete,
+  respondingId,
+  respondingAction,
+  completingId,
+}: {
+  bookings: BookingWithDetails[];
+  loading: boolean;
+  onRespond: (id: string, action: "accept" | "decline") => void;
+  onComplete: (id: string) => void;
+  respondingId: string | null;
+  respondingAction: "accept" | "decline" | null;
+  completingId: string | null;
+}) {
+  if (loading) return <p className="text-sm text-muted-foreground p-2">Loading...</p>;
+  if (bookings.length === 0) return <p className="text-sm text-muted-foreground p-2">No bookings found.</p>;
+  return (
+    <div>
+      {bookings.map((b) => (
+        <BookingCard
+          key={b.id}
+          booking={b}
+          onRespond={onRespond}
+          onComplete={onComplete}
+          respondingId={respondingId}
+          respondingAction={respondingAction}
+          completingId={completingId}
+        />
+      ))}
+    </div>
+  );
+}
+
+export default function ProviderBookingsPage() {
   const { data: session } = useSession();
   const [bookings, setBookings] = useState<BookingWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,6 +176,7 @@ export default function ProviderOverviewPage() {
   const [respondingAction, setRespondingAction] = useState<
     "accept" | "decline" | null
   >(null);
+  const [completingId, setCompletingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/bookings")
@@ -59,12 +186,7 @@ export default function ProviderOverviewPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const orderedBookings = orderProviderBookings(bookings);
-  const { pendingCount, confirmedCount, completedCount } =
-    deriveProviderStats(bookings);
-  const firstName = deriveFirstName(session?.user?.name);
-
-  async function respond(id: string, action: "accept" | "decline") {
+  async function handleRespond(id: string, action: "accept" | "decline") {
     setRespondingId(id);
     setRespondingAction(action);
     try {
@@ -74,14 +196,11 @@ export default function ProviderOverviewPage() {
         body: JSON.stringify({ action }),
       });
       if (!res.ok) throw new Error();
-      toast.success(action === "accept" ? "Booking accepted" : "Booking declined");
+      const newStatus = action === "accept" ? "CONFIRMED" : "DECLINED";
       setBookings((prev) =>
-        prev.map((b) =>
-          b.id === id
-            ? { ...b, status: action === "accept" ? "CONFIRMED" : "DECLINED" }
-            : b
-        )
+        prev.map((b) => (b.id === id ? { ...b, status: newStatus } : b))
       );
+      toast.success(action === "accept" ? "Booking accepted" : "Booking declined");
     } catch {
       toast.error("Failed to respond to booking");
     } finally {
@@ -90,14 +209,46 @@ export default function ProviderOverviewPage() {
     }
   }
 
+  async function handleComplete(id: string) {
+    setCompletingId(id);
+    try {
+      const res = await fetch(`/api/bookings/${id}/complete`, { method: "POST" });
+      if (!res.ok) throw new Error();
+      setBookings((prev) =>
+        prev.map((b) => (b.id === id ? { ...b, status: "COMPLETED" } : b))
+      );
+      toast.success("Booking marked as complete");
+    } catch {
+      toast.error("Failed to mark booking complete");
+    } finally {
+      setCompletingId(null);
+    }
+  }
+
+  const firstName = deriveFirstName(session?.user?.name);
+  const { pendingCount, confirmedCount, completedCount } =
+    deriveProviderStats(bookings);
+  const thisMonthEarnings = deriveThisMonthEarnings(bookings, new Date());
+
+  const pending = bookings.filter((b) => b.status === "PENDING_PROVIDER_RESPONSE");
+  const confirmed = bookings.filter((b) => b.status === "CONFIRMED");
+  const completed = bookings.filter((b) => b.status === "COMPLETED");
+
+  const tabData = [
+    { value: "pending", label: `Pending (${pending.length})`, bookings: pending },
+    { value: "confirmed", label: `Confirmed (${confirmed.length})`, bookings: confirmed },
+    { value: "completed", label: `Completed (${completed.length})`, bookings: completed },
+    { value: "all", label: `All (${bookings.length})`, bookings },
+  ];
+
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold tracking-tight text-neutral-900">
-        {firstName ? `Hi ${firstName}` : "Overview"}
+        {firstName ? `Hi ${firstName}` : "Bookings"}
       </h1>
 
       {/* At a glance */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <div className="rounded-2xl border border-neutral-200 bg-white p-4">
           <div className="flex items-center gap-2 text-neutral-500">
             <Clock className="size-4 text-neutral-400" />
@@ -120,7 +271,7 @@ export default function ProviderOverviewPage() {
             {confirmedCount}
           </p>
         </div>
-        <div className="col-span-2 rounded-2xl border border-neutral-200 bg-white p-4 sm:col-span-1">
+        <div className="rounded-2xl border border-neutral-200 bg-white p-4">
           <div className="flex items-center gap-2 text-neutral-500">
             <CheckCircle2 className="size-4 text-neutral-400" />
             <span className="text-xs font-semibold uppercase tracking-wider">
@@ -131,180 +282,57 @@ export default function ProviderOverviewPage() {
             {completedCount}
           </p>
         </div>
-      </div>
-
-      {/* Contextual nudge: pending requests awaiting a response */}
-      {pendingCount > 0 && (
         <Link
-          href="#booking-requests"
-          className="group flex items-center gap-3 rounded-xl bg-amber-50 px-5 py-4 transition-colors hover:bg-amber-100/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+          href="/provider/settings"
+          aria-label="This month's earnings — view payout details"
+          className="rounded-2xl border border-indigo-200 bg-indigo-50 p-4 transition-colors hover:bg-indigo-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2"
         >
-          <Bell
-            className="size-5 shrink-0 fill-amber-400 text-amber-400"
-            aria-hidden="true"
-          />
-          <p className="min-w-0 flex-1 text-sm font-medium text-neutral-900">
-            You have {pendingCount} request{pendingCount === 1 ? "" : "s"}{" "}
-            waiting for your response
+          <div className="flex items-center justify-between text-indigo-600">
+            <div className="flex items-center gap-2">
+              <DollarSign className="size-4 text-indigo-500" />
+              <span className="text-xs font-semibold uppercase tracking-wider">
+                This month
+              </span>
+            </div>
+            <ChevronRight className="size-4 text-indigo-400" aria-hidden="true" />
+          </div>
+          <p className="mt-2 text-2xl font-bold text-indigo-900">
+            ${thisMonthEarnings.toFixed(2)}
           </p>
-          <ChevronRight
-            className="size-5 shrink-0 text-neutral-400 transition-transform group-hover:translate-x-0.5"
-            aria-hidden="true"
-          />
         </Link>
-      )}
+      </div>
 
       {/* Booking requests */}
-      <div id="booking-requests" className="space-y-3">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-neutral-500">
-          Booking requests
-        </h2>
-        {loading ? (
-          <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white">
-            {renderSkeleton()}
-          </div>
-        ) : orderedBookings.length === 0 ? (
-          renderEmptyState()
-        ) : (
-          <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white">
-            <ul>
-              {orderedBookings.map((booking, i) =>
-                renderBookingRow(booking, i)
-              )}
-            </ul>
-          </div>
-        )}
-      </div>
+      <Tabs defaultValue="pending">
+        <TabsList className="flex-wrap h-auto">
+          {tabData.map(({ value, label }) => (
+            <TabsTrigger key={value} value={value} className="text-xs sm:text-sm">
+              {label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
 
-      {/* Footer */}
-      <p className="pt-2 text-sm text-neutral-500">
-        Questions?{" "}
-        <Link
-          href="/contact"
-          className="font-medium text-neutral-900 hover:underline"
-        >
-          Reach out to us.
-        </Link>
-      </p>
+        {tabData.map(({ value, bookings: tabBookings }) => (
+          <TabsContent key={value} value={value}>
+            <Card>
+              <CardHeader>
+                <CardTitle className="capitalize">{value === "all" ? "All bookings" : `${value} bookings`}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <BookingList
+                  bookings={tabBookings}
+                  loading={loading}
+                  onRespond={handleRespond}
+                  onComplete={handleComplete}
+                  respondingId={respondingId}
+                  respondingAction={respondingAction}
+                  completingId={completingId}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        ))}
+      </Tabs>
     </div>
   );
-
-  function renderSkeleton() {
-    return (
-      <div aria-hidden="true">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <div
-            key={i}
-            className={`flex items-start justify-between gap-4 px-5 py-4 ${
-              i > 0 ? "border-t border-neutral-100" : ""
-            }`}
-          >
-            <div className="space-y-2">
-              <div className="h-4 w-40 animate-pulse rounded bg-neutral-100" />
-              <div className="h-3.5 w-56 animate-pulse rounded bg-neutral-100" />
-              <div className="h-4 w-16 animate-pulse rounded bg-neutral-100" />
-            </div>
-            <div className="h-8 w-32 animate-pulse rounded-md bg-neutral-100" />
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  function renderEmptyState() {
-    return (
-      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-neutral-200 bg-white px-6 py-12 text-center">
-        <Inbox className="mb-3 size-10 text-neutral-300" aria-hidden="true" />
-        <p className="font-medium text-neutral-700">No bookings yet</p>
-        <p className="mt-1 text-sm text-neutral-400">
-          New booking requests from customers will appear here.
-        </p>
-        <Link href="/provider/availability" className="mt-5">
-          <Button>
-            Set your availability
-            <ArrowRight className="size-4" />
-          </Button>
-        </Link>
-      </div>
-    );
-  }
-
-  function renderBookingRow(booking: BookingWithDetails, index: number) {
-    const isPending = booking.status === "PENDING_PROVIDER_RESPONSE";
-    const isResponding = respondingId === booking.id;
-    const customerName = booking.customer?.name ?? "Unknown customer";
-    const statusLabel = BOOKING_STATUS_LABELS[booking.status] ?? booking.status;
-
-    return (
-      <li
-        key={booking.id}
-        className={`flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between ${
-          index > 0 ? "border-t border-neutral-100" : ""
-        } ${isPending ? "bg-yellow-50/60" : ""}`}
-      >
-        <div className="min-w-0 space-y-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="truncate text-sm font-medium text-neutral-900">
-              {customerName}
-            </span>
-            <Badge variant={getStatusVariant(booking.status)}>
-              <span className="sr-only">Status: </span>
-              {statusLabel}
-            </Badge>
-          </div>
-          <p className="flex min-w-0 items-center gap-1.5 text-sm text-neutral-600">
-            <CalendarClock
-              className="size-3.5 shrink-0 text-neutral-400"
-              aria-hidden="true"
-            />
-            <span className="truncate">
-              {booking.service?.title} &middot;{" "}
-              {format(new Date(booking.bookingDate), "d MMM yyyy")} at{" "}
-              {booking.startTime}
-            </span>
-          </p>
-          <p className="text-sm font-semibold tabular-nums text-neutral-900">
-            ${(booking.totalPrice ?? 0).toFixed(2)}
-          </p>
-        </div>
-        {isPending && (
-          <div className="flex shrink-0 gap-2">
-            <Button
-              size="sm"
-              onClick={() => respond(booking.id, "accept")}
-              disabled={isResponding}
-              aria-label={`Accept booking from ${customerName}`}
-              className="flex-1 sm:flex-none"
-            >
-              {isResponding && respondingAction === "accept" ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-                  Accepting…
-                </>
-              ) : (
-                "Accept"
-              )}
-            </Button>
-            <Button
-              size="sm"
-              variant="destructive"
-              onClick={() => respond(booking.id, "decline")}
-              disabled={isResponding}
-              aria-label={`Decline booking from ${customerName}`}
-              className="flex-1 sm:flex-none"
-            >
-              {isResponding && respondingAction === "decline" ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-                  Declining…
-                </>
-              ) : (
-                "Decline"
-              )}
-            </Button>
-          </div>
-        )}
-      </li>
-    );
-  }
 }

@@ -31,13 +31,10 @@ import {
 } from "@/components/provider/provider-nav";
 
 const PROVIDER_LINKS: { href: string; label: string }[] = [
-  { href: "/provider", label: "Overview" },
-  { href: "/provider/profile", label: "Profile" },
-  { href: "/provider/services", label: "Services" },
+  { href: "/provider", label: "Bookings" },
   { href: "/provider/availability", label: "Availability" },
-  { href: "/provider/bookings", label: "Bookings" },
-  { href: "/provider/earnings", label: "Earnings" },
-  { href: "/provider/reviews", label: "Reviews" },
+  { href: "/provider/services", label: "Services" },
+  { href: "/provider/profile", label: "Profile" },
   { href: "/provider/settings", label: "Settings" },
 ];
 
@@ -48,7 +45,7 @@ afterEach(() => {
 });
 
 describe("ProviderNavSidebar", () => {
-  it("renders all 8 provider links with correct labels and hrefs", () => {
+  it("renders the 5 provider links with correct labels and hrefs", () => {
     usePathname.mockReturnValue("/provider");
     render(<ProviderNavSidebar />);
 
@@ -61,35 +58,40 @@ describe("ProviderNavSidebar", () => {
     }
   });
 
-  it("marks only the Overview link active on the /provider root", () => {
+  it("marks only the Bookings link active on the /provider root", () => {
     usePathname.mockReturnValue("/provider");
     render(<ProviderNavSidebar />);
 
-    const overview = screen.getByRole("link", { name: "Overview" });
-    expect(overview).toHaveAttribute("aria-current", "page");
-    expect(overview).toHaveClass(
+    const bookings = screen.getByRole("link", { name: "Bookings" });
+    expect(bookings).toHaveAttribute("aria-current", "page");
+    expect(bookings).toHaveClass(
       "border-neutral-900",
       "bg-white",
       "font-semibold",
       "text-neutral-900"
     );
 
-    // Every other link is inactive.
+    // Every other link is inactive. The four primary inactive items use the
+    // standard text-neutral-600 treatment; Settings is deliberately rendered
+    // with a muted text-neutral-400 (still inactive, transparent border).
     for (const { label } of PROVIDER_LINKS.filter(
-      (l) => l.label !== "Overview"
+      (l) => l.label !== "Bookings"
     )) {
       const link = screen.getByRole("link", { name: label });
       expect(link).not.toHaveAttribute("aria-current");
-      expect(link).toHaveClass("border-transparent", "text-neutral-600");
+      expect(link).toHaveClass("border-transparent");
+      expect(link).toHaveClass(
+        label === "Settings" ? "text-neutral-500" : "text-neutral-600"
+      );
     }
   });
 
-  it("does not mark Overview active on a nested provider sub-path", () => {
-    usePathname.mockReturnValue("/provider/bookings");
+  it("does not mark Bookings active on a nested provider sub-path", () => {
+    usePathname.mockReturnValue("/provider/availability");
     render(<ProviderNavSidebar />);
 
     expect(
-      screen.getByRole("link", { name: "Overview" })
+      screen.getByRole("link", { name: "Bookings" })
     ).not.toHaveAttribute("aria-current");
   });
 
@@ -102,43 +104,43 @@ describe("ProviderNavSidebar", () => {
     expect(services).toHaveClass("border-neutral-900", "font-semibold");
 
     expect(
-      screen.getByRole("link", { name: "Overview" })
+      screen.getByRole("link", { name: "Bookings" })
     ).not.toHaveAttribute("aria-current");
   });
 
   it("marks a section link active on a nested sub-path", () => {
-    usePathname.mockReturnValue("/provider/bookings/abc-123");
+    usePathname.mockReturnValue("/provider/services/abc-123");
     render(<ProviderNavSidebar />);
 
     expect(
-      screen.getByRole("link", { name: "Bookings" })
+      screen.getByRole("link", { name: "Services" })
     ).toHaveAttribute("aria-current", "page");
   });
 
   it("activates exactly one link for any given route", () => {
-    usePathname.mockReturnValue("/provider/earnings");
+    usePathname.mockReturnValue("/provider/settings");
     render(<ProviderNavSidebar />);
 
     const active = screen
       .getAllByRole("link")
       .filter((el) => el.getAttribute("aria-current") === "page");
     expect(active).toHaveLength(1);
-    expect(active[0]).toHaveAccessibleName("Earnings");
+    expect(active[0]).toHaveAccessibleName("Settings");
   });
 
   it("does not mark a sibling whose href is a string prefix of the path", () => {
-    // "/provider/bookingsX" must not activate "/provider/bookings".
-    usePathname.mockReturnValue("/provider/bookingsX");
+    // "/provider/servicesX" must not activate "/provider/services".
+    usePathname.mockReturnValue("/provider/servicesX");
     render(<ProviderNavSidebar />);
 
     expect(
-      screen.getByRole("link", { name: "Bookings" })
+      screen.getByRole("link", { name: "Services" })
     ).not.toHaveAttribute("aria-current");
   });
 });
 
 describe("ProviderNavMobile", () => {
-  it("renders all 8 links reachable on mobile", () => {
+  it("renders all 5 links reachable on mobile", () => {
     usePathname.mockReturnValue("/provider");
     render(<ProviderNavMobile />);
 
@@ -153,16 +155,16 @@ describe("ProviderNavMobile", () => {
   });
 
   it("applies the active underline treatment to the current section", () => {
-    usePathname.mockReturnValue("/provider/reviews");
+    usePathname.mockReturnValue("/provider/profile");
     render(<ProviderNavMobile />);
 
-    const reviews = screen.getByRole("link", { name: "Reviews" });
-    expect(reviews).toHaveAttribute("aria-current", "page");
-    expect(reviews).toHaveClass("border-b-2", "border-neutral-900");
+    const profile = screen.getByRole("link", { name: "Profile" });
+    expect(profile).toHaveAttribute("aria-current", "page");
+    expect(profile).toHaveClass("border-b-2", "border-neutral-900");
 
-    const overview = screen.getByRole("link", { name: "Overview" });
-    expect(overview).not.toHaveAttribute("aria-current");
-    expect(overview).toHaveClass("text-neutral-500");
+    const bookings = screen.getByRole("link", { name: "Bookings" });
+    expect(bookings).not.toHaveAttribute("aria-current");
+    expect(bookings).toHaveClass("text-neutral-500");
   });
 
   it("renders an icon alongside each link label", () => {

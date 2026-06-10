@@ -30,7 +30,7 @@ interface ReviewData {
   bookingDate: string;
 }
 
-export default function ProviderReviewsPage() {
+export function ProviderReviews() {
   const [reviews, setReviews] = useState<ReviewData[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -67,12 +67,7 @@ export default function ProviderReviewsPage() {
   }));
 
   return (
-    <div className="space-y-8 max-w-3xl">
-      <div>
-        <h1 className="text-2xl font-bold">Reviews</h1>
-        <p className="text-muted-foreground text-sm mt-1">Reviews from your customers</p>
-      </div>
-
+    <div className="space-y-6">
       {/* Summary */}
       <Card>
         <CardContent className="p-6">
@@ -122,7 +117,7 @@ export default function ProviderReviewsPage() {
             <CardTitle>All reviews</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="divide-y divide-border">
+            <div className="max-h-[28rem] overflow-y-auto divide-y divide-border">
               {reviews
                 .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
                 .map((review) => (
