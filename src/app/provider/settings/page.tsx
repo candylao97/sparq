@@ -3,16 +3,30 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  splitName,
+  joinName,
+  maskAccountNumber,
+  maskBsb,
+} from "@/lib/account-display";
+
+const updateLink =
+  "text-sm font-medium text-neutral-900 underline-offset-2 hover:underline";
 
 export default function ProviderSettingsPage() {
   const { data: session, update } = useSession();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [profileDraft, setProfileDraft] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+  });
 
   // Payout (bank) details
   const [accountName, setAccountName] = useState("");
@@ -20,6 +34,7 @@ export default function ProviderSettingsPage() {
   const [accountNumber, setAccountNumber] = useState("");
   const [loadingPayout, setLoadingPayout] = useState(true);
   const [savingPayout, setSavingPayout] = useState(false);
+  const [editingPayout, setEditingPayout] = useState(false);
 
   useEffect(() => {
     if (session?.user) {
@@ -46,8 +61,16 @@ export default function ProviderSettingsPage() {
       .finally(() => setLoadingPayout(false));
   }, []);
 
+  function startEditProfile() {
+    const { firstName, lastName } = splitName(name);
+    setProfileDraft({ firstName, lastName, email });
+    setEditingProfile(true);
+  }
+
   async function saveProfile() {
-    if (!name.trim() || !email.trim()) {
+    const nextName = joinName(profileDraft.firstName, profileDraft.lastName);
+    const nextEmail = profileDraft.email;
+    if (!nextName.trim() || !nextEmail.trim()) {
       toast.error("Name and email are required");
       return;
     }
@@ -56,14 +79,17 @@ export default function ProviderSettingsPage() {
       const res = await fetch("/api/user/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email }),
+        body: JSON.stringify({ name: nextName, email: nextEmail }),
       });
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.error ?? "Failed to save");
       }
-      await update({ name, email });
+      await update({ name: nextName, email: nextEmail });
+      setName(nextName);
+      setEmail(nextEmail);
       toast.success("Profile updated");
+      setEditingProfile(false);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to update profile");
     } finally {
@@ -84,6 +110,7 @@ export default function ProviderSettingsPage() {
         throw new Error(err.error ?? "Failed to save");
       }
       toast.success("Payout details saved");
+      setEditingPayout(false);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to save payout details");
     } finally {
@@ -91,111 +118,155 @@ export default function ProviderSettingsPage() {
     }
   }
 
+  const hasPayout = Boolean(accountName || bsb || accountNumber);
+
   return (
-    <div className="space-y-8 max-w-2xl">
-      <div>
-        <h1 className="text-2xl font-bold">Settings</h1>
-        <p className="text-muted-foreground text-sm mt-1">Manage your account settings</p>
-      </div>
+    <div className="max-w-xl space-y-8">
+      <h1 className="text-3xl font-bold tracking-tight text-neutral-900">
+        Settings
+      </h1>
 
       {/* Account details */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Account details</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-5">
-          <div className="space-y-2">
-            <Label htmlFor="name">Full name</Label>
-            <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Your full name"
-            />
+      <section>
+        {!editingProfile ? (
+          <div className="space-y-1">
+            <p className="text-lg font-semibold text-neutral-900">
+              {name || "Your name"}
+            </p>
+            <p className="text-neutral-600">{email}</p>
+            <button onClick={startEditProfile} className={`${updateLink} pt-2`}>
+              Update account details
+            </button>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="email">Email address</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-            />
-          </div>
-          <Button onClick={saveProfile} disabled={savingProfile}>
-            {savingProfile ? "Saving..." : "Save changes"}
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Payout details */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Payout details</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-5">
-          <p className="text-sm text-muted-foreground">
-            Your earnings are paid to this Australian bank account after each
-            completed booking.
-          </p>
-          {loadingPayout ? (
-            <p className="text-sm text-muted-foreground">Loading…</p>
-          ) : (
-            <>
+        ) : (
+          <div className="space-y-4">
+            <p className="text-lg font-semibold text-neutral-900">
+              Account details
+            </p>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="accountName">Account name</Label>
+                <Label htmlFor="firstName">First name</Label>
                 <Input
-                  id="accountName"
-                  value={accountName}
-                  onChange={(e) => setAccountName(e.target.value)}
-                  placeholder="Name on the bank account"
+                  id="firstName"
+                  value={profileDraft.firstName}
+                  onChange={(e) =>
+                    setProfileDraft({ ...profileDraft, firstName: e.target.value })
+                  }
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="bsb">BSB</Label>
-                  <Input
-                    id="bsb"
-                    value={bsb}
-                    onChange={(e) => setBsb(e.target.value)}
-                    placeholder="062-000"
-                    inputMode="numeric"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="accountNumber">Account number</Label>
-                  <Input
-                    id="accountNumber"
-                    value={accountNumber}
-                    onChange={(e) => setAccountNumber(e.target.value)}
-                    placeholder="12345678"
-                    inputMode="numeric"
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Last name</Label>
+                <Input
+                  id="lastName"
+                  value={profileDraft.lastName}
+                  onChange={(e) =>
+                    setProfileDraft({ ...profileDraft, lastName: e.target.value })
+                  }
+                />
               </div>
-              <Button onClick={savePayout} disabled={savingPayout}>
-                {savingPayout ? "Saving..." : "Save payout details"}
-              </Button>
-            </>
-          )}
-        </CardContent>
-      </Card>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email address</Label>
+              <Input
+                id="email"
+                type="email"
+                value={profileDraft.email}
+                onChange={(e) =>
+                  setProfileDraft({ ...profileDraft, email: e.target.value })
+                }
+              />
+            </div>
+            <Button size="sm" onClick={saveProfile} disabled={savingProfile}>
+              {savingProfile ? "Saving…" : "Save changes"}
+            </Button>
+          </div>
+        )}
+      </section>
 
-      {/* Danger zone */}
-      <Card className="border-destructive/30">
-        <CardHeader>
-          <CardTitle className="text-destructive">Danger zone</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground mb-3">
-            Permanently delete your account and all associated data. This action cannot be undone.
-          </p>
-          <Button variant="destructive" disabled>
-            Delete account
-          </Button>
-        </CardContent>
-      </Card>
+      <hr className="border-neutral-200" />
+
+      {/* Payout details */}
+      <section>
+        {!editingPayout ? (
+          <div className="space-y-1">
+            <p className="text-lg font-semibold text-neutral-900">
+              Payout details
+            </p>
+            {loadingPayout ? (
+              <p className="text-neutral-600">Loading…</p>
+            ) : hasPayout ? (
+              <div className="space-y-0.5 text-neutral-600">
+                {accountName && <p>{accountName}</p>}
+                <p className="tracking-wide">
+                  {[maskBsb(bsb), maskAccountNumber(accountNumber)]
+                    .filter(Boolean)
+                    .join("  ·  ")}
+                </p>
+              </div>
+            ) : (
+              <p className="text-neutral-600">Not set up yet</p>
+            )}
+            <p className="pt-1 text-sm text-neutral-600">
+              Your earnings are paid to this Australian bank account after each
+              completed booking.
+            </p>
+            {!loadingPayout && (
+              <button
+                onClick={() => setEditingPayout(true)}
+                className={`${updateLink} pt-2`}
+              >
+                Update payout details
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <p className="text-lg font-semibold text-neutral-900">
+              Payout details
+            </p>
+            <p className="text-sm text-neutral-600">
+              Your earnings are paid to this Australian bank account after each
+              completed booking.
+            </p>
+            <div className="space-y-2">
+              <Label htmlFor="accountName">Account name</Label>
+              <Input
+                id="accountName"
+                value={accountName}
+                onChange={(e) => setAccountName(e.target.value)}
+                placeholder="Name on the bank account"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="bsb">BSB</Label>
+                <Input
+                  id="bsb"
+                  value={bsb}
+                  onChange={(e) => setBsb(e.target.value)}
+                  placeholder="062-000"
+                  inputMode="numeric"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="accountNumber">Account number</Label>
+                <Input
+                  id="accountNumber"
+                  value={accountNumber}
+                  onChange={(e) => setAccountNumber(e.target.value)}
+                  placeholder="12345678"
+                  inputMode="numeric"
+                />
+              </div>
+            </div>
+            <Button size="sm" onClick={savePayout} disabled={savingPayout}>
+              {savingPayout ? "Saving…" : "Save changes"}
+            </Button>
+          </div>
+        )}
+      </section>
+
+      <hr className="border-neutral-200" />
     </div>
   );
 }
