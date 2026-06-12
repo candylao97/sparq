@@ -1,11 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Plus, X } from "lucide-react";
-import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +13,19 @@ import {
   providerLocationSchema,
   type ProviderLocationInput,
 } from "@/server/validation/provider.schema";
+import { AvailabilityCalendar } from "@/components/provider/availability-calendar";
+import {
+  AvailabilityDayPanel,
+  type SaveDayPayload,
+} from "@/components/provider/availability-day-panel";
+import {
+  buildDayMaps,
+  effectiveDayFor,
+  type AvailabilityOverrideDTO,
+  type AvailabilityRuleDTO,
+  type BlockedDateDTO,
+  type BookingDTO,
+} from "@/components/provider/availability-utils";
 
 const SERVICE_MODE_OPTIONS = [
   { value: "STUDIO", label: "Studio / Provider Location" },
@@ -32,28 +43,30 @@ const DAYS = [
   { value: 0, label: "Sunday" },
 ];
 
-interface AvailabilityRule {
-  id?: string;
-  dayOfWeek: number;
-  startTime: string;
-  endTime: string;
-}
-
-interface BlockedDate {
-  id: string;
-  date: string;
-  reason?: string | null;
-}
-
 interface DaySchedule {
   available: boolean;
   startTime: string;
   endTime: string;
 }
 
+function startOfMonth(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
 export default function ProviderAvailabilityPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingDay, setSavingDay] = useState(false);
+  const [savingLocation, setSavingLocation] = useState(false);
+
+  const [rules, setRules] = useState<AvailabilityRuleDTO[]>([]);
+  const [overrides, setOverrides] = useState<AvailabilityOverrideDTO[]>([]);
+  const [blockedDates, setBlockedDates] = useState<BlockedDateDTO[]>([]);
+  const [bookings, setBookings] = useState<BookingDTO[]>([]);
+
+  const [monthAnchor, setMonthAnchor] = useState<Date>(() => startOfMonth(new Date()));
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+
   const [schedule, setSchedule] = useState<Record<number, DaySchedule>>(() => {
     const init: Record<number, DaySchedule> = {};
     DAYS.forEach(({ value }) => {
@@ -61,12 +74,6 @@ export default function ProviderAvailabilityPage() {
     });
     return init;
   });
-  const [blockedDates, setBlockedDates] = useState<BlockedDate[]>([]);
-  const [newDate, setNewDate] = useState("");
-  const [newReason, setNewReason] = useState("");
-  const [addingDate, setAddingDate] = useState(false);
-  const [removingId, setRemovingId] = useState<string | null>(null);
-  const [savingLocation, setSavingLocation] = useState(false);
 
   const {
     register,
@@ -88,6 +95,53 @@ export default function ProviderAvailabilityPage() {
 
   const serviceMode = watch("serviceMode");
 
+  const maps = useMemo(
+    () => buildDayMaps(rules, overrides, bookings, blockedDates),
+    [rules, overrides, bookings, blockedDates]
+  );
+
+  const loadAvailability = useCallback(async () => {
+    const [availRes, bookingsRes] = await Promise.all([
+      fetch("/api/availability"),
+      fetch("/api/bookings"),
+    ]);
+
+    const availData: {
+      rules?: AvailabilityRuleDTO[];
+      overrides?: AvailabilityOverrideDTO[];
+      blockedDates?: BlockedDateDTO[];
+    } = await availRes.json();
+
+    const nextRules = Array.isArray(availData.rules) ? availData.rules : [];
+    setRules(nextRules);
+    setOverrides(Array.isArray(availData.overrides) ? availData.overrides : []);
+    setBlockedDates(
+      Array.isArray(availData.blockedDates) ? availData.blockedDates : []
+    );
+
+    const bookingsData = await bookingsRes.json();
+    setBookings(Array.isArray(bookingsData) ? (bookingsData as BookingDTO[]) : []);
+
+    const updated: Record<number, DaySchedule> = {};
+    DAYS.forEach(({ value }) => {
+      updated[value] = { available: false, startTime: "09:00", endTime: "17:00" };
+    });
+    nextRules.forEach((rule) => {
+      updated[rule.dayOfWeek] = {
+        available: true,
+        startTime: rule.startTime,
+        endTime: rule.endTime,
+      };
+    });
+    setSchedule(updated);
+  }, []);
+
+  useEffect(() => {
+    loadAvailability()
+      .catch(() => toast.error("Failed to load availability"))
+      .finally(() => setLoading(false));
+  }, [loadAvailability]);
+
   useEffect(() => {
     fetch("/api/providers/me")
       .then((r) => (r.ok ? r.json() : null))
@@ -104,6 +158,52 @@ export default function ProviderAvailabilityPage() {
       })
       .catch(() => {});
   }, [resetLocation]);
+
+  async function handleSaveDay(payload: SaveDayPayload) {
+    setSavingDay(true);
+    try {
+      const res = await fetch("/api/availability/override", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => null);
+        throw new Error(err?.error ?? "Save failed");
+      }
+      await loadAvailability();
+      toast.success("Day updated");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to save day");
+    } finally {
+      setSavingDay(false);
+    }
+  }
+
+  async function handleApplyToWeekday(
+    dayOfWeek: number,
+    startTime: string,
+    endTime: string
+  ) {
+    setSavingDay(true);
+    try {
+      const res = await fetch("/api/availability/weekday", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dayOfWeek, startTime, endTime }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => null);
+        throw new Error(err?.error ?? "Save failed");
+      }
+      await loadAvailability();
+      toast.success("Weekly default updated");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update default");
+    } finally {
+      setSavingDay(false);
+    }
+  }
 
   async function onSaveLocation(data: ProviderLocationInput) {
     setSavingLocation(true);
@@ -131,96 +231,32 @@ export default function ProviderAvailabilityPage() {
     }
   }
 
-  useEffect(() => {
-    fetch("/api/availability")
-      .then((r) => r.json())
-      .then(({ rules, blockedDates: bd }: { rules: AvailabilityRule[]; blockedDates: BlockedDate[] }) => {
-        if (Array.isArray(rules)) {
-          const updated: Record<number, DaySchedule> = {};
-          DAYS.forEach(({ value }) => {
-            updated[value] = { available: false, startTime: "09:00", endTime: "17:00" };
-          });
-          rules.forEach((rule) => {
-            updated[rule.dayOfWeek] = {
-              available: true,
-              startTime: rule.startTime,
-              endTime: rule.endTime,
-            };
-          });
-          setSchedule(updated);
-        }
-        if (Array.isArray(bd)) {
-          setBlockedDates(bd);
-        }
-      })
-      .catch(() => toast.error("Failed to load availability"))
-      .finally(() => setLoading(false));
-  }, []);
-
   async function saveSchedule() {
     setSaving(true);
     try {
-      const rules = DAYS
-        .filter(({ value }) => schedule[value]?.available)
-        .map(({ value }) => ({
+      const nextRules = DAYS.filter(({ value }) => schedule[value]?.available).map(
+        ({ value }) => ({
           dayOfWeek: value,
           startTime: schedule[value].startTime,
           endTime: schedule[value].endTime,
-        }));
+        })
+      );
 
       const res = await fetch("/api/availability", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rules }),
+        body: JSON.stringify({ rules: nextRules }),
       });
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.error ?? "Save failed");
       }
+      await loadAvailability();
       toast.success("Availability saved");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to save availability");
     } finally {
       setSaving(false);
-    }
-  }
-
-  async function addBlockedDate() {
-    if (!newDate) {
-      toast.error("Please select a date");
-      return;
-    }
-    setAddingDate(true);
-    try {
-      const res = await fetch("/api/availability", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date: newDate, reason: newReason || undefined }),
-      });
-      if (!res.ok) throw new Error();
-      const created = await res.json();
-      setBlockedDates((prev) => [...prev, created]);
-      setNewDate("");
-      setNewReason("");
-      toast.success("Blocked date added");
-    } catch {
-      toast.error("Failed to add blocked date");
-    } finally {
-      setAddingDate(false);
-    }
-  }
-
-  async function removeBlockedDate(id: string) {
-    setRemovingId(id);
-    try {
-      const res = await fetch(`/api/availability?id=${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error();
-      setBlockedDates((prev) => prev.filter((d) => d.id !== id));
-      toast.success("Blocked date removed");
-    } catch {
-      toast.error("Failed to remove blocked date");
-    } finally {
-      setRemovingId(null);
     }
   }
 
@@ -233,30 +269,93 @@ export default function ProviderAvailabilityPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[40vh]">
+      <div className="flex min-h-[40vh] items-center justify-center">
         <p className="text-muted-foreground">Loading availability...</p>
       </div>
     );
   }
 
+  const selectedEffective = selectedDate ? effectiveDayFor(selectedDate, maps) : null;
+
   return (
-    <div className="space-y-8 max-w-3xl">
+    <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold">Availability</h1>
-        <p className="text-muted-foreground text-sm mt-1">Set your weekly schedule and blocked dates</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Tap a day to set its hours and location, or adjust your weekly defaults below.
+        </p>
       </div>
 
-      {/* Weekly schedule */}
+      {/* Calendar + day panel */}
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+        <Card className="lg:flex-1">
+          <CardContent className="pt-6">
+            <AvailabilityCalendar
+              monthAnchor={monthAnchor}
+              onMonthChange={setMonthAnchor}
+              selectedDate={selectedDate}
+              onSelectDate={setSelectedDate}
+              maps={maps}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Desktop side panel */}
+        {selectedDate && selectedEffective && (
+          <Card className="hidden w-80 shrink-0 lg:block lg:sticky lg:top-8">
+            <CardContent className="pt-6">
+              <AvailabilityDayPanel
+                key={selectedDate.toDateString()}
+                date={selectedDate}
+                effective={selectedEffective}
+                bookings={bookings}
+                saving={savingDay}
+                onClose={() => setSelectedDate(null)}
+                onSaveDay={handleSaveDay}
+                onApplyToWeekday={handleApplyToWeekday}
+              />
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* Mobile bottom sheet */}
+      {selectedDate && selectedEffective && (
+        <div className="fixed inset-x-0 bottom-0 z-30 lg:hidden">
+          <div
+            className="max-h-[80vh] overflow-y-auto rounded-t-2xl border-t border-border bg-background p-5 shadow-2xl"
+            role="dialog"
+            aria-modal="false"
+            aria-label="Day availability"
+          >
+            <AvailabilityDayPanel
+              key={selectedDate.toDateString()}
+              date={selectedDate}
+              effective={selectedEffective}
+              bookings={bookings}
+              saving={savingDay}
+              onClose={() => setSelectedDate(null)}
+              onSaveDay={handleSaveDay}
+              onApplyToWeekday={handleApplyToWeekday}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Default hours */}
       <Card>
         <CardHeader>
-          <CardTitle>Weekly schedule</CardTitle>
+          <CardTitle>Default hours</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {DAYS.map(({ value, label }) => {
             const day = schedule[value];
             return (
-              <div key={value} className="flex flex-col sm:flex-row sm:items-center gap-3 py-2 border-b border-border last:border-0">
-                <div className="flex items-center gap-3 w-36 shrink-0">
+              <div
+                key={value}
+                className="flex flex-col gap-3 border-b border-border py-2 last:border-0 sm:flex-row sm:items-center"
+              >
+                <div className="flex w-36 shrink-0 items-center gap-3">
                   <input
                     type="checkbox"
                     id={`day-${value}`}
@@ -269,14 +368,14 @@ export default function ProviderAvailabilityPage() {
                   </Label>
                 </div>
                 {day.available ? (
-                  <div className="flex items-center gap-2 flex-1">
+                  <div className="flex flex-1 items-center gap-2">
                     <Input
                       type="time"
                       value={day.startTime}
                       onChange={(e) => updateDay(value, { startTime: e.target.value })}
                       className="w-32"
                     />
-                    <span className="text-muted-foreground text-sm">to</span>
+                    <span className="text-sm text-muted-foreground">to</span>
                     <Input
                       type="time"
                       value={day.endTime}
@@ -298,68 +397,6 @@ export default function ProviderAvailabilityPage() {
         </CardContent>
       </Card>
 
-      {/* Blocked dates */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Blocked dates</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {blockedDates.length > 0 && (
-            <div className="divide-y divide-border">
-              {blockedDates.map((bd) => (
-                <div key={bd.id} className="py-2.5 flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium">
-                      {format(new Date(bd.date), "EEEE, d MMMM yyyy")}
-                    </p>
-                    {bd.reason && (
-                      <p className="text-xs text-muted-foreground">{bd.reason}</p>
-                    )}
-                  </div>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => removeBlockedDate(bd.id)}
-                    disabled={removingId === bd.id}
-                  >
-                    <X className="size-4" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className="border-t border-border pt-4 space-y-3">
-            <p className="text-sm font-medium">Add blocked date</p>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="flex-1 space-y-1">
-                <Label htmlFor="newDate">Date</Label>
-                <Input
-                  id="newDate"
-                  type="date"
-                  value={newDate}
-                  onChange={(e) => setNewDate(e.target.value)}
-                  min={new Date().toISOString().split("T")[0]}
-                />
-              </div>
-              <div className="flex-1 space-y-1">
-                <Label htmlFor="newReason">Reason (optional)</Label>
-                <Input
-                  id="newReason"
-                  value={newReason}
-                  onChange={(e) => setNewReason(e.target.value)}
-                  placeholder="e.g. Public holiday"
-                />
-              </div>
-            </div>
-            <Button onClick={addBlockedDate} disabled={addingDate} variant="outline">
-              <Plus className="size-4 mr-1.5" />
-              {addingDate ? "Adding..." : "Add blocked date"}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Location & coverage */}
       <Card>
         <CardHeader>
@@ -374,11 +411,11 @@ export default function ProviderAvailabilityPage() {
               render={({ field }) => (
                 <div className="space-y-2">
                   <Label>Service mode</Label>
-                  <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="flex flex-col gap-3 sm:flex-row">
                     {SERVICE_MODE_OPTIONS.map(({ value, label }) => (
                       <label
                         key={value}
-                        className={`flex items-center gap-2 border rounded-lg px-4 py-2.5 cursor-pointer transition ${
+                        className={`flex cursor-pointer items-center gap-2 rounded-lg border px-4 py-2.5 transition ${
                           field.value === value
                             ? "border-indigo-600 bg-indigo-50 text-indigo-700"
                             : "border-border hover:border-muted-foreground"
@@ -400,12 +437,14 @@ export default function ProviderAvailabilityPage() {
             />
 
             {(serviceMode === "STUDIO" || serviceMode === "BOTH") && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="studioAddress">Studio address</Label>
                   <Input id="studioAddress" {...register("studioAddress")} />
                   {locationErrors.studioAddress && (
-                    <p className="text-sm text-red-500">{locationErrors.studioAddress.message}</p>
+                    <p className="text-sm text-red-500">
+                      {locationErrors.studioAddress.message}
+                    </p>
                   )}
                 </div>
                 <div className="space-y-2">
@@ -426,7 +465,9 @@ export default function ProviderAvailabilityPage() {
                   {...register("mobileRadius", { valueAsNumber: true })}
                 />
                 {locationErrors.mobileRadius && (
-                  <p className="text-sm text-red-500">{locationErrors.mobileRadius.message}</p>
+                  <p className="text-sm text-red-500">
+                    {locationErrors.mobileRadius.message}
+                  </p>
                 )}
               </div>
             )}
@@ -438,11 +479,14 @@ export default function ProviderAvailabilityPage() {
                 name="suburbs"
                 control={control}
                 render={({ field }) => (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                     {LAUNCH_SUBURBS.map((suburb) => {
                       const checked = field.value.includes(suburb);
                       return (
-                        <label key={suburb} className="flex items-center gap-2 cursor-pointer">
+                        <label
+                          key={suburb}
+                          className="flex cursor-pointer items-center gap-2"
+                        >
                           <input
                             type="checkbox"
                             checked={checked}
