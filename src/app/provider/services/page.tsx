@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Store, Home, MapPin, Check } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,12 @@ import type { Service } from "@/types";
 const CATEGORY_OPTIONS = [
   { value: "NAILS", label: "Nails" },
   { value: "LASHES", label: "Lashes" },
+] as const;
+
+const SERVICE_MODE_OPTIONS = [
+  { value: "STUDIO", label: "At my studio", icon: Store },
+  { value: "MOBILE", label: "Client's home", icon: Home },
+  { value: "BOTH", label: "Both", icon: MapPin },
 ] as const;
 
 export default function ProviderServicesPage() {
@@ -246,6 +252,39 @@ export default function ProviderServicesPage() {
                         </span>
                       </label>
                     ))}
+                  </div>
+                )}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Service location</Label>
+              <Controller
+                name="serviceMode"
+                control={control}
+                render={({ field }) => (
+                  <div className="grid gap-2" role="radiogroup" aria-label="Service location">
+                    {SERVICE_MODE_OPTIONS.map(({ value, label, icon: Icon }) => {
+                      const active = field.value === value;
+                      return (
+                        <button
+                          key={value}
+                          type="button"
+                          role="radio"
+                          aria-checked={active}
+                          onClick={() => field.onChange(value)}
+                          className={`flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 ${
+                            active
+                              ? "border-indigo-600 bg-indigo-50 text-indigo-700"
+                              : "border-border hover:border-muted-foreground"
+                          }`}
+                        >
+                          <Icon className="size-4 shrink-0" aria-hidden="true" />
+                          <span className="flex-1 font-medium">{label}</span>
+                          {active && <Check className="size-4 text-indigo-600" aria-hidden="true" />}
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               />

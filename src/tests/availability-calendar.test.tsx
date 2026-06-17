@@ -168,6 +168,87 @@ describe("AvailabilityCalendar", () => {
     expect(dayButtons).toHaveLength(42);
   });
 
+  it("uses explicit per-state swatch colours in the legend (not derived from cell classes)", () => {
+    const { container } = render(
+      <AvailabilityCalendar
+        monthAnchor={JUNE}
+        onMonthChange={vi.fn()}
+        selectedDate={null}
+        onSelectDate={vi.fn()}
+        maps={maps}
+      />
+    );
+    // Each legend row pairs an aria-hidden swatch with its text label. Walk from
+    // the label to the sibling swatch and assert the brand colour per state.
+    const swatchFor = (label: string) => {
+      const text = within(container as HTMLElement).getByText(label);
+      const row = text.parentElement as HTMLElement;
+      return row.querySelector("span[aria-hidden='true']") as HTMLElement;
+    };
+
+    expect(swatchFor("Available").className).toContain("bg-teal-50");
+    expect(swatchFor("Has bookings").className).toContain("bg-blue-50");
+    expect(swatchFor("Unavailable").className).toContain("bg-neutral-100");
+    // The custom-day marker is the neutral dot, distinct from the state swatches.
+    expect(swatchFor("Custom day").className).toContain("bg-neutral-500");
+  });
+
+  it("renders today with a distinct treatment from the selected ring (disambiguating selected-today)", () => {
+    const now = new Date();
+    const todayAnchor = new Date(now.getFullYear(), now.getMonth(), 1);
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    // Render with TODAY also selected: the cell must read as both at once.
+    render(
+      <AvailabilityCalendar
+        monthAnchor={todayAnchor}
+        onMonthChange={vi.fn()}
+        selectedDate={today}
+        onSelectDate={vi.fn()}
+        maps={buildDayMaps([], [], [])}
+      />
+    );
+
+    const todayCell = screen.getByRole("button", { name: new RegExp(`^${today.getDate()} `) });
+
+    // Selection is still the dark ring on the button.
+    expect(todayCell).toHaveAttribute("aria-pressed", "true");
+    expect(todayCell.className).toContain("ring-2");
+    expect(todayCell.className).toContain("ring-neutral-900");
+
+    // Today is differentiated by a treatment on the inner number span (underline),
+    // NOT by a near-black filled circle that would clash with the selection ring.
+    const inner = todayCell.querySelector("span") as HTMLElement;
+    expect(inner.className).toContain("underline");
+    expect(inner.className).not.toContain("bg-neutral-900");
+    expect(inner.className).not.toContain("rounded-full");
+  });
+
+  it("does not apply the today treatment to a non-today selected day", () => {
+    // 8 June 2026 is selected but (almost certainly) not the real 'today'.
+    render(
+      <AvailabilityCalendar
+        monthAnchor={JUNE}
+        onMonthChange={vi.fn()}
+        selectedDate={new Date(2026, 5, 8)}
+        onSelectDate={vi.fn()}
+        maps={maps}
+      />
+    );
+    const selected = screen.getByRole("button", { name: /^8 June 2026 —/ });
+    const inner = selected.querySelector("span") as HTMLElement;
+    // Guard against the suite happening to run on 8 June of some year — only
+    // assert when 2026-06-08 is genuinely not today.
+    const realToday = new Date();
+    const isReallyToday =
+      realToday.getFullYear() === 2026 &&
+      realToday.getMonth() === 5 &&
+      realToday.getDate() === 8;
+    if (!isReallyToday) {
+      expect(inner.className).not.toContain("underline");
+    }
+  });
+
   it("dims days outside the anchored month", () => {
     renderCalendar();
     // 31 May 2026 is the leading pad cell.

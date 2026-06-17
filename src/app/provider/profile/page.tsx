@@ -1,18 +1,30 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import Image from "next/image";
-import { Upload, Trash2 } from "lucide-react";
+import { Upload, Trash2, Store, Home, MapPin, Check } from "lucide-react";
 import { z } from "zod";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { LAUNCH_SUBURBS } from "@/lib/constants";
+import {
+  providerLocationSchema,
+  type ProviderLocationInput,
+} from "@/server/validation/provider.schema";
 import { ProviderReviews } from "@/components/provider/provider-reviews";
+
+const SERVICE_MODE_OPTIONS = [
+  { value: "STUDIO", label: "At my studio", icon: Store },
+  { value: "MOBILE", label: "Client's home", icon: Home },
+  { value: "BOTH", label: "Both", icon: MapPin },
+] as const;
 
 // Lightweight editor schema: businessName and bio are saved incrementally, so
 // each field can be left empty without blocking a save of the other. We keep
@@ -38,6 +50,11 @@ interface ProfileData {
   moderationStatus?: string;
   profilePhoto?: string | null;
   portfolioImages?: { id: string; url: string }[];
+  serviceMode?: "STUDIO" | "MOBILE" | "BOTH" | null;
+  studioAddress?: string | null;
+  studioSuburb?: string | null;
+  mobileRadius?: number | null;
+  suburbs?: string[] | null;
 }
 
 function SectionHeading({ children, divider = true }: { children: React.ReactNode; divider?: boolean }) {
@@ -57,6 +74,7 @@ export default function ProviderProfilePage() {
   const [moderationStatus, setModerationStatus] = useState<string | undefined>(undefined);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [uploadingPortfolio, setUploadingPortfolio] = useState(false);
+  const [savingLocation, setSavingLocation] = useState(false);
 
   const {
     register,
@@ -71,6 +89,26 @@ export default function ProviderProfilePage() {
     },
   });
 
+  const {
+    register: registerLocation,
+    handleSubmit: handleLocationSubmit,
+    control,
+    watch,
+    reset: resetLocation,
+    formState: { errors: locationErrors },
+  } = useForm<ProviderLocationInput>({
+    resolver: zodResolver(providerLocationSchema),
+    defaultValues: {
+      serviceMode: "STUDIO",
+      studioAddress: "",
+      studioSuburb: "",
+      mobileRadius: undefined,
+      suburbs: [],
+    },
+  });
+
+  const serviceMode = watch("serviceMode");
+
   useEffect(() => {
     fetch("/api/providers/me")
       .then((r) => (r.ok ? r.json() : null))
@@ -80,6 +118,13 @@ export default function ProviderProfilePage() {
             businessName: data.businessName ?? "",
             bio: data.bio ?? "",
           });
+          resetLocation({
+            serviceMode: data.serviceMode ?? "STUDIO",
+            studioAddress: data.studioAddress ?? "",
+            studioSuburb: data.studioSuburb ?? "",
+            mobileRadius: data.mobileRadius ?? undefined,
+            suburbs: data.suburbs ?? [],
+          });
           setProfilePhotoUrl(data.profilePhoto ?? null);
           setPortfolioImages(data.portfolioImages ?? []);
           setModerationStatus(data.moderationStatus);
@@ -87,7 +132,7 @@ export default function ProviderProfilePage() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [reset]);
+  }, [reset, resetLocation]);
 
   const onSave = async (data: PublicProfileInput) => {
     setSaving(true);
@@ -106,6 +151,32 @@ export default function ProviderProfilePage() {
       toast.error(err instanceof Error ? err.message : "Failed to save profile");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const onSaveLocation = async (data: ProviderLocationInput) => {
+    setSavingLocation(true);
+    try {
+      const res = await fetch("/api/providers", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          serviceMode: data.serviceMode,
+          studioAddress: data.studioAddress,
+          studioSuburb: data.studioSuburb,
+          mobileRadius: data.mobileRadius,
+          suburbs: data.suburbs,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error ?? "Save failed");
+      }
+      toast.success("Location & coverage saved");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to save location");
+    } finally {
+      setSavingLocation(false);
     }
   };
 
@@ -291,6 +362,135 @@ export default function ProviderProfilePage() {
               />
             </label>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Location & coverage */}
+      <Card>
+        <CardContent className="space-y-6">
+          <form onSubmit={handleLocationSubmit(onSaveLocation)} className="space-y-6">
+            <div className="space-y-3">
+              <SectionHeading divider={false}>Service area</SectionHeading>
+              <p className="text-sm text-muted-foreground">
+                Set how and where you offer your services.
+              </p>
+            </div>
+
+            {/* Service mode */}
+            <div className="space-y-2">
+              <Label>Service mode</Label>
+              <Controller
+                name="serviceMode"
+                control={control}
+                render={({ field }) => (
+                  <div className="grid gap-2 sm:grid-cols-3" role="radiogroup" aria-label="Service mode">
+                    {SERVICE_MODE_OPTIONS.map(({ value, label, icon: Icon }) => {
+                      const active = field.value === value;
+                      return (
+                        <button
+                          key={value}
+                          type="button"
+                          role="radio"
+                          aria-checked={active}
+                          onClick={() => field.onChange(value)}
+                          className={`flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 ${
+                            active
+                              ? "border-indigo-600 bg-indigo-50 text-indigo-700"
+                              : "border-border hover:border-muted-foreground"
+                          }`}
+                        >
+                          <Icon className="size-4 shrink-0" aria-hidden="true" />
+                          <span className="flex-1 font-medium">{label}</span>
+                          {active && <Check className="size-4 text-indigo-600" aria-hidden="true" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              />
+            </div>
+
+            {(serviceMode === "STUDIO" || serviceMode === "BOTH") && (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="studioAddress">Studio address</Label>
+                  <Input id="studioAddress" {...registerLocation("studioAddress")} />
+                  {locationErrors.studioAddress && (
+                    <p className="text-sm text-red-500">
+                      {locationErrors.studioAddress.message}
+                    </p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="studioSuburb">Studio suburb</Label>
+                  <Input id="studioSuburb" {...registerLocation("studioSuburb")} />
+                </div>
+              </div>
+            )}
+
+            {(serviceMode === "MOBILE" || serviceMode === "BOTH") && (
+              <div className="space-y-2">
+                <Label htmlFor="mobileRadius">Mobile radius (km)</Label>
+                <Input
+                  id="mobileRadius"
+                  type="number"
+                  min={1}
+                  max={50}
+                  {...registerLocation("mobileRadius", { valueAsNumber: true })}
+                />
+                {locationErrors.mobileRadius && (
+                  <p className="text-sm text-red-500">
+                    {locationErrors.mobileRadius.message}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Service suburbs */}
+            <div className="space-y-2">
+              <Label>Service suburbs</Label>
+              <Controller
+                name="suburbs"
+                control={control}
+                render={({ field }) => (
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    {LAUNCH_SUBURBS.map((suburb) => {
+                      const checked = field.value.includes(suburb);
+                      return (
+                        <label
+                          key={suburb}
+                          className="flex cursor-pointer items-center gap-2"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => {
+                              if (checked) {
+                                field.onChange(field.value.filter((s) => s !== suburb));
+                              } else {
+                                field.onChange([...field.value, suburb]);
+                              }
+                            }}
+                            className="h-4 w-4 rounded border-border"
+                          />
+                          <span className="text-sm">{suburb}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
+              />
+              {locationErrors.suburbs && (
+                <p className="text-sm text-red-500">{locationErrors.suburbs.message}</p>
+              )}
+            </div>
+
+            <div className="border-t border-border pt-6">
+              <Button type="submit" disabled={savingLocation}>
+                {savingLocation ? "Saving..." : "Save location"}
+              </Button>
+            </div>
+          </form>
         </CardContent>
       </Card>
 

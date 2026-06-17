@@ -49,6 +49,12 @@ const STATE_CELL_CLASSES: Record<DayState, string> = {
     "bg-neutral-100 border-neutral-200 text-neutral-600 hover:bg-neutral-200",
 };
 
+const STATE_SWATCH_CLASSES: Record<DayState, string> = {
+  available: "bg-teal-50 border-teal-200",
+  partial: "bg-blue-50 border-blue-200",
+  unavailable: "bg-neutral-100 border-neutral-200",
+};
+
 function DayCell({
   date,
   inCurrentMonth,
@@ -81,7 +87,12 @@ function DayCell({
         selected && "ring-2 ring-neutral-900 ring-offset-1"
       )}
     >
-      <span className={cn(isToday && "flex size-6 items-center justify-center rounded-full bg-neutral-900 text-white")}>
+      <span
+        className={cn(
+          "flex flex-col items-center",
+          isToday && "font-semibold underline decoration-2 underline-offset-4"
+        )}
+      >
         {date.getDate()}
       </span>
       {hasOverride && (
@@ -110,10 +121,7 @@ function Legend({ className }: LegendProps) {
         <div key={state} className="flex items-center gap-1.5">
           <span
             aria-hidden="true"
-            className={cn(
-              "size-3 rounded-[4px] border",
-              STATE_CELL_CLASSES[state].split(" ").slice(0, 2).join(" ")
-            )}
+            className={cn("size-3 rounded-[4px] border", STATE_SWATCH_CLASSES[state])}
           />
           <span className="text-xs text-muted-foreground">{label}</span>
         </div>
